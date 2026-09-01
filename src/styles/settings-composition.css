@@ -1,0 +1,75 @@
+/* A compact, local-first settings surface: every setting commits immediately. */
+.settings-page { max-width: 940px; margin-inline: auto; }
+.settings-page > section { margin-top: 28px; }
+.settings-page > section:first-of-type { margin-top: 0; }
+.settings-page .settings-card { padding: 0; overflow: hidden; }
+.settings-page .setting-row { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 13px; min-height: 76px; padding: 13px 16px; }
+.settings-page .language-setting-row { width: 100%; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; text-align: left; cursor: pointer; background: transparent; border: 0; }
+.settings-page .language-setting-copy { min-width: 0; display: grid; }
+.settings-page .language-setting-trailing { display: inline-flex; flex: none; align-items: center; gap: 6px; white-space: nowrap; }
+.settings-page .language-setting-trailing .setting-value { justify-self: auto; }
+.settings-page .language-setting-row .setting-chevron { flex: none; place-self: auto; }
+.settings-page .setting-row > :nth-child(2) { min-width: 0; }
+.settings-page .setting-row .input { width: min(174px, 42vw); }
+.settings-page .setting-value { white-space: nowrap; }
+.settings-page .setting-chevron { width: 18px; color: var(--text-muted); }
+
+.language-selector-sheet { width: min(100%, 430px); }
+.language-selector-intro { margin-bottom: 14px; }
+.language-options { gap: 8px; }
+.language-options button { grid-template-columns: minmax(0, 1fr) auto; min-height: 66px; gap: 12px; padding: 12px 14px; }
+.language-options button > span:first-child { min-width: 0; display: grid; gap: 2px; }
+.language-options button strong { font-size: 14px; }
+.language-options button small { color: var(--text-secondary); font-size: 12px; }
+.language-option-check { width: 20px; height: 20px; color: var(--purple-600); stroke-width: 3; }
+
+.settings-page .notification-settings > .setting-row { border-bottom: 0; }
+.notification-preference-group { border-top: 1px solid var(--border); padding: 16px; }
+.notification-preference-group.is-disabled { opacity: .58; }
+.notification-preference-heading { grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 11px; margin-bottom: 9px; display: grid; }
+.notification-preference-heading strong { font-size: 13px; }
+.notification-preference-rows { padding-left: 51px; }
+.notification-preference-row { grid-template-columns: minmax(0, 1fr) 48px; align-items: center; column-gap: 16px; min-height: 52px; display: grid; }
+.notification-preference-row > strong { min-width: 0; font-size: 13px; line-height: 1.35; }
+.settings-page .toggle { justify-self: end; position: relative; width: 48px; min-width: 48px; height: 44px; padding: 0; background: transparent; }
+.settings-page .toggle::before { position: absolute; top: 9px; right: 1px; width: 46px; height: 26px; border-radius: 99px; background: #d9d7e1; content: ""; transition: background .18s ease; }
+.settings-page .toggle span { position: absolute; z-index: 1; top: 11px; left: 3px; width: 22px; height: 22px; transform: none; }
+.settings-page .toggle.on { background: transparent; }
+.settings-page .toggle.on::before { background: var(--purple-500); }
+.settings-page .toggle.on span { transform: translateX(20px); }
+.settings-page .toggle:focus-visible { outline: 3px solid rgba(118, 86, 246, .38); outline-offset: 2px; }
+.settings-page .toggle:disabled { cursor: not-allowed; }
+
+.device-notification-setting { padding-bottom: 14px; }
+.device-notification-row { grid-template-columns: 40px minmax(0, 1fr) 48px; min-height: 62px; gap: 11px; }
+.device-notification-row > div { min-width: 0; display: grid; }
+.device-notification-row small { color: var(--text-muted); font-size: 11px; line-height: 1.4; }
+.notification-permission { color: var(--text-secondary); margin: 5px 0 0 51px; font-size: 11px; line-height: 1.45; }
+.notification-permission.permission-denied, .notification-permission.permission-unsupported { color: #9a4c09; }
+
+.account-management { margin-top: 28px; }
+.account-management-card { padding: 0; overflow: hidden; }
+.account-action-row { grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 13px; min-height: 84px; padding: 16px; display: grid; }
+.account-action-row > span:nth-child(2) { min-width: 0; display: grid; gap: 2px; }
+.account-action-row strong { font-size: 14px; }
+.account-action-row small { color: var(--text-secondary); font-size: 12px; line-height: 1.4; }
+.account-action-row .compact-button, .account-action-row .text-danger-button { justify-self: end; min-height: 44px; white-space: nowrap; }
+.account-actions-divider { height: 1px; background: var(--border); margin-inline: 16px; }
+.account-delete-row .danger-icon { grid-row: auto; }
+
+@media (max-width: 480px) {
+  .settings-page .setting-row { padding-inline: 14px; }
+  .settings-page .setting-row .input { width: min(138px, 39vw); }
+  .notification-preference-group { padding-inline: 14px; }
+  .notification-preference-rows { padding-left: 0; }
+  .notification-preference-heading { grid-template-columns: 1fr; gap: 7px; }
+  .notification-preference-heading .setting-icon { display: none; }
+  .account-action-row { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
+  .account-action-row > button { grid-column: 2; justify-self: start; }
+}
+
+@media (min-width: 700px) {
+  .settings-page .settings-card { box-shadow: var(--shadow-small); }
+  .notification-preference-group { padding-inline: 22px; }
+  .notification-preference-rows { padding-left: 51px; }
+}

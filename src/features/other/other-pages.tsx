@@ -1,0 +1,129 @@
+"use client";
+
+import Link from "next/link";
+import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, GraduationCap, Info, Languages, Send, Sparkles, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { BottomSheet, Card, Input, TalevoMascot, PageHeader, Select } from "@/components/ui";
+import { NotificationCard } from "@/components/domain";
+import { AccountManagement } from "@/components/account-actions";
+import { useAppState } from "@/providers/app-state-provider";
+import { useLanguage } from "@/providers/language-provider";
+import { languageLabels } from "@/lib/i18n";
+import { getUnreadNotificationCount, groupNotifications, type NotificationGroupKey } from "@/lib/alerts/notification-utils";
+import { getPendingTasks } from "@/lib/local-ai";
+import { formatTaskDateTime } from "@/lib/task-utils";
+import type { ClassSchedule, NotificationPreferences, Task } from "@/types";
+
+export function NotificationsPage() {
+  const { notifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteReadNotifications } = useAppState();
+  const { language, t } = useLanguage();
+  const [deleteReadDialogOpen, setDeleteReadDialogOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const unread = getUnreadNotificationCount(notifications);
+  const readCount = notifications.length - unread;
+  const groups = useMemo(() => groupNotifications(notifications, new Date()), [notifications]);
+  const groupOrder: NotificationGroupKey[] = ["important", "today", "thisWeek", "previous"];
+  const unreadBadge = language === "th" ? `${unread > 99 ? "99+" : unread} ยังไม่อ่าน` : `${unread > 99 ? "99+" : unread} unread`;
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 3200);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const handleDeleteNotification = (id: string) => {
+    deleteNotification(id);
+    setNotice(t("notifications.deleted"));
+  };
+  const handleMarkAllRead = () => {
+    if (!unread) return;
+    markAllNotificationsRead();
+    setNotice(t("notifications.markedAllRead"));
+  };
+  const handleDeleteRead = () => {
+    deleteReadNotifications();
+    setDeleteReadDialogOpen(false);
+    setNotice(t("notifications.deletedRead"));
+  };
+
+  return <div className="page notifications-page">
+    <PageHeader title={t("notifications.title")} backHref="/today" />
+    <section className="notification-summary-card" aria-labelledby="notification-summary-title">
+      <span className="notification-summary-icon" aria-hidden="true"><Bell /></span>
+      <div className="notification-summary-copy">
+        <div><h2 id="notification-summary-title">{t("notifications.centerTitle")}</h2>{unread > 0 && <span className="notification-unread-badge">{unreadBadge}</span>}</div>
+        <p>{unread > 0 ? t("notifications.unreadSummary").replace("{count}", String(unread)) : t("notifications.allCaughtUp")}</p>
+      </div>
+      {(notifications.length > 0) && <div className="notification-summary-actions" aria-label={t("notifications.actionsLabel")}>
+        <button className="secondary-button notification-mark-read-button" type="button" onClick={handleMarkAllRead} disabled={unread === 0}><CheckCheck aria-hidden="true" />{t("notifications.markAllRead")}</button>
+        {readCount > 0 && <button className="notification-delete-read-button" type="button" onClick={() => setDeleteReadDialogOpen(true)}><Trash2 aria-hidden="true" />{t("notifications.deleteRead")}</button>}
+      </div>}
+    </section>
+    {notice && <p className="notification-action-notice" role="status">{notice}</p>}
+    {notifications.length ? <div className="notification-groups">{groupOrder.map((group) => groups[group].length > 0 && <section className="notification-group" key={group} aria-labelledby={`notification-group-${group}`}><h2 id={`notification-group-${group}`}>{t(`notifications.groups.${group}`)}</h2><div className="notification-list">{groups[group].map((item) => <NotificationCard key={item.id} item={item} onClick={() => markNotificationRead(item.id)} onDelete={item.readAt ? () => handleDeleteNotification(item.id) : undefined} deleteLabel={t("notifications.deleteOne")} />)}</div></section>)}</div> : <Card className="notification-empty"><CheckCircle2 aria-hidden="true" /><h2>{t("notifications.emptyTitle")}</h2><p>{t("notifications.emptyDescription")}</p></Card>}
+    <p className="notification-local-note">{language === "th" ? "การแจ้งเตือนและสถานะอ่านเก็บไว้บนอุปกรณ์นี้" : "Notifications and read status are stored on this device."}</p>
+    <BottomSheet open={deleteReadDialogOpen} title={t("notifications.deleteReadTitle")} onClose={() => setDeleteReadDialogOpen(false)} closeLabel={t("common.close")} className="notification-delete-dialog"><p>{t("notifications.deleteReadConfirm")}</p><div className="notification-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDeleteReadDialogOpen(false)}>{t("common.cancel")}</button><button className="notification-delete-confirm-button" type="button" onClick={handleDeleteRead}>{t("notifications.deleteRead")}</button></div></BottomSheet>
+  </div>;
+}
+
+function TaskSummaryMessage({ tasks, schedules }: { tasks: Task[]; schedules: ClassSchedule[] }) {
+  const items = getPendingTasks(tasks).slice(0, 4);
+  return <div className="ai-summary"><strong>งานที่ยังไม่เสร็จ</strong><ol>{items.map((task) => <li key={task.id}><Link href={`/tasks/${task.id}`}><span>{task.title}</span><small>{schedules.find((item) => item.courseId === task.courseId)?.name ?? "งานทั่วไป"} · {formatTaskDateTime(task)}</small></Link></li>)}</ol><Link href="/tasks" className="secondary-button button-block">ดูรายละเอียดทั้งหมด</Link></div>;
+}
+
+export function AIPage() {
+  const { chat, sendChat, tasks, schedules, exams, profile } = useAppState();
+  const { t } = useLanguage();
+  const suggestions = [t("ai.promptToday"), t("ai.promptClasses"), t("ai.promptDue"), t("ai.promptExams")];
+  const [input, setInput] = useState("");
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const chatScroll = chatScrollRef.current;
+    if (!chatScroll) return;
+    chatScroll.scrollTo({ top: chatScroll.scrollHeight, behavior: "smooth" });
+  }, [chat.length]);
+  const submit = (event?: FormEvent) => { event?.preventDefault(); if (!input.trim()) return; sendChat(input); setInput(""); };
+  return (
+    <div className="page ai-page">
+      <header className="ai-header"><Link href="/today" className="icon-button" aria-label="ย้อนกลับ">‹</Link><TalevoMascot variant="thinking" crop="head" size="sm" decorative priority /><div><h1>TALEVO AI</h1><span><i /> ผู้ช่วยวางแผนการเรียนของ{profile.displayName || "คุณ"}</span></div><button className="icon-button ai-info-button" type="button" aria-label={t("ai.aboutAi")} onClick={() => setAboutOpen(true)}><Info /></button></header>
+      <div className="ai-layout"><section className="chat-card"><div ref={chatScrollRef} className="chat-scroll" aria-live="polite">{chat.map((message, index) => <div key={message.id} className={`ai-message ${message.role}`}>
+        {message.role === "assistant" && <TalevoMascot className="ai-avatar" variant="thinking" crop="head" size="xs" decorative priority={index === 0} />}<div className="message-bubble"><p>{message.content}</p>{message.kind === "task-summary" && <TaskSummaryMessage tasks={tasks} schedules={schedules} />}</div>
+      </div>)}</div>
+      {chat.length === 1 && <div className="suggestion-chips">{suggestions.map((item) => <button type="button" key={item} onClick={() => sendChat(item)}>{item}</button>)}</div>}
+      <form className="chat-input" onSubmit={submit}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={t("ai.placeholder")} aria-label="ข้อความถึง TALEVO" /><button className="send-button" type="submit" aria-label="ส่งข้อความ" disabled={!input.trim()}><Send /></button></form></section>
+      <aside className="ai-context"><Card><span className="eyebrow"><Sparkles /> บริบทวันนี้</span><h2>พร้อมช่วยจากแผนของคุณ</h2><div><span><CheckCircle2 />{tasks.filter((item) => item.status !== "completed").length} งานที่ยังไม่เสร็จ</span><span><CalendarDays />{schedules.length} คาบในสัปดาห์นี้</span><span><GraduationCap />{exams.length} การสอบที่บันทึกไว้</span></div></Card><p>คำตอบใช้ข้อมูลที่บันทึกไว้บนอุปกรณ์และกฎภายใน ยังไม่ได้เชื่อมต่อบริการ AI ภายนอก</p></aside></div>
+      <BottomSheet open={aboutOpen} title={t("ai.aboutAi")} onClose={() => setAboutOpen(false)} closeLabel={t("common.close")} className="ai-about-sheet"><div className="ai-about-dialog"><TalevoMascot className="ai-about-mascot" variant="neutral" crop="head" size="md" decorative /><p className="ai-about-subtitle">{t("ai.aboutSubtitle")}</p><section><h3>{t("ai.aiCapabilities")}</h3><p>{t("ai.capabilitiesDescription")}</p></section><section><h3>{t("ai.dataUsed")}</h3><p>{t("ai.dataUsedDescription")}</p></section><section><h3>{t("ai.limitations")}</h3><p>{t("ai.limitationsDescription")}</p></section><button className="primary-button button-block" type="button" onClick={() => setAboutOpen(false)}>{t("ai.close")}</button></div></BottomSheet>
+    </div>
+  );
+}
+
+
+function SettingRow({ icon, title, description, children }: { icon: ReactNode; title: string; description?: string; children: ReactNode }) {
+  return <div className="setting-row"><span className="setting-icon">{icon}</span><div><strong>{title}</strong>{description && <small>{description}</small>}</div>{children}</div>;
+}
+
+function Toggle({ checked, onChange, label, disabled = false }: { checked: boolean; onChange: (value: boolean) => void; label: string; disabled?: boolean }) {
+  return <button type="button" role="switch" aria-checked={checked} aria-label={label} className={`toggle ${checked ? "on" : ""}`} onClick={() => onChange(!checked)} disabled={disabled}><span /></button>;
+}
+
+export function SettingsPage() {
+  const { settings, updateSettings, updateNotificationPreferences, browserNotificationPermission, setBrowserNotificationsEnabled } = useAppState();
+  const { language, setLanguage, t } = useLanguage();
+  const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
+  const languageRowLabel = language === "th" ? `ภาษา ภาษาปัจจุบัน ${languageLabels[language]}` : `Language Current language ${languageLabels[language]}`;
+  const preferences = settings.notificationPreferences;
+  const disabled = !preferences.enabled;
+  const setPreference = (key: keyof NotificationPreferences, value: boolean) => updateNotificationPreferences({ [key]: value });
+  const preferenceGroups = [
+    { title: t("settings.alertTasks"), icon: <CheckCircle2 />, rows: [["task24h", "settings.task24h"], ["task12h", "settings.task12h"], ["deadlineRisk", "settings.deadlineRisk"]] as const },
+    { title: t("settings.alertDaily"), icon: <Clock3 />, rows: [["morning0600", "settings.morning0600"], ["daily0700", "settings.daily0700"]] as const },
+    { title: t("settings.alertClasses"), icon: <CalendarDays />, rows: [["class30m", "settings.class30m"], ["classEnd10m", "settings.classEnd10m"]] as const },
+    { title: t("settings.alertExams"), icon: <GraduationCap />, rows: [["exam7d", "settings.exam7d"], ["exam3d", "settings.exam3d"], ["exam1d", "settings.exam1d"], ["examMorning", "settings.examMorning"]] as const },
+    { title: t("settings.alertWeekly"), icon: <Sparkles />, rows: [["weeklyRadar", "settings.weeklyRadar"]] as const },
+  ];
+  return <div className="page settings-page"><PageHeader title={t("settings.title")} backHref="/profile" />
+    <section><div className="section-header"><h2>{t("settings.general")}</h2></div><Card className="settings-card"><button className="setting-row language-setting-row" type="button" onClick={() => setLanguagePickerOpen(true)} aria-label={languageRowLabel}><span className="setting-icon"><Languages /></span><span className="language-setting-copy"><strong>{t("settings.language")}</strong><small>{t("settings.languageDescription")}</small></span><span className="language-setting-trailing"><strong className="setting-value language-setting-value">{languageLabels[language]}</strong><ChevronRight className="setting-chevron" aria-hidden="true" /></span></button><SettingRow icon={<Clock3 />} title={t("settings.timeZone")}><strong className="setting-value">Asia/Bangkok</strong></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.dateFormat")}><Select aria-label={t("settings.dateFormat")} value={settings.dateFormat} onChange={(event) => updateSettings({dateFormat:event.target.value as typeof settings.dateFormat})}><option value="วัน/เดือน/ปี">{language === "th" ? "วัน/เดือน/ปี" : "Day / Month / Year"}</option><option value="เดือน/วัน/ปี">{language === "th" ? "เดือน/วัน/ปี" : "Month / Day / Year"}</option></Select></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.yearDisplay")}><Select aria-label={t("settings.yearDisplay")} value={settings.yearSystem} onChange={(event) => updateSettings({yearSystem:event.target.value as typeof settings.yearSystem})}><option>พ.ศ.</option><option>ค.ศ.</option></Select></SettingRow></Card></section>
+    <section><div className="section-header"><h2>{t("settings.notifications")}</h2></div><Card className="settings-card notification-settings"><SettingRow icon={<Bell />} title={t("settings.smartAlerts")} description={t("settings.smartAlertsDescription")}><Toggle label={t("settings.smartAlerts")} checked={preferences.enabled} onChange={(value) => setPreference("enabled", value)} /></SettingRow>{preferenceGroups.map((group) => <section className={`notification-preference-group ${disabled ? "is-disabled" : ""}`} key={group.title}><div className="notification-preference-heading"><span className="setting-icon">{group.icon}</span><strong>{group.title}</strong></div><div className="notification-preference-rows">{group.rows.map(([key, labelKey]) => <div className="notification-preference-row" key={key}><strong>{t(labelKey)}</strong><Toggle label={t(labelKey)} checked={preferences[key]} disabled={disabled} onChange={(value) => setPreference(key, value)} /></div>)}</div></section>)}<section className={`notification-preference-group device-notification-setting ${disabled ? "is-disabled" : ""}`}><div className="notification-preference-row device-notification-row"><span className="setting-icon"><Bell /></span><div><strong>{t("settings.browserNotifications")}</strong><small>{t("settings.browserNotificationsDescription")}</small></div><Toggle label={t("settings.browserNotifications")} checked={preferences.browserNotifications} disabled={disabled || browserNotificationPermission === "unsupported"} onChange={(value) => void setBrowserNotificationsEnabled(value)} /></div><p className={`notification-permission permission-${browserNotificationPermission}`}>{browserNotificationPermission === "granted" ? t("settings.permissionGranted") : browserNotificationPermission === "denied" ? t("settings.permissionDenied") : browserNotificationPermission === "unsupported" ? t("settings.permissionUnsupported") : t("settings.permissionDefault")}</p></section></Card></section>
+    <AccountManagement /><BottomSheet className="language-selector-sheet" open={languagePickerOpen} title={t("settings.chooseLanguage")} onClose={() => setLanguagePickerOpen(false)}><div className="language-selector-intro">{t("settings.chooseLanguageDescription")}</div><div className="language-options" role="radiogroup" aria-label={t("settings.chooseLanguage")}>{(["th", "en"] as const).map((option) => <button type="button" role="radio" aria-checked={language === option} className={language === option ? "selected" : ""} key={option} onClick={() => { setLanguage(option); setLanguagePickerOpen(false); }}><span><strong>{languageLabels[option]}</strong><small>{option === "th" ? "Thai" : "English"}</small></span>{language === option && <Check className="language-option-check" aria-hidden="true" />}</button>)}</div></BottomSheet></div>;
+}

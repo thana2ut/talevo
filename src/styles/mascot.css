@@ -1,0 +1,123 @@
+/* Canonical mascot composition. Full-body and head assets always preserve their
+   intrinsic ratio; surface rules change scale and safe space, never crop anatomy. */
+:root {
+  --mascot-xs: 42px;
+  --mascot-sm: 64px;
+  --mascot-md: 104px;
+  --mascot-lg: clamp(190px, 20vw, 260px);
+  --mascot-hero: clamp(220px, 62vw, 300px);
+}
+
+.talevo-mascot {
+  position: relative;
+  display: flex;
+  width: auto;
+  height: var(--mascot-md);
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 470 / 874;
+  min-width: 0;
+  isolation: isolate;
+}
+
+.talevo-mascot-head { aspect-ratio: 1 / 1; }
+.talevo-mascot-upper { aspect-ratio: 470 / 588; }
+.talevo-mascot-full { aspect-ratio: 1086 / 1448; }
+.talevo-mascot-frame {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+.talevo-mascot-head .talevo-mascot-frame { padding: 5%; }
+.talevo-mascot-upper .talevo-mascot-frame { padding: 3%; }
+.talevo-mascot-full .talevo-mascot-frame { padding: 3% 5%; }
+.talevo-mascot-frame > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 12px 16px rgba(91, 54, 185, .18));
+}
+.talevo-mascot-xs { height: var(--mascot-xs); }
+.talevo-mascot-sm { height: var(--mascot-sm); }
+.talevo-mascot-md { height: var(--mascot-md); }
+.talevo-mascot-lg { height: var(--mascot-lg); }
+.talevo-mascot-hero { height: var(--mascot-hero); }
+
+/* Today keeps a dedicated right safe area. The rounded card can still contain its
+   background aura, while the full character remains inside the visible bounds. */
+.smart-recommendation {
+  position: relative;
+  display: grid;
+  min-height: 238px;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 112px);
+  overflow: hidden;
+}
+.smart-today-hero .smart-recommendation .talevo-mascot {
+  height: clamp(106px, 34vw, 124px);
+  align-self: end;
+  justify-self: center;
+  margin: 8px 8px 10px 0;
+}
+.smart-recommendation-copy { position: relative; z-index: 1; }
+
+/* Compact support surfaces intentionally use the dedicated head asset. */
+.ai-header .talevo-mascot { height: 52px; }
+.ai-message .talevo-mascot.ai-avatar { height: 42px; flex: 0 0 auto; }
+.ai-header .talevo-mascot-head .talevo-mascot-frame,
+.ai-message .talevo-mascot-head .talevo-mascot-frame { padding: 1%; }
+.ai-about-mascot { height: 96px; justify-self: center; }
+.help-hero > .talevo-mascot { height: 62px; flex: 0 0 auto; }
+
+/* Full-body marketing surfaces retain the character's complete silhouette. */
+.welcome-visual .talevo-mascot { z-index: 2; height: var(--mascot-hero); margin: 12px 0; }
+.auth-hero > .talevo-mascot {
+  right: 7%;
+  bottom: 20px;
+  height: clamp(220px, 26vw, 300px);
+  margin: 0;
+  position: absolute;
+}
+.auth-hero .brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 7px 16px rgba(36, 21, 91, .16);
+}
+.auth-hero .brand-mark .talevo-mascot { height: 28px; }
+.auth-hero .brand-logo.brand-logo {
+  color: #fff;
+  filter: none;
+}
+
+@media (min-width: 700px) {
+  :root { --mascot-hero: clamp(270px, 30vw, 350px); }
+  .smart-recommendation {
+    min-height: 242px;
+    grid-template-columns: minmax(0, 1fr) minmax(162px, 220px);
+  }
+  .smart-today-hero .smart-recommendation .talevo-mascot {
+    height: clamp(178px, 15vw, 214px);
+    margin: 12px 22px 14px 0;
+  }
+}
+
+@media (max-width: 390px) {
+  .smart-recommendation {
+    min-height: 244px;
+    grid-template-columns: minmax(0, 1fr) 96px;
+  }
+  .smart-today-hero .smart-recommendation .talevo-mascot {
+    height: clamp(98px, 34vw, 112px);
+    margin: 8px 8px 12px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .talevo-mascot-frame > img { filter: drop-shadow(0 8px 12px rgba(91, 54, 185, .14)); }
+}

@@ -1,0 +1,247 @@
+/* Feature-scoped composition pass. Kept separate from shared polish so surface
+   defaults cannot flatten the layouts below. */
+.semester-weather {
+  background: linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(248, 246, 255, .92));
+  border: 1px solid rgba(118, 86, 246, .13);
+  border-radius: 24px;
+  box-shadow: 0 12px 28px rgba(74, 55, 130, .06);
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.semester-weather-heading > div {
+  align-items: center;
+  display: flex;
+  gap: 11px;
+}
+
+.semester-weather-heading > div > span {
+  align-items: center;
+  background: linear-gradient(145deg, var(--purple-100), #edf6ff);
+  border-radius: 14px;
+  color: var(--purple-700);
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.semester-weather-heading svg { height: 20px; width: 20px; }
+.semester-weather-heading h2 { color: var(--text-primary); font-size: 18px; line-height: 1.35; margin: 0; }
+.semester-weather-heading p { color: var(--text-secondary); font-size: 12px; line-height: 1.5; margin: 2px 0 0; }
+
+.academic-weather-strip {
+  display: grid;
+  gap: 9px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.academic-weather-day {
+  align-content: center;
+  background: var(--weather-surface, #f7f5ff);
+  border: 1px solid var(--weather-border, rgba(118, 86, 246, .1));
+  border-radius: 16px;
+  color: var(--weather-ink, var(--purple-700));
+  cursor: pointer;
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  min-height: 116px;
+  padding: 12px 7px;
+  text-align: center;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.academic-weather-day:hover { border-color: var(--weather-strong, var(--purple-300)); box-shadow: 0 8px 16px rgba(69, 55, 121, .08); transform: translateY(-1px); }
+.academic-weather-day:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.academic-weather-day > span { color: var(--text-secondary); font-size: 12px; font-weight: 750; line-height: 1; }
+.academic-weather-date { color: var(--weather-ink, var(--purple-700)); font-size: 10px; font-style: normal; font-weight: 760; line-height: 1.15; white-space: nowrap; }
+.academic-weather-day > svg { height: 25px; width: 25px; }
+.academic-weather-day > strong { font-size: 12px; line-height: 1.1; }
+.academic-weather-day.weather-clear { --weather-surface: #f1f5ff; --weather-border: #9eb8f033; --weather-ink: #4167b9; --weather-strong: #7799df; }
+.academic-weather-day.weather-light { --weather-surface: #effaf8; --weather-border: #67bca133; --weather-ink: #25816c; --weather-strong: #4daa92; }
+.academic-weather-day.weather-moderate { --weather-surface: #fff8ea; --weather-border: #dca44638; --weather-ink: #9b6816; --weather-strong: #cf9130; }
+.academic-weather-day.weather-heavy, .academic-weather-day.weather-storm { --weather-surface: #fff1f0; --weather-border: #dc74693d; --weather-ink: #bc4e45; --weather-strong: #d76860; }
+
+.academic-weather-insight, .academic-weather-empty {
+  align-items: flex-start;
+  border-radius: 16px;
+  display: flex;
+  gap: 10px;
+  padding: 13px 14px;
+}
+
+.academic-weather-insight.is-calm { background: #f4f5ff; color: #5369b6; }
+.academic-weather-insight.is-risk { background: #fff6eb; color: #ad6b13; }
+.academic-weather-insight > svg, .academic-weather-empty > svg { flex: none; height: 20px; margin-top: 1px; width: 20px; }
+.academic-weather-insight > div, .academic-weather-empty > div { display: grid; gap: 2px; }
+.academic-weather-insight strong, .academic-weather-empty strong { color: var(--text-primary); font-size: 13px; }
+.academic-weather-insight span, .academic-weather-empty span { color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.academic-weather-empty { background: var(--surface-soft); color: var(--purple-600); }
+
+.smart-today-hero .smart-recommendation {
+  grid-template-columns: minmax(0, 1.38fr) minmax(238px, .92fr);
+  min-height: 266px;
+  padding-block: 20px;
+}
+
+.smart-today-hero .smart-recommendation::before {
+  display: none;
+}
+
+.smart-today-hero .smart-recommendation::after {
+  display: none;
+}
+
+.smart-mascot-stage {
+  align-self: stretch;
+  display: grid;
+  isolation: isolate;
+  justify-items: center;
+  min-width: 0;
+  overflow: visible;
+  position: relative;
+}
+
+.smart-mascot-stage .talevo-mascot {
+  align-self: end;
+  height: clamp(214px, 17.5vw, 244px);
+  justify-self: center;
+  margin: 2px 16px 15px 0;
+  position: relative;
+  transform-origin: center bottom;
+  z-index: 2;
+  animation: smart-mascot-float 4.6s ease-in-out infinite;
+}
+
+.smart-mascot-aura {
+  background: radial-gradient(circle, rgba(255, 255, 255, .96) 0 11%, rgba(206, 187, 255, .56) 42%, rgba(206, 187, 255, 0) 72%);
+  border-radius: 50%;
+  bottom: 4px;
+  height: 250px;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-54%);
+  width: 270px;
+  z-index: 0;
+  animation: smart-mascot-aura 5.8s ease-in-out infinite;
+}
+
+.smart-mascot-orbit {
+  border: 1px solid rgba(126, 92, 233, .24);
+  border-radius: 50%;
+  bottom: 18px;
+  height: 72px;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-54%) rotate(-14deg);
+  width: 206px;
+  z-index: 1;
+  animation: smart-mascot-orbit 8s linear infinite;
+}
+
+.smart-mascot-pedestal {
+  background: radial-gradient(ellipse at center, rgba(102, 66, 220, .36), rgba(158, 128, 244, .12) 52%, transparent 73%);
+  border: 1px solid rgba(126, 92, 233, .16);
+  border-radius: 50%;
+  bottom: 6px;
+  height: 23px;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-54%);
+  width: 174px;
+  z-index: 1;
+  animation: smart-mascot-pedestal 4.6s ease-in-out infinite;
+}
+
+.smart-mascot-spark {
+  background: rgba(255, 255, 255, .96);
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px rgba(221, 207, 255, .12), 0 0 16px rgba(255, 255, 255, .9);
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  height: 13px;
+  pointer-events: none;
+  position: absolute;
+  width: 13px;
+  z-index: 3;
+  animation: smart-mascot-spark 3.4s ease-in-out infinite;
+}
+
+.smart-mascot-spark-one { right: 17%; top: 18%; animation-delay: -1.2s; }
+.smart-mascot-spark-two { left: 19%; top: 42%; height: 9px; width: 9px; animation-delay: -2.4s; }
+.smart-mascot-spark-three { right: 23%; bottom: 25%; height: 8px; width: 8px; animation-delay: -.5s; }
+
+@keyframes smart-mascot-float { 0%, 100% { transform: translateY(0) rotate(-.7deg); } 50% { transform: translateY(-10px) rotate(.7deg); } }
+@keyframes smart-mascot-aura { 0%, 100% { opacity: .68; transform: translateX(-54%) scale(.96); } 50% { opacity: 1; transform: translateX(-54%) scale(1.04); } }
+@keyframes smart-mascot-orbit { to { transform: translateX(-54%) rotate(346deg); } }
+@keyframes smart-mascot-pedestal { 0%, 100% { opacity: .62; transform: translateX(-54%) scaleX(.88); } 50% { opacity: 1; transform: translateX(-54%) scaleX(1.04); } }
+@keyframes smart-mascot-spark { 0%, 100% { opacity: .42; transform: scale(.65) rotate(0); } 50% { opacity: 1; transform: scale(1.12) rotate(28deg); } }
+.smart-today-primary-grid { align-items: stretch; gap: 16px; }
+.smart-today-primary-grid > .card, .smart-today-primary-grid > .smart-next-class { min-height: 148px; }
+.smart-due-card .smart-due-copy { gap: 5px; }
+.smart-empty-card > div { gap: 5px; }
+.smart-free-time, .smart-finance { min-height: 128px; }
+
+.ai-header { column-gap: 12px; grid-template-columns: 44px 50px minmax(0, 1fr) 44px; margin-bottom: 18px; }
+.ai-header .talevo-mascot { height: 48px; }
+.ai-header > div:not(.talevo-mascot) { display: grid; gap: 3px; }
+.ai-header h1 { font-size: 18px; line-height: 1.2; }
+.ai-header > div:not(.talevo-mascot) > span { align-items: flex-start; color: var(--text-secondary); font-size: 11px; line-height: 1.45; }
+.ai-header > div:not(.talevo-mascot) > span i { background: var(--purple-500); flex: none; margin-top: 5px; }
+.ai-message .talevo-mascot.ai-avatar { height: 40px; margin-top: 1px; }
+.ai-message { gap: 10px; }
+
+.welcome-page > header { padding-top: 0; }
+.welcome-grid { align-items: center; }
+.welcome-copy { padding-top: 18px; }
+.welcome-visual::before { height: min(70%, 410px); width: min(74%, 430px); }
+.welcome-mascot-glow { height: min(65%, 390px); width: min(70%, 420px); }
+.welcome-orbit-line { height: min(48%, 300px); width: min(78%, 480px); }
+.welcome-visual .talevo-mascot { height: clamp(250px, 29vw, 330px); margin: 4px 0 0; }
+.welcome-visual .talevo-mascot-frame > img { filter: drop-shadow(0 18px 18px rgba(84, 53, 165, .18)); }
+.welcome-visual::before, .welcome-mascot-glow, .welcome-orbit-line { pointer-events: none; }
+.welcome-visual .talevo-mascot { pointer-events: none; }
+.sidebar-brand::after { filter: blur(8px); opacity: .7; }
+
+@media (min-width: 900px) {
+  .welcome-page { gap: clamp(7px, 1.2vh, 12px); }
+  .welcome-grid { gap: clamp(18px, 3vw, 56px); }
+  .welcome-copy { align-self: center; padding-bottom: 26px; }
+  .welcome-visual { min-height: 0; }
+}
+
+@media (max-width: 699px) {
+  .semester-weather { border-radius: 21px; gap: 15px; padding: 17px; }
+  .semester-weather-heading > div > span { border-radius: 13px; height: 37px; width: 37px; }
+  .semester-weather-heading h2 { font-size: 17px; }
+  .academic-weather-strip { grid-auto-columns: 96px; grid-auto-flow: column; grid-template-columns: none; overflow-x: auto; overscroll-behavior-inline: contain; padding-bottom: 3px; scrollbar-width: none; }
+  .academic-weather-strip::-webkit-scrollbar { display: none; }
+  .academic-weather-day { min-height: 124px; }
+  .smart-today-hero .smart-recommendation { grid-template-columns: minmax(0, 1fr) 124px; min-height: 240px; padding-block: 18px; }
+  .smart-mascot-aura { bottom: 0; height: 172px; width: 184px; }
+  .smart-mascot-orbit { bottom: 18px; height: 48px; width: 132px; }
+  .smart-mascot-pedestal { bottom: 8px; height: 16px; width: 104px; }
+  .smart-mascot-spark { height: 8px; width: 8px; }
+  .smart-mascot-spark-one { right: 2px; top: 24%; }
+  .smart-mascot-spark-two { display: none; }
+  .smart-mascot-spark-three { bottom: 32%; right: 9px; height: 6px; width: 6px; }
+  .smart-today-hero .smart-recommendation .talevo-mascot { height: clamp(128px, 37vw, 154px); margin: 3px 0 12px 0; }
+  .ai-header { column-gap: 10px; grid-template-columns: 42px 46px minmax(0, 1fr) 42px; }
+  .ai-header .talevo-mascot { height: 45px; }
+  .welcome-copy { padding-top: 24px; }
+  .welcome-visual { min-height: min(368px, 98vw); }
+  .welcome-visual .talevo-mascot { height: clamp(235px, 70vw, 285px); }
+  .welcome-visual::before { height: min(66%, 340px); width: min(72%, 360px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-mascot-stage .talevo-mascot,
+  .smart-mascot-aura,
+  .smart-mascot-orbit,
+  .smart-mascot-pedestal,
+  .smart-mascot-spark { animation: none; }
+}

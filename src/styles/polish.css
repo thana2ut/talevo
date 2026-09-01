@@ -1,0 +1,75 @@
+/* Shared production-polish layer: this keeps established feature layouts intact while
+   giving common surfaces, controls, and narrow screens the same visual rhythm. */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --control-height: 48px;
+  --focus-ring: rgba(118, 86, 246, .34);
+}
+
+.brand { gap: var(--space-2); }
+.brand-logo-image { display: block; height: 54px; width: 170px; }
+.brand-logo-image > img { display: block; height: 100%; object-fit: contain; object-position: left center; width: 100%; }
+.brand-compact .brand-logo-image { height: 49px; width: 154px; }
+
+.card { border-radius: var(--radius-lg); box-shadow: 0 10px 28px rgba(74, 55, 130, .055); }
+.section-header { margin: var(--space-8) var(--space-1) var(--space-3); }
+.section-header h2 { font-size: clamp(18px, 2.2vw, 21px); line-height: 1.35; }
+.page-intro { margin-bottom: var(--space-6); }
+.page-intro p { line-height: 1.6; }
+
+.primary-button, .secondary-button { min-height: var(--control-height); padding: 10px 18px; border-radius: var(--radius-md); }
+.secondary-button { transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease; }
+.secondary-button:hover { border-color: var(--purple-300); background: var(--purple-50); box-shadow: 0 7px 18px rgba(74, 55, 130, .06); }
+.primary-button:disabled, .secondary-button:disabled, .icon-button:disabled { cursor: not-allowed; opacity: .55; }
+:where(a, button, input, select, textarea, [role="button"], [role="tab"], [role="switch"]):focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.input { min-height: var(--control-height); border-radius: var(--radius-md); padding: 11px 14px; }
+.field { gap: var(--space-2); }
+.form-grid { gap: var(--space-4); }
+.form-two { gap: var(--space-3); }
+.icon-button { border-radius: var(--radius-md); }
+.status-pill { line-height: 1.35; }
+
+@media (min-width: 700px) {
+  .card { border-radius: 22px; }
+  .app-main { max-width: 1240px; }
+}
+
+@media (max-width: 360px) {
+  .app-main { padding-right: 14px; padding-left: 14px; }
+  .page-header { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+  .page-header h1 { font-size: 21px; }
+  .form-two { grid-template-columns: 1fr; }
+  .bottom-sheet { padding-right: 16px; padding-left: 16px; }
+
+  /* Keep the wordmark and its tagline inside the narrowest supported viewport. */
+  .welcome-brand .brand-logo-image { width: 142px; height: 45px; }
+  .welcome-brand .brand-copy small { font-size: 9px; letter-spacing: 0; }
+
+  /* The notification bell should not force a student's name onto an orphan line. */
+  .smart-today-header { position: relative; display: block; padding-top: 50px; }
+  .smart-today-header > .notification-bell { position: absolute; top: 0; right: 0; }
+  .smart-today-header h1 { font-size: 25px; line-height: 1.28; }
+}
+
+/* Small, icon-only date controls were below the mobile touch-target baseline. */
+@media (max-width: 699px) {
+  .schedule-date-title > button,
+  .schedule-week-controls > button,
+  .month-view-heading > button,
+  .finance-category-card .icon-button { min-width: 44px; min-height: 44px; }
+
+  .finance-tabs button { min-height: 44px; }
+
+  /* The visual thumb remains compact while the actual switch is easier to tap. */
+  .settings-page .toggle { min-height: 44px; }
+}

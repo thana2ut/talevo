@@ -1,0 +1,88 @@
+.schedule-event-card.schedule-custom {
+  border-color: color-mix(in srgb, var(--course-color) 28%, var(--border));
+  border-left-color: var(--course-color);
+  background: color-mix(in srgb, var(--course-color) 10%, var(--surface-elevated));
+}
+
+.schedule-event-card.schedule-custom:hover {
+  border-color: color-mix(in srgb, var(--course-color) 48%, var(--border));
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--course-color) 14%, transparent);
+}
+
+.timeline-line.schedule-custom {
+  background: color-mix(in srgb, var(--course-color) 34%, var(--surface));
+}
+
+.timeline-line.schedule-custom::before {
+  background: var(--course-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--course-color) 26%, var(--surface));
+}
+
+.week-day-column {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--week-hour-height) - 1px),
+    var(--border) calc(var(--week-hour-height) - 1px),
+    var(--border) var(--week-hour-height)
+  );
+}
+
+.week-class-block.schedule-custom {
+  border-left-color: var(--course-color);
+  background: color-mix(in srgb, var(--course-color) 12%, var(--surface-elevated));
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--course-color) 13%, transparent);
+  color: var(--text-primary);
+}
+
+.week-class-block.schedule-custom.is-current {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--course-color) 40%, transparent), 0 6px 14px color-mix(in srgb, var(--course-color) 18%, transparent);
+}
+
+.week-class-block.is-compact {
+  align-content: center;
+  padding-block: 2px;
+}
+
+.week-class-block.is-compact strong {
+  font-size: 9px;
+}
+
+.month-event-dots .schedule-custom {
+  background: var(--course-color);
+}
+
+.month-event-names .schedule-custom {
+  border-left: 3px solid var(--course-color);
+  background: color-mix(in srgb, var(--course-color) 10%, var(--surface-elevated));
+}
+
+.class-detail-icon.schedule-custom {
+  background: var(--course-color);
+  color: var(--course-color-contrast);
+}
+
+.class-detail-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.class-detail-actions a,
+.class-detail-actions button {
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 42px;
+  display: flex;
+}
+
+@media (max-width: 420px) {
+  .class-detail-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+html[data-theme="dark"] .week-class-block.schedule-custom,
+html[data-theme="dark"] .schedule-event-card.schedule-custom {
+  background: color-mix(in srgb, var(--course-color) 18%, var(--surface-elevated));
+}

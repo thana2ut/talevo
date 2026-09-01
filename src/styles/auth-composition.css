@@ -1,0 +1,304 @@
+/* Decorative-only motion for the public authentication surfaces. */
+@media (min-width: 900px) {
+  html:has(.auth-page-login),
+  html:has(.auth-page-register),
+  html:has(.auth-page-forgot),
+  body:has(.auth-page-login),
+  body:has(.auth-page-register),
+  body:has(.auth-page-forgot) { overflow: hidden; }
+
+  .auth-page-login,
+  .auth-page-register,
+  .auth-page-forgot {
+    height: calc(100dvh - 40px);
+    min-height: 0;
+    margin-block: 20px;
+    overscroll-behavior: none;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 39% 72%, rgba(190, 161, 255, .22), transparent 27%),
+      radial-gradient(circle at 76% 18%, rgba(152, 115, 255, .16), transparent 31%),
+      linear-gradient(112deg, #8c64ff 0%, #704ce9 47%, #5738cf 100%);
+  }
+
+  .auth-page-login .auth-hero,
+  .auth-page-register .auth-hero,
+  .auth-page-forgot .auth-hero,
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel {
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* The page owns the base purple now. The hero only adds feathered light,
+     so the grid boundary cannot create a visible vertical colour seam. */
+  .auth-page-login .auth-hero,
+  .auth-page-register .auth-hero,
+  .auth-page-forgot .auth-hero {
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 69% 70%, rgba(222, 209, 255, .3), transparent 19%),
+      radial-gradient(circle at 14% 12%, rgba(190, 168, 255, .36), transparent 27%),
+      linear-gradient(90deg, rgba(140, 100, 255, .15) 0%, rgba(112, 76, 233, .08) 57%, transparent 100%);
+  }
+
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+  }
+
+  /* The old geometric overlays had hard rectangular edges. Both layers now
+     use feathered radial light so their movement blends into the gradient. */
+  .auth-page-login .auth-hero::before,
+  .auth-page-register .auth-hero::before,
+  .auth-page-forgot .auth-hero::before {
+    background: radial-gradient(circle, rgba(219, 199, 255, .26) 0%, rgba(152, 111, 255, .12) 44%, transparent 72%) !important;
+    border-radius: 50%;
+    filter: blur(5px);
+    height: min(74vw, 760px) !important;
+    left: -23% !important;
+    opacity: 1 !important;
+    top: -28% !important;
+    transform: none !important;
+    width: min(74vw, 760px) !important;
+  }
+
+  .auth-page-login .auth-hero::after,
+  .auth-page-register .auth-hero::after,
+  .auth-page-forgot .auth-hero::after {
+    background: radial-gradient(circle, rgba(236, 224, 255, .31) 0%, rgba(126, 83, 237, .14) 43%, transparent 73%) !important;
+    border-radius: 50%;
+    bottom: -31% !important;
+    filter: blur(4px);
+    height: min(56vw, 610px) !important;
+    opacity: 1 !important;
+    /* Keep the glow inside the hero. A negative right offset was clipped by
+       the grid edge and left a visible vertical cut through the background. */
+    right: 5% !important;
+    top: auto !important;
+    width: min(56vw, 610px) !important;
+  }
+
+  .auth-hero > a,
+  .auth-hero-copy { position: relative; z-index: 2; }
+  .auth-hero > a {
+    align-self: flex-start;
+    background: transparent;
+    padding: 0;
+  }
+  .auth-hero > a .brand-compact .brand-logo-image {
+    filter: drop-shadow(0 12px 14px rgba(34, 15, 96, .26));
+    height: clamp(84px, 6.4vw, 108px);
+    width: clamp(262px, 18vw, 332px);
+  }
+  .auth-hero > .talevo-mascot { z-index: 2; animation: auth-mascot-float 4.8s ease-in-out infinite; filter: drop-shadow(0 26px 22px rgba(27, 12, 85, .3)); }
+  .auth-hero-copy .eyebrow { background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .24); box-shadow: 0 12px 28px rgba(35, 13, 103, .14); color: #fff; }
+  .auth-hero-copy h2 { text-shadow: 0 8px 20px rgba(38, 16, 107, .2); }
+  .auth-hero-copy p { color: rgba(255, 255, 255, .86); }
+
+  .auth-aurora {
+    position: absolute;
+    z-index: 0;
+    right: 4%;
+    bottom: -18%;
+    width: min(62vw, 650px);
+    height: min(62vw, 650px);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(237, 224, 255, .42), rgba(162, 117, 255, .14) 42%, transparent 70%);
+    filter: blur(4px);
+    animation: auth-aurora-breathe 7s ease-in-out infinite;
+  }
+
+  .auth-orbit {
+    position: absolute;
+    z-index: 0;
+    border: 1px solid rgba(255, 255, 255, .23);
+    border-radius: 50%;
+    pointer-events: none;
+    transform-origin: center;
+    will-change: transform;
+  }
+  /* Keep both orbit ellipses fully inside the hero. Their previous negative
+     offset let the overflow boundary cut the line and made the loop jump. */
+  .auth-orbit-one {
+    right: 4%;
+    bottom: clamp(36px, 13vh, 140px);
+    width: min(31vw, 360px);
+    height: min(15vw, 180px);
+    animation: auth-orbit-one-drift 14s linear infinite;
+  }
+  .auth-orbit-two {
+    right: 4%;
+    bottom: clamp(90px, 17vh, 170px);
+    width: min(19vw, 220px);
+    height: min(9vw, 110px);
+    border-color: rgba(222, 208, 255, .32);
+    animation: auth-orbit-two-drift 11s linear infinite;
+  }
+
+  .auth-star {
+    position: absolute;
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 0 0 5px rgba(235, 218, 255, .08), 0 0 22px rgba(255, 255, 255, .76);
+    clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+    pointer-events: none;
+    animation: auth-star-twinkle 3.5s ease-in-out infinite;
+  }
+  .auth-star-one { top: 20%; left: 13%; animation-delay: -1s; }
+  .auth-star-two { top: 40%; right: 17%; width: 10px; height: 10px; animation-delay: -2.3s; }
+  .auth-star-three { right: 39%; bottom: 19%; width: 8px; height: 8px; animation-delay: -.5s; }
+  .auth-star-four { bottom: 8%; left: 27%; width: 11px; height: 11px; animation-delay: -3s; }
+
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel { padding: clamp(22px, 3vw, 40px); }
+  .auth-page-login .auth-card,
+  .auth-page-register .auth-card,
+  .auth-page-forgot .auth-card { padding: clamp(24px, 2.5vw, 34px) clamp(28px, 2.7vw, 38px); }
+}
+
+@media (min-width: 900px) and (max-height: 860px) {
+  .auth-page-login .auth-hero,
+  .auth-page-register .auth-hero,
+  .auth-page-forgot .auth-hero { padding: 34px 48px; }
+  .auth-page-login .auth-hero h2,
+  .auth-page-register .auth-hero h2,
+  .auth-page-forgot .auth-hero h2 { font-size: clamp(38px, 4vw, 48px); margin-block: 14px 9px; }
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel { padding: 20px 32px; }
+  .auth-page-login .auth-card,
+  .auth-page-register .auth-card,
+  .auth-page-forgot .auth-card { padding: 23px 30px; }
+  .auth-page-login .auth-card > p,
+  .auth-page-register .auth-card > p,
+  .auth-page-forgot .auth-card > p { margin-bottom: 16px; }
+  .auth-page-login .auth-form,
+  .auth-page-register .auth-form,
+  .auth-page-forgot .auth-form { gap: 9px; }
+  .auth-page-login .auth-form .input,
+  .auth-page-register .auth-form .input,
+  .auth-page-forgot .auth-form .input,
+  .auth-page-login .auth-form .primary-button,
+  .auth-page-register .auth-form .primary-button,
+  .auth-page-forgot .auth-form .primary-button { min-height: 48px; }
+  .auth-page-login .auth-switch,
+  .auth-page-register .auth-switch,
+  .auth-page-forgot .auth-switch { margin-top: 12px; }
+}
+
+@media (max-width: 899px) {
+  .auth-page { background: radial-gradient(circle at 88% 8%, rgba(185, 161, 255, .32), transparent 28%), var(--bg); }
+  .auth-mobile-brand { position: relative; }
+  .auth-mobile-brand::after { position: absolute; top: 14px; right: 3px; width: 10px; height: 10px; border-radius: 3px; background: var(--purple-400); box-shadow: 0 0 0 5px rgba(165, 138, 251, .12); clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); content: ""; }
+  .auth-page-login .auth-hero > .talevo-mascot,
+  .auth-page-register .auth-hero > .talevo-mascot,
+  .auth-page-forgot .auth-hero > .talevo-mascot {
+    bottom: 12px;
+    height: clamp(104px, 32vw, 126px);
+    right: 18px;
+  }
+}
+
+/* Four registration fields can fit in one standard phone viewport when it has
+   enough vertical space. Very short phones keep normal scrolling so no field
+   or action becomes inaccessible. */
+@media (max-width: 899px) and (min-height: 760px) {
+  .auth-page-login,
+  .auth-page-register,
+  .auth-page-forgot { height: 100dvh; min-height: 0; overflow: hidden; }
+  .auth-page-login .auth-hero,
+  .auth-page-register .auth-hero,
+  .auth-page-forgot .auth-hero { height: 176px; min-height: 176px; padding: 19px 20px 22px; }
+  .auth-page-login .auth-hero > div.auth-hero-copy,
+  .auth-page-register .auth-hero > div.auth-hero-copy,
+  .auth-page-forgot .auth-hero > div.auth-hero-copy { margin: 39px 0 0; }
+  .auth-page-login .auth-hero h2,
+  .auth-page-register .auth-hero h2,
+  .auth-page-forgot .auth-hero h2 { font-size: clamp(27px, 7vw, 32px); line-height: 1.08; max-width: 228px; }
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel { padding: 0 18px 14px; }
+  .auth-page-login .auth-card,
+  .auth-page-register .auth-card,
+  .auth-page-forgot .auth-card { margin-top: -12px; padding: 20px 21px 18px; }
+  .auth-page-login .auth-card h1,
+  .auth-page-register .auth-card h1,
+  .auth-page-forgot .auth-card h1 { font-size: 29px; line-height: 1.2; margin: 8px 0 4px; }
+  .auth-page-login .auth-card > p,
+  .auth-page-register .auth-card > p,
+  .auth-page-forgot .auth-card > p { margin-bottom: 14px; }
+  .auth-page-login .auth-form,
+  .auth-page-register .auth-form,
+  .auth-page-forgot .auth-form { gap: 7px; }
+  .auth-page-login .auth-form .input,
+  .auth-page-register .auth-form .input,
+  .auth-page-forgot .auth-form .input,
+  .auth-page-login .auth-form .primary-button,
+  .auth-page-register .auth-form .primary-button,
+  .auth-page-forgot .auth-form .primary-button { min-height: 46px; }
+  .auth-page-login .auth-switch,
+  .auth-page-register .auth-switch,
+  .auth-page-forgot .auth-switch { margin-top: 9px; }
+}
+
+@media (min-width: 600px) and (max-width: 899px) and (min-height: 760px) {
+  .auth-page-login .auth-hero,
+  .auth-page-register .auth-hero,
+  .auth-page-forgot .auth-hero { height: 226px; min-height: 226px; padding-inline: 48px; }
+  .auth-page-login .auth-hero > div.auth-hero-copy,
+  .auth-page-register .auth-hero > div.auth-hero-copy,
+  .auth-page-forgot .auth-hero > div.auth-hero-copy { margin-top: 47px; }
+  .auth-page-login .auth-hero h2,
+  .auth-page-register .auth-hero h2,
+  .auth-page-forgot .auth-hero h2 { font-size: 34px; max-width: 460px; }
+  .auth-page-login .auth-hero > .talevo-mascot,
+  .auth-page-register .auth-hero > .talevo-mascot,
+  .auth-page-forgot .auth-hero > .talevo-mascot { bottom: 14px; height: 140px; right: 52px; }
+}
+
+@keyframes auth-mascot-float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-14px) rotate(1deg); } }
+@keyframes auth-aurora-breathe { 0%, 100% { opacity: .72; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes auth-orbit-one-drift { from { transform: rotate(-20deg); } to { transform: rotate(340deg); } }
+@keyframes auth-orbit-two-drift { from { transform: rotate(24deg); } to { transform: rotate(384deg); } }
+@keyframes auth-star-twinkle { 0%, 100% { opacity: .46; transform: scale(.72) rotate(0); } 48% { opacity: 1; transform: scale(1.15) rotate(28deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-hero > .talevo-mascot,
+  .auth-aurora,
+  .auth-orbit,
+  .auth-star { animation: none; }
+}
+
+/* Registration is intentionally split into two compact, keyboard-friendly
+   sections so every required academic field stays readable on a phone. */
+@media (min-width:900px){.auth-page-register{grid-template-columns:minmax(0,1.52fr) minmax(430px,.98fr)}.auth-page-register .auth-panel{padding:clamp(22px,2.5vw,36px)}.auth-page-register .auth-card{width:min(100%,520px);padding:clamp(24px,2.2vw,31px) clamp(26px,2.4vw,34px)}.auth-page-register .auth-card>p{margin-bottom:18px}.auth-page-register .auth-form{gap:9px}}
+.auth-registration-progress { color: var(--text-secondary); gap: 8px; margin: -2px 0 2px; font-size: 12px; font-weight: 750; display: grid; }
+.auth-registration-progress i { background: var(--purple-100); border-radius: 99px; height: 5px; overflow: hidden; position: relative; }
+.auth-registration-progress i::after { content: ""; background: linear-gradient(90deg, var(--purple-500), var(--purple-700)); border-radius: inherit; width: var(--registration-progress); height: 100%; position: absolute; inset: 0 auto 0 0; transition: width .18s ease; }
+.auth-section-title { margin: 2px 0 0; color: var(--text-primary); font-size: 16px; line-height: 1.35; }
+.auth-section-title-term { margin-top: 7px; }
+.auth-term-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; display: grid; }
+.auth-term-fields .field { min-width: 0; }
+.auth-back-button { margin-top: 2px; }
+.auth-back-button svg, .auth-form .primary-button svg { width: 17px; height: 17px; }
+.profile-hero-static { grid-template-columns: auto minmax(0, 1fr); justify-items: start; align-items: center; gap: 20px; text-align: left; }
+.profile-hero-static .profile-hero-copy { min-width: 0; }
+
+@media (max-width: 899px) {
+  .auth-page-register { height: auto !important; min-height: 100dvh !important; overflow: visible !important; }
+}
+
+@media (max-width: 480px) {
+  .auth-term-fields { grid-template-columns: 1fr; }
+  .profile-hero-static { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+}

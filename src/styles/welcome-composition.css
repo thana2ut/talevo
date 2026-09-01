@@ -1,0 +1,204 @@
+/* Welcome is a quiet "learning constellation": the artwork stays decorative
+   while the content and controls remain the primary visual focus. */
+.welcome-page {
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(circle at 78% 46%, rgba(186, 163, 255, .2), transparent 25%),
+    radial-gradient(circle at 15% 80%, rgba(177, 223, 255, .18), transparent 23%),
+    linear-gradient(135deg, #fcfbff 0%, #f9f7ff 46%, #f4f0ff 100%);
+}
+
+.welcome-page > :not(.welcome-background) { position: relative; z-index: 1; }
+
+.welcome-background {
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.welcome-aurora,
+.welcome-study-grid,
+.welcome-ai-path,
+.welcome-ai-node,
+.welcome-background-spark { pointer-events: none; position: absolute; }
+
+.welcome-aurora { border-radius: 50%; filter: blur(2px); }
+.welcome-aurora-primary {
+  background: radial-gradient(circle, rgba(173, 139, 255, .26), rgba(203, 183, 255, .1) 43%, transparent 71%);
+  height: min(48vw, 720px);
+  right: -11vw;
+  top: 8vh;
+  width: min(48vw, 720px);
+  animation: welcome-aurora-breathe 9s ease-in-out infinite;
+}
+.welcome-aurora-secondary {
+  background: radial-gradient(circle, rgba(126, 206, 255, .19), rgba(215, 203, 255, .07) 49%, transparent 71%);
+  bottom: -19vw;
+  height: min(38vw, 570px);
+  left: -12vw;
+  width: min(38vw, 570px);
+  animation: welcome-aurora-breathe 11s ease-in-out infinite reverse;
+}
+
+.welcome-study-grid {
+  background-image: linear-gradient(rgba(125, 93, 236, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(125, 93, 236, .06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at center, #000 0%, transparent 68%);
+  opacity: .72;
+  right: 2%;
+  top: 9%;
+  transform: rotate(-9deg);
+  width: min(51vw, 730px);
+  height: min(58vw, 760px);
+}
+
+.welcome-ai-path {
+  border: 1px solid rgba(116, 83, 238, .22);
+  border-radius: 50%;
+  opacity: .78;
+  transform-origin: center;
+}
+.welcome-ai-path-one { height: 36vw; max-height: 550px; right: 7%; top: 15%; width: 19vw; min-width: 285px; transform: rotate(30deg); animation: welcome-path-drift 18s linear infinite; }
+.welcome-ai-path-two { height: 22vw; max-height: 340px; right: 20%; top: 27%; width: 12vw; min-width: 190px; border-color: rgba(101, 192, 255, .28); transform: rotate(-34deg); animation: welcome-path-drift 13s linear infinite reverse; }
+
+.welcome-ai-node {
+  background: #fff;
+  border: 4px solid rgba(119, 83, 241, .85);
+  border-radius: 50%;
+  box-shadow: 0 0 0 7px rgba(147, 117, 250, .08), 0 0 22px rgba(131, 95, 245, .34);
+  height: 13px;
+  width: 13px;
+  animation: welcome-node-pulse 4.4s ease-in-out infinite;
+}
+.welcome-ai-node-one { right: 20%; top: 26%; }
+.welcome-ai-node-two { right: 10%; top: 54%; border-color: rgba(66, 166, 237, .84); animation-delay: -1.8s; }
+.welcome-ai-node-three { right: 28%; top: 67%; height: 10px; width: 10px; animation-delay: -3s; }
+
+.welcome-background-spark {
+  background: rgba(117, 82, 240, .72);
+  border-radius: 3px;
+  box-shadow: 0 0 0 5px rgba(149, 118, 250, .09), 0 0 18px rgba(123, 86, 246, .45);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  height: 12px;
+  width: 12px;
+  animation: welcome-spark-twinkle 4s ease-in-out infinite;
+}
+.welcome-background-spark-one { left: 13%; top: 23%; }
+.welcome-background-spark-two { right: 28%; top: 18%; height: 9px; width: 9px; animation-delay: -1.3s; }
+.welcome-background-spark-three { bottom: 17%; right: 39%; height: 8px; width: 8px; animation-delay: -2.5s; }
+
+.welcome-visual { isolation: isolate; }
+.welcome-visual::before {
+  background: radial-gradient(circle, rgba(255, 255, 255, .9) 0%, rgba(216, 201, 255, .5) 43%, transparent 72%);
+  border-radius: 50%;
+  content: "";
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  animation: welcome-mascot-glow 6.4s ease-in-out infinite;
+}
+.welcome-mascot-glow {
+  background: radial-gradient(ellipse, rgba(117, 81, 243, .22), rgba(165, 135, 255, .08) 49%, transparent 72%);
+  border-radius: 50%;
+  left: 50%;
+  position: absolute;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  animation: welcome-mascot-glow 5.5s ease-in-out infinite reverse;
+}
+.welcome-orbit-line {
+  border: 1px solid rgba(119, 83, 241, .27);
+  border-radius: 50%;
+  left: 50%;
+  position: absolute;
+  top: 51%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  z-index: 1;
+  animation: welcome-orbit-drift 16s linear infinite;
+}
+.welcome-visual .talevo-mascot { animation: welcome-mascot-float 5s ease-in-out infinite; }
+
+.welcome-benefits > .welcome-benefit {
+  background: rgba(255, 255, 255, .76);
+  border: 1px solid rgba(122, 91, 235, .12);
+  border-radius: 23px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 24px rgba(70, 48, 135, .06);
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 106px;
+  padding: 16px 17px;
+  cursor: default;
+  transition: none;
+}
+.welcome-benefits > .welcome-benefit > svg:first-child {
+  background: var(--purple-100);
+  border-radius: 16px;
+  color: var(--purple-600);
+  height: 48px;
+  padding: 12px;
+  width: 48px;
+}
+.welcome-benefits > .welcome-benefit:nth-child(2) > svg:first-child { background: #f0ebff; color: #7556ef; }
+.welcome-benefits > .welcome-benefit:nth-child(3) > svg:first-child { background: #eef4ff; color: #6388df; }
+.welcome-benefits > .welcome-benefit:nth-child(4) > svg:first-child { background: #f4edff; color: #8e62e5; }
+.welcome-benefit > span { display: grid; gap: 2px; min-width: 0; }
+.welcome-benefit strong { color: #22184a; font-size: 15px; font-weight: 760; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.welcome-benefit small { color: #77748a; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@keyframes welcome-aurora-breathe { 0%, 100% { opacity: .66; transform: scale(.95); } 50% { opacity: 1; transform: scale(1.07); } }
+@keyframes welcome-path-drift { to { transform: rotate(390deg); } }
+@keyframes welcome-node-pulse { 0%, 100% { opacity: .48; transform: scale(.78); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes welcome-spark-twinkle { 0%, 100% { opacity: .32; transform: scale(.65) rotate(0); } 50% { opacity: 1; transform: scale(1.14) rotate(28deg); } }
+@keyframes welcome-mascot-glow { 0%, 100% { opacity: .7; transform: translate(-50%, -50%) scale(.95); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } }
+@keyframes welcome-orbit-drift { to { transform: translate(-50%, -50%) rotate(342deg); } }
+@keyframes welcome-mascot-float { 0%, 100% { transform: translateY(0) rotate(-.8deg); } 50% { transform: translateY(-12px) rotate(.8deg); } }
+
+html[data-theme="dark"] .welcome-page {
+  background: radial-gradient(circle at 78% 46%, rgba(123, 81, 246, .17), transparent 26%), linear-gradient(135deg, #121120, #161428 58%, #1d1734);
+}
+html[data-theme="dark"] .welcome-study-grid { background-image: linear-gradient(rgba(201, 184, 255, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(201, 184, 255, .09) 1px, transparent 1px); }
+html[data-theme="dark"] .welcome-benefits > .welcome-benefit { background: rgba(31, 28, 51, .76); border-color: var(--border); }
+
+@media (max-width: 767px) {
+  .welcome-aurora-primary { height: 105vw; right: -46vw; top: 20vh; width: 105vw; }
+  .welcome-aurora-secondary { bottom: 5%; height: 82vw; left: -48vw; width: 82vw; }
+  .welcome-study-grid { right: -32%; top: 15%; width: 110vw; height: 132vw; }
+  .welcome-ai-path-one { right: -38%; top: 24%; width: 70vw; min-width: 250px; height: 100vw; }
+  .welcome-ai-path-two, .welcome-ai-node-three { display: none; }
+  .welcome-ai-node-one { right: 3%; top: 47%; }
+  .welcome-ai-node-two { right: 3%; top: 51%; }
+  .welcome-background-spark-one { left: 8%; top: 18%; }
+  .welcome-background-spark-two { right: 8%; top: 38%; }
+  .welcome-background-spark-three { bottom: 21%; right: 15%; }
+  .welcome-benefits > .welcome-benefit {
+    border-radius: 19px;
+    gap: 9px;
+    grid-template-columns: 39px minmax(0, 1fr);
+    min-height: 78px;
+    padding: 11px;
+  }
+  .welcome-benefits > .welcome-benefit > svg:first-child { border-radius: 13px; height: 39px; padding: 9px; width: 39px; }
+  .welcome-benefit strong { font-size: 11px; white-space: normal; }
+  .welcome-benefit small { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-aurora,
+  .welcome-ai-path,
+  .welcome-ai-node,
+  .welcome-background-spark,
+  .welcome-visual::before,
+  .welcome-mascot-glow,
+  .welcome-orbit-line,
+  .welcome-visual .talevo-mascot { animation: none; }
+}
