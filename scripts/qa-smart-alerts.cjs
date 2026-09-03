@@ -95,6 +95,12 @@ const backToBackAlert = evaluateSmartAlerts(context(dateTime("2026-09-07", "09:5
 check(backToBackAlert?.title.includes("เปลี่ยนคาบ") && !backToBackAlert.message.includes("พัก"), "back-to-back classes should not invent a break");
 const noNextAlert = evaluateSmartAlerts(context(dateTime("2026-09-07", "09:50"), { schedules: [baseSchedule[0]] })).find((alert) => alert.type === "class_ending");
 check(noNextAlert?.message.includes("ไม่มีเรียนต่อแล้ว"), "last class should state that no later class exists today");
+const weekendSchedules = [
+  { ...baseSchedule[0], id: "saturday-late", day: 5, startTime: "23:00", endTime: "24:00" },
+  { ...baseSchedule[1], id: "sunday-midnight", day: 6, startTime: "00:00", endTime: "01:00" },
+];
+check(types(evaluateSmartAlerts(context(dateTime("2026-09-12", "23:50"), { schedules: weekendSchedules }))).includes("class_ending"), "Saturday 23:00–24:00 must produce its end-of-class alert");
+check(types(evaluateSmartAlerts(context(dateTime("2026-09-13", "00:30"), { schedules: weekendSchedules }))).includes("class_ending") === false, "Sunday midnight class must be active without an early end alert");
 
 for (const [days, key] of [[7, "7d"], [3, "3d"], [1, "1d"]]) {
   const examDate = new Date(2026, 8, 7 + days, 9, 0);

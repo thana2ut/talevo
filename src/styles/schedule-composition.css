@@ -48,6 +48,344 @@
   font-size: 9px;
 }
 
+/* ==========================================================================
+   Horizontal Academic Timetable Styles
+   ========================================================================== */
+
+.schedule-week-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.week-timetable-card {
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 20px;
+  position: relative;
+}
+
+.timetable-scroll-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--purple-200) transparent;
+}
+
+.timetable-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.timetable-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--purple-200);
+  border-radius: 4px;
+}
+
+.academic-timetable {
+  display: flex;
+  flex-direction: column;
+  min-width: 1180px;
+  user-select: none;
+}
+
+/* Header Row: Corner + Horizontal Time Axis */
+.timetable-header-row {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--surface-elevated);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.timetable-corner-cell {
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  z-index: 25;
+  background: var(--surface-elevated);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.timetable-time-axis {
+  flex: 1;
+  position: relative;
+  height: 38px;
+}
+
+.timetable-time-marker {
+  position: absolute;
+  inset-block: 0;
+  width: 1px;
+  border-left: 1px dashed var(--divider);
+}
+
+.timetable-time-label {
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  background: var(--surface-elevated);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.timetable-time-marker:first-child .timetable-time-label {
+  left: 4px;
+  transform: translateY(-50%);
+}
+
+.timetable-time-marker:last-child .timetable-time-label {
+  right: 4px;
+  left: auto;
+  transform: translateY(-50%);
+}
+
+/* Day Rows */
+.timetable-day-row {
+  display: flex;
+  position: relative;
+  min-height: 76px;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease;
+}
+
+.timetable-day-row:last-child {
+  border-bottom: none;
+}
+
+.timetable-day-row:hover {
+  background-color: color-mix(in srgb, var(--purple-50) 40%, transparent);
+}
+
+.timetable-day-row.is-today {
+  background-color: color-mix(in srgb, var(--purple-50) 60%, transparent);
+}
+
+.timetable-day-row.is-weekend {
+  background-color: color-mix(in srgb, var(--surface-soft) 40%, transparent);
+}
+
+/* Day Header Cell (Sticky Left) */
+.timetable-day-header {
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  z-index: 15;
+  background: var(--surface-elevated);
+  border: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  gap: 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.02);
+}
+
+.timetable-day-header:hover {
+  background: var(--hover-bg);
+}
+
+.timetable-day-header.is-selected {
+  background: color-mix(in srgb, var(--purple-500) 10%, var(--surface-elevated));
+}
+
+.timetable-day-header .day-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.15;
+}
+
+.timetable-day-header .day-date {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.timetable-day-header.is-today .day-date {
+  color: #fff;
+  background: var(--purple-600);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timetable-day-header.is-today .day-name {
+  color: var(--purple-700);
+  font-weight: 800;
+}
+
+/* Timeline Track */
+.timetable-day-track {
+  flex: 1;
+  position: relative;
+  min-height: 76px;
+}
+
+.timetable-grid-guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.timetable-grid-guide-line {
+  position: absolute;
+  inset-block: 0;
+  width: 1px;
+  border-left: 1px dashed var(--divider);
+}
+
+/* Current Time Indicator Line */
+.timetable-current-time-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--purple-600);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.timetable-current-time-line::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--purple-600);
+  box-shadow: 0 0 0 2px var(--surface-elevated);
+}
+
+/* Class Blocks inside Timeline Track */
+.timetable-class-block {
+  position: absolute;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--course-color) 35%, var(--border));
+  border-left: 4px solid var(--course-color);
+  background: color-mix(in srgb, var(--course-color) 12%, var(--surface-elevated));
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--course-color) 12%, transparent);
+  cursor: pointer;
+  padding: 6px 10px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 5;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.1s ease;
+}
+
+.timetable-class-block:hover {
+  transform: translateY(-1px);
+  z-index: 8;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--course-color) 22%, transparent);
+  border-color: color-mix(in srgb, var(--course-color) 55%, var(--border));
+}
+
+.timetable-class-block.is-current {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--course-color) 45%, transparent), 0 6px 16px color-mix(in srgb, var(--course-color) 24%, transparent);
+}
+
+.class-block-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.class-block-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.class-block-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.class-block-meta span {
+  font-variant-numeric: tabular-nums;
+}
+
+.class-block-meta small {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.class-block-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--purple-700);
+  background: var(--purple-100);
+  padding: 1px 6px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 2px;
+}
+
+/* Compact Block Styling (for shorter duration classes) */
+.timetable-class-block.is-compact {
+  padding: 4px 6px;
+}
+
+.timetable-class-block.is-compact .class-block-title {
+  font-size: 11px;
+}
+
+.timetable-class-block.is-compact .class-block-meta {
+  font-size: 10px;
+}
+
 .month-event-dots .schedule-custom {
   background: var(--course-color);
 }

@@ -1,5 +1,7 @@
 export const TALEVO_APP_STATE_KEY = "talevo-app-state";
 export const TALEVO_APP_STATE_BACKUP_KEY = "talevo-app-state-backup";
+export const TALEVO_APP_STATE_OWNER_KEY = "talevo-app-state-owner";
+export const TALEVO_ACCOUNT_STATE_PREFIX = "talevo-app-state-account";
 export const LEGACY_KERNOVA_APP_STATE_KEY = "kernova-app-state";
 export const LEGACY_KERNOVA_APP_STATE_BACKUP_KEY = "kernova-app-state-backup";
 

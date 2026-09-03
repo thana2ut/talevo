@@ -2,7 +2,6 @@ import type {
   AcademicTerm,
   AppNotification,
   AppSettings,
-  AttendanceRecord,
   ChatMessage,
   ClassSchedule,
   CourseGradePlan,
@@ -59,7 +58,6 @@ export interface PersistedAppState {
   exams: Exam[];
   gradePlans: CourseGradePlan[];
   courseNotes: CourseNote[];
-  attendanceRecords: AttendanceRecord[];
   financeTransactions: FinanceTransaction[];
   savingGoals: SavingGoal[];
   financeSettings: FinanceSettings;
@@ -129,16 +127,23 @@ function normalizeAcademicTerm(value: unknown, fallback: AcademicTerm): Academic
   };
 }
 
-function normalizeSchedules(value: unknown, fallback: ClassSchedule[]) {
+export function normalizeSchedules(value: unknown, fallback: ClassSchedule[]) {
   return normalizeArray<ClassSchedule>(value, fallback, (item) => hasStringId(item)
     && isString(item.courseId)
-    && isString(item.name)
+    && (isString(item.name) || isString(item.courseCode))
     && isFiniteNumber(item.day)
     && item.day >= 0
     && item.day <= 6
     && isString(item.startTime)
     && isString(item.endTime))
-    .map((schedule) => ({ ...schedule, color: normalizeTalevoColor(schedule.color) }));
+    .map((schedule) => ({
+      ...schedule,
+      name: isString(schedule.name) ? schedule.name : "",
+      ...(isString(schedule.courseCode) ? { courseCode: schedule.courseCode } : {}),
+      ...(isString(schedule.section) ? { section: schedule.section } : {}),
+      ...(isFiniteNumber(schedule.credits) ? { credits: schedule.credits } : {}),
+      color: normalizeTalevoColor(schedule.color),
+    }));
 }
 
 function normalizeTasks(value: unknown, fallback: Task[]) {
@@ -320,7 +325,6 @@ export function normalizePersistedState(rawState: unknown, defaults: AppStateDef
     exams: normalizeExams(migrated.exams, defaults.exams),
     gradePlans: normalizeArray<CourseGradePlan>(migrated.gradePlans, defaults.gradePlans, (item) => hasStringId(item) && isString(item.courseId) && Array.isArray(item.components) && Array.isArray(item.thresholds)),
     courseNotes: normalizeArray<CourseNote>(migrated.courseNotes, defaults.courseNotes, (item) => hasStringId(item) && isString(item.courseId) && isString(item.title)),
-    attendanceRecords: normalizeArray<AttendanceRecord>(migrated.attendanceRecords, defaults.attendanceRecords, (item) => hasStringId(item) && isString(item.courseId) && isString(item.date)),
     financeTransactions: normalizeArray<FinanceTransaction>(migrated.financeTransactions, defaults.financeTransactions, (item) => hasStringId(item) && isString(item.type) && isFiniteNumber(item.amount)),
     savingGoals: normalizeArray<SavingGoal>(migrated.savingGoals, defaults.savingGoals, (item) => hasStringId(item) && isFiniteNumber(item.targetAmount) && isFiniteNumber(item.savedAmount)),
     financeSettings: normalizeFinanceSettings(migrated.financeSettings, defaults.financeSettings),

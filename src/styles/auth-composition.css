@@ -286,9 +286,18 @@
 .auth-registration-progress i { background: var(--purple-100); border-radius: 99px; height: 5px; overflow: hidden; position: relative; }
 .auth-registration-progress i::after { content: ""; background: linear-gradient(90deg, var(--purple-500), var(--purple-700)); border-radius: inherit; width: var(--registration-progress); height: 100%; position: absolute; inset: 0 auto 0 0; transition: width .18s ease; }
 .auth-section-title { margin: 2px 0 0; color: var(--text-primary); font-size: 16px; line-height: 1.35; }
+.auth-status-message { color: var(--success); background: var(--success-soft); border-radius: 12px; margin: 2px 0; padding: 10px 12px; font-size: 12px; line-height: 1.5; }
+.success-message .auth-status-message,
+.success-message .form-error { width: 100%; margin: 10px 0 0; }
+.success-message .secondary-button { margin-top: 2px; }
+.success-message .primary-button { margin-top: 10px; }
+.auth-resend-link { color: var(--purple-600); justify-self: start; margin-top: -3px; font-size: 12px; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
 .auth-section-title-term { margin-top: 7px; }
+.auth-education-fields { gap: 10px; display: grid; }
 .auth-term-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; display: grid; }
+.auth-education-fields .field,
 .auth-term-fields .field { min-width: 0; }
+.auth-registration-actions { gap: 10px; display: grid; }
 .auth-back-button { margin-top: 2px; }
 .auth-back-button svg, .auth-form .primary-button svg { width: 17px; height: 17px; }
 .profile-hero-static { grid-template-columns: auto minmax(0, 1fr); justify-items: start; align-items: center; gap: 20px; text-align: left; }
@@ -296,6 +305,21 @@
 
 @media (max-width: 899px) {
   .auth-page-register { height: auto !important; min-height: 100dvh !important; overflow: visible !important; }
+  .auth-helper a,
+  .auth-switch a,
+  .auth-resend-link { display: inline-flex; min-height: 44px; align-items: center; }
+}
+
+@media (min-width: 900px) {
+  .auth-page-register .auth-card { max-width: 560px; }
+  .auth-page-register .auth-form:has(.auth-education-fields) { gap: 8px; }
+  .auth-page-register .auth-form:has(.auth-education-fields) .field { gap: 4px; }
+  .auth-page-register .auth-form:has(.auth-education-fields) .input,
+  .auth-page-register .auth-form:has(.auth-education-fields) select { min-height: 48px; }
+  .auth-education-fields,
+  .auth-registration-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .auth-registration-actions { margin-top: 2px; }
+  .auth-registration-actions .auth-back-button { margin-top: 0; }
 }
 
 @media (max-width: 480px) {

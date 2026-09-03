@@ -1,4 +1,4 @@
-import type { AttendanceRecord, CourseGradePlan, Exam, GradeComponent, GradeThreshold } from "@/types";
+import type { CourseGradePlan, Exam, GradeComponent, GradeThreshold } from "@/types";
 import { parseLocalTaskDate } from "@/lib/task-utils";
 
 export function getExamDate(exam: Pick<Exam, "startAt">) { return parseLocalTaskDate(exam.startAt); }
@@ -66,7 +66,6 @@ export function getExamCountdown(exam: Pick<Exam, "startAt">, now = new Date(), 
   return language === "th" ? `อีก ${days} วัน` : `In ${days} days`;
 }
 export function getExamReadiness(exam: Pick<Exam, "topics">) { const total = exam.topics.length; const completed = exam.topics.filter((item) => item.completed).length; return total ? { total, completed, percent: Math.round((completed / total) * 100) } : null; }
-export function getAttendanceSummary(records: AttendanceRecord[]) { const count = (status: AttendanceRecord["status"]) => records.filter((record) => record.status === status).length; const present = count("present"); const late = count("late"); const leave = count("leave"); const absent = count("absent"); const cancelled = count("cancelled"); const denominator = present + late + leave + absent; return { present, late, leave, absent, cancelled, rate: denominator ? ((present + late) / denominator) * 100 : null }; }
 const isFiniteNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 
 export function hasEarnedScore(component: GradeComponent): component is GradeComponent & { earnedScore: number } {

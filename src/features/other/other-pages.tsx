@@ -1,18 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, GraduationCap, Info, Languages, Send, Sparkles, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { BottomSheet, Card, Input, TalevoMascot, PageHeader, Select } from "@/components/ui";
+import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, GraduationCap, Languages, Sparkles, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { BottomSheet, Card, PageHeader, Select } from "@/components/ui";
 import { NotificationCard } from "@/components/domain";
 import { AccountManagement } from "@/components/account-actions";
+import { LocalCloudMigrationPanel } from "@/components/local-cloud-migration-panel";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { languageLabels } from "@/lib/i18n";
 import { getUnreadNotificationCount, groupNotifications, type NotificationGroupKey } from "@/lib/alerts/notification-utils";
-import { getPendingTasks } from "@/lib/local-ai";
-import { formatTaskDateTime } from "@/lib/task-utils";
-import type { ClassSchedule, NotificationPreferences, Task } from "@/types";
+import type { NotificationPreferences } from "@/types";
 
 export function NotificationsPage() {
   const { notifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteReadNotifications } = useAppState();
@@ -66,39 +64,6 @@ export function NotificationsPage() {
   </div>;
 }
 
-function TaskSummaryMessage({ tasks, schedules }: { tasks: Task[]; schedules: ClassSchedule[] }) {
-  const items = getPendingTasks(tasks).slice(0, 4);
-  return <div className="ai-summary"><strong>งานที่ยังไม่เสร็จ</strong><ol>{items.map((task) => <li key={task.id}><Link href={`/tasks/${task.id}`}><span>{task.title}</span><small>{schedules.find((item) => item.courseId === task.courseId)?.name ?? "งานทั่วไป"} · {formatTaskDateTime(task)}</small></Link></li>)}</ol><Link href="/tasks" className="secondary-button button-block">ดูรายละเอียดทั้งหมด</Link></div>;
-}
-
-export function AIPage() {
-  const { chat, sendChat, tasks, schedules, exams, profile } = useAppState();
-  const { t } = useLanguage();
-  const suggestions = [t("ai.promptToday"), t("ai.promptClasses"), t("ai.promptDue"), t("ai.promptExams")];
-  const [input, setInput] = useState("");
-  const [aboutOpen, setAboutOpen] = useState(false);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const chatScroll = chatScrollRef.current;
-    if (!chatScroll) return;
-    chatScroll.scrollTo({ top: chatScroll.scrollHeight, behavior: "smooth" });
-  }, [chat.length]);
-  const submit = (event?: FormEvent) => { event?.preventDefault(); if (!input.trim()) return; sendChat(input); setInput(""); };
-  return (
-    <div className="page ai-page">
-      <header className="ai-header"><Link href="/today" className="icon-button" aria-label="ย้อนกลับ">‹</Link><TalevoMascot variant="thinking" crop="head" size="sm" decorative priority /><div><h1>TALEVO AI</h1><span><i /> ผู้ช่วยวางแผนการเรียนของ{profile.displayName || "คุณ"}</span></div><button className="icon-button ai-info-button" type="button" aria-label={t("ai.aboutAi")} onClick={() => setAboutOpen(true)}><Info /></button></header>
-      <div className="ai-layout"><section className="chat-card"><div ref={chatScrollRef} className="chat-scroll" aria-live="polite">{chat.map((message, index) => <div key={message.id} className={`ai-message ${message.role}`}>
-        {message.role === "assistant" && <TalevoMascot className="ai-avatar" variant="thinking" crop="head" size="xs" decorative priority={index === 0} />}<div className="message-bubble"><p>{message.content}</p>{message.kind === "task-summary" && <TaskSummaryMessage tasks={tasks} schedules={schedules} />}</div>
-      </div>)}</div>
-      {chat.length === 1 && <div className="suggestion-chips">{suggestions.map((item) => <button type="button" key={item} onClick={() => sendChat(item)}>{item}</button>)}</div>}
-      <form className="chat-input" onSubmit={submit}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={t("ai.placeholder")} aria-label="ข้อความถึง TALEVO" /><button className="send-button" type="submit" aria-label="ส่งข้อความ" disabled={!input.trim()}><Send /></button></form></section>
-      <aside className="ai-context"><Card><span className="eyebrow"><Sparkles /> บริบทวันนี้</span><h2>พร้อมช่วยจากแผนของคุณ</h2><div><span><CheckCircle2 />{tasks.filter((item) => item.status !== "completed").length} งานที่ยังไม่เสร็จ</span><span><CalendarDays />{schedules.length} คาบในสัปดาห์นี้</span><span><GraduationCap />{exams.length} การสอบที่บันทึกไว้</span></div></Card><p>คำตอบใช้ข้อมูลที่บันทึกไว้บนอุปกรณ์และกฎภายใน ยังไม่ได้เชื่อมต่อบริการ AI ภายนอก</p></aside></div>
-      <BottomSheet open={aboutOpen} title={t("ai.aboutAi")} onClose={() => setAboutOpen(false)} closeLabel={t("common.close")} className="ai-about-sheet"><div className="ai-about-dialog"><TalevoMascot className="ai-about-mascot" variant="neutral" crop="head" size="md" decorative /><p className="ai-about-subtitle">{t("ai.aboutSubtitle")}</p><section><h3>{t("ai.aiCapabilities")}</h3><p>{t("ai.capabilitiesDescription")}</p></section><section><h3>{t("ai.dataUsed")}</h3><p>{t("ai.dataUsedDescription")}</p></section><section><h3>{t("ai.limitations")}</h3><p>{t("ai.limitationsDescription")}</p></section><button className="primary-button button-block" type="button" onClick={() => setAboutOpen(false)}>{t("ai.close")}</button></div></BottomSheet>
-    </div>
-  );
-}
-
-
 function SettingRow({ icon, title, description, children }: { icon: ReactNode; title: string; description?: string; children: ReactNode }) {
   return <div className="setting-row"><span className="setting-icon">{icon}</span><div><strong>{title}</strong>{description && <small>{description}</small>}</div>{children}</div>;
 }
@@ -125,5 +90,5 @@ export function SettingsPage() {
   return <div className="page settings-page"><PageHeader title={t("settings.title")} backHref="/profile" />
     <section><div className="section-header"><h2>{t("settings.general")}</h2></div><Card className="settings-card"><button className="setting-row language-setting-row" type="button" onClick={() => setLanguagePickerOpen(true)} aria-label={languageRowLabel}><span className="setting-icon"><Languages /></span><span className="language-setting-copy"><strong>{t("settings.language")}</strong><small>{t("settings.languageDescription")}</small></span><span className="language-setting-trailing"><strong className="setting-value language-setting-value">{languageLabels[language]}</strong><ChevronRight className="setting-chevron" aria-hidden="true" /></span></button><SettingRow icon={<Clock3 />} title={t("settings.timeZone")}><strong className="setting-value">Asia/Bangkok</strong></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.dateFormat")}><Select aria-label={t("settings.dateFormat")} value={settings.dateFormat} onChange={(event) => updateSettings({dateFormat:event.target.value as typeof settings.dateFormat})}><option value="วัน/เดือน/ปี">{language === "th" ? "วัน/เดือน/ปี" : "Day / Month / Year"}</option><option value="เดือน/วัน/ปี">{language === "th" ? "เดือน/วัน/ปี" : "Month / Day / Year"}</option></Select></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.yearDisplay")}><Select aria-label={t("settings.yearDisplay")} value={settings.yearSystem} onChange={(event) => updateSettings({yearSystem:event.target.value as typeof settings.yearSystem})}><option>พ.ศ.</option><option>ค.ศ.</option></Select></SettingRow></Card></section>
     <section><div className="section-header"><h2>{t("settings.notifications")}</h2></div><Card className="settings-card notification-settings"><SettingRow icon={<Bell />} title={t("settings.smartAlerts")} description={t("settings.smartAlertsDescription")}><Toggle label={t("settings.smartAlerts")} checked={preferences.enabled} onChange={(value) => setPreference("enabled", value)} /></SettingRow>{preferenceGroups.map((group) => <section className={`notification-preference-group ${disabled ? "is-disabled" : ""}`} key={group.title}><div className="notification-preference-heading"><span className="setting-icon">{group.icon}</span><strong>{group.title}</strong></div><div className="notification-preference-rows">{group.rows.map(([key, labelKey]) => <div className="notification-preference-row" key={key}><strong>{t(labelKey)}</strong><Toggle label={t(labelKey)} checked={preferences[key]} disabled={disabled} onChange={(value) => setPreference(key, value)} /></div>)}</div></section>)}<section className={`notification-preference-group device-notification-setting ${disabled ? "is-disabled" : ""}`}><div className="notification-preference-row device-notification-row"><span className="setting-icon"><Bell /></span><div><strong>{t("settings.browserNotifications")}</strong><small>{t("settings.browserNotificationsDescription")}</small></div><Toggle label={t("settings.browserNotifications")} checked={preferences.browserNotifications} disabled={disabled || browserNotificationPermission === "unsupported"} onChange={(value) => void setBrowserNotificationsEnabled(value)} /></div><p className={`notification-permission permission-${browserNotificationPermission}`}>{browserNotificationPermission === "granted" ? t("settings.permissionGranted") : browserNotificationPermission === "denied" ? t("settings.permissionDenied") : browserNotificationPermission === "unsupported" ? t("settings.permissionUnsupported") : t("settings.permissionDefault")}</p></section></Card></section>
-    <AccountManagement /><BottomSheet className="language-selector-sheet" open={languagePickerOpen} title={t("settings.chooseLanguage")} onClose={() => setLanguagePickerOpen(false)}><div className="language-selector-intro">{t("settings.chooseLanguageDescription")}</div><div className="language-options" role="radiogroup" aria-label={t("settings.chooseLanguage")}>{(["th", "en"] as const).map((option) => <button type="button" role="radio" aria-checked={language === option} className={language === option ? "selected" : ""} key={option} onClick={() => { setLanguage(option); setLanguagePickerOpen(false); }}><span><strong>{languageLabels[option]}</strong><small>{option === "th" ? "Thai" : "English"}</small></span>{language === option && <Check className="language-option-check" aria-hidden="true" />}</button>)}</div></BottomSheet></div>;
+    <LocalCloudMigrationPanel /><AccountManagement /><BottomSheet className="language-selector-sheet" open={languagePickerOpen} title={t("settings.chooseLanguage")} onClose={() => setLanguagePickerOpen(false)}><div className="language-selector-intro">{t("settings.chooseLanguageDescription")}</div><div className="language-options" role="radiogroup" aria-label={t("settings.chooseLanguage")}>{(["th", "en"] as const).map((option) => <button type="button" role="radio" aria-checked={language === option} className={language === option ? "selected" : ""} key={option} onClick={() => { setLanguage(option); setLanguagePickerOpen(false); }}><span><strong>{languageLabels[option]}</strong><small>{option === "th" ? "Thai" : "English"}</small></span>{language === option && <Check className="language-option-check" aria-hidden="true" />}</button>)}</div></BottomSheet></div>;
 }

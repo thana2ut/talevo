@@ -35,7 +35,7 @@ git diff --check
 - `src/app` — App Router pages
 - `src/components` — reusable UI, navigation และ domain cards
 - `src/features` — page-level feature modules
-- `src/lib/mock-data.ts` — typed local mock data
+- `src/lib/app-state-defaults.ts` — production clean-slate defaults และ system configuration
 - `src/providers/app-state-provider.tsx` — state abstraction สำหรับ UI
 - `src/styles` — shared responsive feature styles
 - `src/types` — shared data types
@@ -43,6 +43,6 @@ git diff --check
 ## ข้อจำกัดของระยะนี้
 
 - state ถูกบันทึกใน browser ด้วย AppState schema v8 และมี primary/backup snapshot
-- login/register เป็น local form flow ไม่ใช่ authentication จริง
-- AI ใช้ deterministic mock responses เท่านั้น
+- login/register ใช้ Supabase Auth และแยก AppState ในอุปกรณ์ตามบัญชี
+- AI ใช้คำตอบแบบ rule-based จากข้อมูลที่ผู้ใช้บันทึกในอุปกรณ์ ยังไม่เชื่อมบริการ AI ภายนอก
 - มาสคอต canonical อยู่ที่ `public/assets/mascot/` และเรียกผ่าน shared `TalevoMascot` component

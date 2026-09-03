@@ -87,7 +87,7 @@ export function StatusPill({ children, tone = "purple" }: { children: ReactNode;
 }
 
 export function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
-  return <label className="field"><span>{label}</span>{children}{error && <small className="field-error">{error}</small>}</label>;
+  return <label className="field"><span>{label}</span>{children}{error && <small className="field-error" role="alert">{error}</small>}</label>;
 }
 
 export function Input(props: ComponentProps<"input">) {
@@ -105,12 +105,16 @@ export function Select(props: ComponentProps<"select">) {
 export function BottomSheet({ open, title, onClose, children, className = "", closeLabel = "ปิด" }: { open: boolean; title: string; onClose: () => void; children: ReactNode; className?: string; closeLabel?: string }) {
   const dialogRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
   const titleId = useId();
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
   useEffect(() => {
     if (!open) return;
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { onClose(); return; }
+      if (event.key === "Escape") { onCloseRef.current(); return; }
       if (event.key !== "Tab") return;
       const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])") ?? [])
         .filter((element) => !element.hasAttribute("hidden") && element.getClientRects().length > 0);
@@ -125,10 +129,11 @@ export function BottomSheet({ open, title, onClose, children, className = "", cl
     return () => {
       window.clearTimeout(focusTimer);
       window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
       previousFocusRef.current?.focus();
       previousFocusRef.current = null;
     };
-  }, [onClose, open]);
+  }, [open]);
   if (!open || typeof document === "undefined") return null;
   return createPortal(
     <div className="sheet-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>

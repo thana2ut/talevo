@@ -28,6 +28,7 @@ export interface ClassSchedule {
   id: string;
   courseId: string;
   name: string;
+  courseCode?: string;
   teacher: string;
   room: string;
   /** Canonical #RRGGBB color. Legacy named colors are normalized when state loads. */
@@ -36,6 +37,8 @@ export interface ClassSchedule {
   startTime: string;
   endTime: string;
   note?: string;
+  section?: string;
+  credits?: number;
 }
 
 export type TaskStatus = "todo" | "doing" | "completed";
@@ -86,9 +89,6 @@ export type NewExamInput = Omit<Exam, "id" | "createdAt" | "updatedAt" | "comple
 export interface CourseNote { id: string; courseId: string; title: string; content: string; tags: string[]; pinned: boolean; classDate?: string; createdAt: string; updatedAt: string; }
 export type NewCourseNoteInput = Omit<CourseNote, "id" | "createdAt" | "updatedAt">;
 
-export type AttendanceStatus = "present" | "late" | "leave" | "absent" | "cancelled";
-export interface AttendanceRecord { id: string; courseId: string; date: string; startTime?: string; status: AttendanceStatus; note?: string; createdAt: string; updatedAt?: string; }
-export type NewAttendanceInput = Omit<AttendanceRecord, "id" | "createdAt" | "updatedAt">;
 
 export interface GradeComponent { id: string; name: string; weight: number; maxScore: number; earnedScore?: number; note?: string; }
 export interface GradeThreshold { label: string; minimumPercent: number; }
@@ -184,6 +184,7 @@ export interface NewTaskInput {
 
 export interface NewClassInput {
   name: string;
+  courseCode?: string;
   teacher: string;
   room: string;
   day: number;
@@ -191,6 +192,8 @@ export interface NewClassInput {
   endTime: string;
   color: string;
   note: string;
+  section?: string;
+  credits?: number;
 }
 
 export type FinanceTransactionType = "income" | "expense" | "saving";

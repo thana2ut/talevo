@@ -1,4 +1,5 @@
 import type { AcademicTerm, ClassSchedule, Course, Task } from "@/types";
+import { getScheduleDisplayName } from "@/lib/schedule-utils";
 
 const weekdayLabels = ["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."];
 
@@ -21,7 +22,7 @@ export function getCurrentTermCourses(schedules: ClassSchedule[], _academicTerm?
     }
     courses.set(schedule.courseId, {
       id: schedule.courseId,
-      name: schedule.name,
+      name: getScheduleDisplayName(schedule),
       teacher: schedule.teacher,
       room: schedule.room,
       color: schedule.color,

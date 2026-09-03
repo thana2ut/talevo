@@ -1,6 +1,7 @@
 import type { ClassSchedule } from "@/types";
 import { mondayIndex } from "@/lib/schedule-date";
 import { timeToMinutes } from "@/lib/schedule-utils";
+import { parseAcademicTime } from "@/lib/academic-time";
 
 export const MINUTE_MS = 60_000;
 export const DAY_MS = 24 * 60 * MINUTE_MS;
@@ -13,8 +14,8 @@ export function localDateKey(date: Date) {
 
 export function localDateTime(dateKey: string, time: string) {
   const [year, month, day] = dateKey.split("-").map(Number);
-  const [hour, minute] = time.split(":").map(Number);
-  return new Date(year, month - 1, day, hour, minute, 0, 0);
+  const parsed = parseAcademicTime(time);
+  return parsed ? new Date(year, month - 1, day, 0, parsed.minutes, 0, 0) : new Date(Number.NaN);
 }
 
 export function startOfLocalDay(date: Date) {

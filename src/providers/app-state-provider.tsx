@@ -1,26 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import {
-  initialChat,
-  initialAcademicTerm,
-  initialExams,
-  initialLearningGoals,
-  initialNotifications,
-  initialProfile,
-  initialProjects,
-  initialSchedules,
-  initialSettings,
-  initialFinanceTransactions,
-  initialFinanceSettings,
-  initialFinanceCategories,
-  initialSavingGoals,
-  initialTasks,
-  initialCourseNotes,
-  initialAttendanceRecords,
-  initialGradePlans,
-} from "@/lib/mock-data";
+import { createEmptyAccountAppState } from "@/lib/app-state-defaults";
 import { buildLocalAIResponse } from "@/lib/local-ai";
+import type { AIContextSelection } from "@/lib/ai/types";
 import type {
   AppNotification,
   AppSettings,
@@ -41,8 +24,6 @@ import type {
   FinanceCategory,
   CourseNote,
   NewCourseNoteInput,
-  AttendanceRecord,
-  NewAttendanceInput,
   CourseGradePlan,
   NewExamInput,
   TaskAttachment,
@@ -50,15 +31,14 @@ import type {
 } from "@/types";
 import { getLocalMonthKey } from "@/lib/finance-utils";
 import { normalizeTaskColor } from "@/lib/task-color-utils";
-import { normalizeTalevoColor } from "@/lib/talevo-color-utils";
-import { clearAttachmentBlobs, deleteAttachmentBlob } from "@/lib/task-attachment-storage";
+import { getDeterministicCourseColor, normalizeTalevoColor } from "@/lib/talevo-color-utils";
+import { deleteAttachmentBlob } from "@/lib/task-attachment-storage";
+import type { SyllabusImportPayload } from "@/lib/syllabus-import";
 import { createTaskCompletionHistory, getExpiredCompletedTasks } from "@/lib/task-retention";
 import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
 import { removeAllReadNotifications, removeReadNotification } from "@/lib/alerts/notification-deletion";
 import { claimAlertDeliveryLeadership, deliverNewBrowserNotifications } from "@/lib/alerts/notification-delivery";
 import {
-  APP_STATE_STORAGE_KEY,
-  clearAppStateStorage,
   createAppStateSnapshot,
   parseAppStateSnapshot,
   readAppStateSnapshot,
@@ -66,13 +46,27 @@ import {
   type AppStateDefaults,
   type PersistedAppState,
 } from "@/lib/persistence/app-state-storage";
-import { LEGACY_KERNOVA_SESSION_STORAGE_KEY, TALEVO_SESSION_STORAGE_KEY } from "@/lib/talevo-storage-keys";
+import {
+  bindCanonicalStateToAccount,
+  canonicalStateBelongsToAccount,
+  clearAccountStateStorage,
+  createAccountStateStorage,
+  getAccountStateKeys,
+  inspectLocalOwnership,
+  recordLocalOwnershipDecision,
+  type LocalOwnershipStatus,
+} from "@/lib/persistence/local-account-storage";
 import { useLanguage } from "@/providers/language-provider";
+import { useAuth } from "@/providers/auth-provider";
 import type { NotificationPreferences } from "@/types";
 
 interface AppStateValue {
   isAuthenticated: boolean;
+  isAuthLoading: boolean;
   isHydrated: boolean;
+  localOwnershipStatus: LocalOwnershipStatus;
+  createMigrationSnapshot: () => PersistedAppState;
+  refreshCurrentAccountFromStorage: () => PersistedAppState | null;
   profile: UserProfile;
   tasks: Task[];
   tasksHydrated: boolean;
@@ -93,16 +87,17 @@ interface AppStateValue {
   financeCategories: FinanceCategory[];
   selectedFinanceMonth: string;
   updateProfile: (value: Partial<UserProfile>) => void;
-  registerLocalAccount: (profile: UserProfile, academicTerm: AcademicTerm) => void;
+  registerLocalAccount: (profile: UserProfile, academicTerm: AcademicTerm, userId: string) => void;
+  adoptExistingLocalData: () => void;
+  startFreshLocalData: () => void;
   setSelectedFinanceMonth: (monthKey: string) => void;
   updateSettings: (value: Partial<AppSettings>) => void;
   updateNotificationPreferences: (value: Partial<NotificationPreferences>) => void;
   setBrowserNotificationsEnabled: (enabled: boolean) => Promise<void>;
   updateGoals: (value: Partial<LearningGoals>) => void;
   updateAcademicTerm: (value: AcademicTerm) => void;
-  startSession: () => void;
-  endSession: () => void;
-  resetUserData: () => void;
+  endSession: () => Promise<string | null>;
+  deleteUserAccount: () => Promise<string | null>;
   sessionNotice: string | null;
   clearSessionNotice: () => void;
   addTask: (value: NewTaskInput, id?: string) => string;
@@ -117,13 +112,15 @@ interface AppStateValue {
   updateTaskSubtask: (taskId: string, subtaskId: string, title: string) => void;
   removeTaskSubtask: (taskId: string, subtaskId: string) => void;
   addSchedule: (value: NewClassInput) => string;
+  importSyllabus: (payload: SyllabusImportPayload) => { schedules: number; tasks: number; exams: number };
   updateSchedule: (id: string, value: NewClassInput) => void;
   deleteSchedule: (id: string) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   deleteNotification: (id: string) => void;
   deleteReadNotifications: () => void;
-  sendChat: (content: string) => void;
+  sendChat: (content: string, selectedContext?: AIContextSelection) => void;
+  appendChatMessages: (messages: ChatMessage[]) => void;
   addFinanceTransaction: (value: NewFinanceTransactionInput) => string;
   updateFinanceTransaction: (id: string, value: NewFinanceTransactionInput) => void;
   deleteFinanceTransaction: (id: string) => void;
@@ -134,7 +131,6 @@ interface AppStateValue {
   updateFinanceCategory: (id: string, value: Partial<Omit<FinanceCategory, "id">>) => void;
   deleteFinanceCategory: (id: string) => boolean;
   courseNotes: CourseNote[];
-  attendanceRecords: AttendanceRecord[];
   gradePlans: CourseGradePlan[];
   addExam: (value: NewExamInput) => string;
   updateExam: (id: string, value: Partial<NewExamInput>) => void;
@@ -144,26 +140,10 @@ interface AppStateValue {
   updateCourseNote: (id: string, value: Partial<NewCourseNoteInput>) => void;
   deleteCourseNote: (id: string) => void;
   toggleNotePinned: (id: string) => void;
-  addAttendance: (value: NewAttendanceInput) => string | null;
-  updateAttendance: (id: string, value: Partial<NewAttendanceInput>) => void;
-  deleteAttendance: (id: string) => void;
   upsertGradePlan: (courseId: string, value: Omit<CourseGradePlan, "id" | "courseId">) => void;
 }
 
 const AppStateContext = createContext<AppStateValue | null>(null);
-
-function readSessionStatus(storage: Storage) {
-  const current = storage.getItem(TALEVO_SESSION_STORAGE_KEY);
-  if (current !== null) return current;
-  const legacy = storage.getItem(LEGACY_KERNOVA_SESSION_STORAGE_KEY);
-  if (legacy === null) return null;
-  try {
-    storage.setItem(TALEVO_SESSION_STORAGE_KEY, legacy);
-  } catch {
-    // The legacy value remains available for this session when storage is full or blocked.
-  }
-  return legacy;
-}
 
 function appendCompletionHistory(current: TaskCompletionHistory[], tasks: Task[]) {
   const existingIds = new Set(current.map((item) => item.originalTaskId));
@@ -180,61 +160,68 @@ function uid(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-const defaultAppState: AppStateDefaults = {
-  profile: initialProfile,
-  academicTerm: initialAcademicTerm,
-  schedules: initialSchedules,
-  tasks: initialTasks,
-  taskCompletionHistory: [],
-  exams: initialExams,
-  gradePlans: initialGradePlans,
-  courseNotes: initialCourseNotes,
-  attendanceRecords: initialAttendanceRecords,
-  financeTransactions: initialFinanceTransactions,
-  savingGoals: initialSavingGoals,
-  financeSettings: initialFinanceSettings,
-  financeCategories: initialFinanceCategories,
-  goals: initialLearningGoals,
-  notifications: initialNotifications,
-  dismissedNotificationEventKeys: [],
-  settings: initialSettings,
-  projects: initialProjects,
-  chat: initialChat,
-  selectedFinanceMonth: getLocalMonthKey(),
-};
+const defaultAppState = createEmptyAccountAppState();
+
+function getMetadataText(metadata: Record<string, unknown>, key: string, maxLength: number) {
+  const value = metadata[key];
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function createAccountDefaults(user: { email?: string | null; user_metadata?: Record<string, unknown> }) {
+  const metadata = user.user_metadata ?? {};
+  return createEmptyAccountAppState({
+    displayName: getMetadataText(metadata, "display_name", 80),
+    email: user.email?.trim() ?? "",
+    major: getMetadataText(metadata, "major", 80),
+    university: getMetadataText(metadata, "university", 80),
+  }, {
+    level: getMetadataText(metadata, "level", 60),
+    term: getMetadataText(metadata, "term", 60),
+    academicYear: /^\d{4}$/.test(getMetadataText(metadata, "academic_year", 4))
+      ? getMetadataText(metadata, "academic_year", 4)
+      : "",
+  });
+}
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const { language } = useLanguage();
-  // The current prototype has no backend authentication, so this flag only
-  // represents access during this browser session.
-  const [isAuthenticated, setIsAuthenticated] = useState(() => typeof window === "undefined" || readSessionStatus(window.sessionStorage) !== "logged-out");
+  const { deleteAccount, isAuthenticated, isLoading: isAuthLoading, signOut, user } = useAuth();
+  const userId = user?.id ?? null;
+  const userEmail = user?.email ?? null;
+  const userMetadata = user?.user_metadata;
+  const accountDefaults = useMemo(
+    () => createAccountDefaults({ email: userEmail, user_metadata: userMetadata }),
+    [userEmail, userMetadata],
+  );
   const [isHydrated, setIsHydrated] = useState(false);
-  const [profile, setProfile] = useState(initialProfile);
-  const [tasks, setTasks] = useState(initialTasks);
+  const [hydratedScope, setHydratedScope] = useState<string | null>(null);
+  const [localOwnershipStatus, setLocalOwnershipStatus] = useState<LocalOwnershipStatus>("checking");
+  const activeStorageRef = useRef<ReturnType<typeof createAccountStateStorage> | null>(null);
+  const [profile, setProfile] = useState(defaultAppState.profile);
+  const [tasks, setTasks] = useState(defaultAppState.tasks);
   const [taskCompletionHistory, setTaskCompletionHistory] = useState<TaskCompletionHistory[]>([]);
   const [now, setNow] = useState(() => new Date());
   const tasksRef = useRef(tasks);
-  const [schedules, setSchedules] = useState(initialSchedules);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [schedules, setSchedules] = useState(defaultAppState.schedules);
+  const [notifications, setNotifications] = useState(defaultAppState.notifications);
   const notificationsRef = useRef(notifications);
   const [dismissedNotificationEventKeys, setDismissedNotificationEventKeys] = useState<string[]>([]);
   const dismissedNotificationEventKeysRef = useRef(dismissedNotificationEventKeys);
   const applyingExternalStateRef = useRef(false);
   const tabIdRef = useRef(uid("tab"));
-  const [chat, setChat] = useState(initialChat);
-  const [projects, setProjects] = useState(initialProjects);
-  const [settings, setSettings] = useState(initialSettings);
+  const [chat, setChat] = useState(defaultAppState.chat);
+  const [projects, setProjects] = useState(defaultAppState.projects);
+  const [settings, setSettings] = useState(defaultAppState.settings);
   const [browserNotificationPermission, setBrowserNotificationPermission] = useState<NotificationPermission | "unsupported">("unsupported");
-  const [goals, setGoals] = useState<LearningGoals>(initialLearningGoals);
-  const [academicTerm, setAcademicTerm] = useState<AcademicTerm>(initialAcademicTerm);
-  const [financeTransactions, setFinanceTransactions] = useState<FinanceTransaction[]>(initialFinanceTransactions);
-  const [savingGoals, setSavingGoals] = useState<SavingGoal[]>(initialSavingGoals);
-  const [financeSettings, setFinanceSettings] = useState<FinanceSettings>(initialFinanceSettings);
-  const [financeCategories, setFinanceCategories] = useState<FinanceCategory[]>(initialFinanceCategories);
-  const [exams, setExams] = useState<Exam[]>(initialExams);
-  const [courseNotes, setCourseNotes] = useState<CourseNote[]>(initialCourseNotes);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendanceRecords);
-  const [gradePlans, setGradePlans] = useState<CourseGradePlan[]>(initialGradePlans);
+  const [goals, setGoals] = useState<LearningGoals>(defaultAppState.goals);
+  const [academicTerm, setAcademicTerm] = useState<AcademicTerm>(defaultAppState.academicTerm);
+  const [financeTransactions, setFinanceTransactions] = useState<FinanceTransaction[]>(defaultAppState.financeTransactions);
+  const [savingGoals, setSavingGoals] = useState<SavingGoal[]>(defaultAppState.savingGoals);
+  const [financeSettings, setFinanceSettings] = useState<FinanceSettings>(defaultAppState.financeSettings);
+  const [financeCategories, setFinanceCategories] = useState<FinanceCategory[]>(defaultAppState.financeCategories);
+  const [exams, setExams] = useState<Exam[]>(defaultAppState.exams);
+  const [courseNotes, setCourseNotes] = useState<CourseNote[]>(defaultAppState.courseNotes);
+  const [gradePlans, setGradePlans] = useState<CourseGradePlan[]>(defaultAppState.gradePlans);
   const [selectedFinanceMonth, setSelectedFinanceMonth] = useState(() => getLocalMonthKey());
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
 
@@ -247,7 +234,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setExams(snapshot.exams);
     setGradePlans(snapshot.gradePlans);
     setCourseNotes(snapshot.courseNotes);
-    setAttendanceRecords(snapshot.attendanceRecords);
     setFinanceTransactions(snapshot.financeTransactions);
     setSavingGoals(snapshot.savingGoals);
     setFinanceSettings(snapshot.financeSettings);
@@ -263,9 +249,41 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setSelectedFinanceMonth(snapshot.selectedFinanceMonth);
   }, []);
 
+  const authScope = userId ?? "anonymous";
+  const isCurrentScopeHydrated = isHydrated && hydratedScope === authScope;
+
   useEffect(() => {
+    if (isAuthLoading) return;
     const timer = window.setTimeout(() => {
-      const result = readAppStateSnapshot(window.localStorage, defaultAppState);
+      if (!userId) {
+        activeStorageRef.current = null;
+        applySnapshot(createAppStateSnapshot(defaultAppState, tabIdRef.current));
+        setLocalOwnershipStatus("ready");
+        setHydratedScope("anonymous");
+        setIsHydrated(true);
+        return;
+      }
+
+      const ownership = inspectLocalOwnership(window.localStorage, userId);
+      if (ownership === "needs-adoption") {
+        activeStorageRef.current = null;
+        applySnapshot(createAppStateSnapshot(accountDefaults, tabIdRef.current));
+        setLocalOwnershipStatus(ownership);
+        setHydratedScope(userId);
+        setIsHydrated(true);
+        return;
+      }
+
+      const accountStorage = createAccountStateStorage(window.localStorage, userId);
+      const accountKeys = getAccountStateKeys(userId);
+      if (canonicalStateBelongsToAccount(window.localStorage, userId)
+          && window.localStorage.getItem(accountKeys.primary) === null
+          && window.localStorage.getItem(accountKeys.backup) === null) {
+        const canonical = readAppStateSnapshot(window.localStorage, accountDefaults);
+        writeAppStateSnapshot(accountStorage, canonical.state);
+      }
+      activeStorageRef.current = accountStorage;
+      const result = readAppStateSnapshot(accountStorage, accountDefaults);
       const expiredTasks = getExpiredCompletedTasks(result.state.tasks, new Date());
       const expiredIds = new Set(expiredTasks.map((task) => task.id));
       const hydratedState: PersistedAppState = expiredTasks.length ? {
@@ -279,10 +297,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (result.source !== "primary" && result.source !== "defaults" || result.warnings.length) {
         console.warn("[TALEVO] AppState recovery", { source: result.source, warnings: result.warnings });
       }
+      setLocalOwnershipStatus("ready");
+      setHydratedScope(userId);
       setIsHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [applySnapshot]);
+  }, [accountDefaults, applySnapshot, isAuthLoading, userId]);
 
   const persistableState = useMemo<AppStateDefaults>(() => ({
     profile,
@@ -293,7 +313,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     exams,
     gradePlans,
     courseNotes,
-    attendanceRecords,
     financeTransactions,
     savingGoals,
     financeSettings,
@@ -305,40 +324,41 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     projects,
     chat,
     selectedFinanceMonth,
-  }), [academicTerm, attendanceRecords, chat, courseNotes, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, notifications, profile, projects, savingGoals, schedules, selectedFinanceMonth, settings, taskCompletionHistory, tasks]);
+  }), [academicTerm, chat, courseNotes, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, notifications, profile, projects, savingGoals, schedules, selectedFinanceMonth, settings, taskCompletionHistory, tasks]);
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isCurrentScopeHydrated) return;
     if (applyingExternalStateRef.current) {
       applyingExternalStateRef.current = false;
       return;
     }
     const timer = window.setTimeout(() => {
       const snapshot = createAppStateSnapshot(persistableState, tabIdRef.current);
-      writeAppStateSnapshot(window.localStorage, snapshot);
+      if (!activeStorageRef.current || localOwnershipStatus !== "ready") return;
+      writeAppStateSnapshot(activeStorageRef.current, snapshot);
     }, 200);
     return () => window.clearTimeout(timer);
-  }, [isHydrated, persistableState]);
+  }, [isCurrentScopeHydrated, localOwnershipStatus, persistableState]);
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isCurrentScopeHydrated) return;
     const synchronizeFromAnotherTab = (event: StorageEvent) => {
-      if (event.key !== APP_STATE_STORAGE_KEY || !event.newValue) return;
-      const snapshot = parseAppStateSnapshot(event.newValue, defaultAppState);
+      if (!userId || event.key !== getAccountStateKeys(userId).primary || !event.newValue) return;
+      const snapshot = parseAppStateSnapshot(event.newValue, accountDefaults);
       if (!snapshot || snapshot.writerId === tabIdRef.current) return;
       applyingExternalStateRef.current = true;
       applySnapshot(snapshot);
     };
     window.addEventListener("storage", synchronizeFromAnotherTab);
     return () => window.removeEventListener("storage", synchronizeFromAnotherTab);
-  }, [applySnapshot, isHydrated]);
+  }, [accountDefaults, applySnapshot, isCurrentScopeHydrated, userId]);
 
   useEffect(() => { tasksRef.current = tasks; }, [tasks]);
   useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
   useEffect(() => { dismissedNotificationEventKeysRef.current = dismissedNotificationEventKeys; }, [dismissedNotificationEventKeys]);
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isCurrentScopeHydrated) return;
     const cleanupExpired = (currentTime: Date) => {
       const expiredTasks = getExpiredCompletedTasks(tasksRef.current, currentTime);
       if (!expiredTasks.length) return;
@@ -351,10 +371,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     tick();
     const interval = window.setInterval(tick, 60_000);
     return () => window.clearInterval(interval);
-  }, [isHydrated]);
+  }, [isCurrentScopeHydrated]);
 
   useEffect(() => {
-    if (!isHydrated || !settings.notificationPreferences.enabled) return;
+    if (!isCurrentScopeHydrated || !settings.notificationPreferences.enabled) return;
     const currentNotifications = notificationsRef.current;
     const generated = evaluateSmartAlerts({
       now,
@@ -375,21 +395,63 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     if (settings.notificationPreferences.browserNotifications && browserNotificationPermission === "granted" && claimAlertDeliveryLeadership(window.localStorage, tabIdRef.current)) {
       deliverNewBrowserNotifications(generated);
     }
-  }, [academicTerm, browserNotificationPermission, dismissedNotificationEventKeys, exams, isHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks]);
+  }, [academicTerm, browserNotificationPermission, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks]);
+
+  const adoptExistingLocalData = useCallback(() => {
+    if (!userId) return;
+    const canonical = readAppStateSnapshot(window.localStorage, accountDefaults);
+    bindCanonicalStateToAccount(window.localStorage, userId);
+    const accountStorage = createAccountStateStorage(window.localStorage, userId);
+    writeAppStateSnapshot(accountStorage, canonical.state);
+    activeStorageRef.current = accountStorage;
+    applySnapshot(canonical.state);
+    setLocalOwnershipStatus("ready");
+    setHydratedScope(userId);
+    setIsHydrated(true);
+  }, [accountDefaults, applySnapshot, userId]);
+
+  const startFreshLocalData = useCallback(() => {
+    if (!userId) return;
+    const accountStorage = createAccountStateStorage(window.localStorage, userId);
+    const snapshot = createAppStateSnapshot(accountDefaults, tabIdRef.current);
+    writeAppStateSnapshot(accountStorage, snapshot);
+    recordLocalOwnershipDecision(window.localStorage, userId, "fresh");
+    activeStorageRef.current = accountStorage;
+    applySnapshot(snapshot);
+    setLocalOwnershipStatus("ready");
+    setHydratedScope(userId);
+    setIsHydrated(true);
+  }, [accountDefaults, applySnapshot, userId]);
+
+  const refreshCurrentAccountFromStorage = useCallback(() => {
+    if (!userId) return null;
+    const accountStorage = createAccountStateStorage(window.localStorage, userId);
+    const result = readAppStateSnapshot(accountStorage, accountDefaults);
+    activeStorageRef.current = accountStorage;
+    applyingExternalStateRef.current = true;
+    applySnapshot(result.state);
+    setLocalOwnershipStatus("ready");
+    setHydratedScope(userId);
+    setIsHydrated(true);
+    return result.state;
+  }, [accountDefaults, applySnapshot, userId]);
 
   const value = useMemo<AppStateValue>(() => ({
     isAuthenticated,
-    isHydrated,
+    isAuthLoading,
+    isHydrated: isCurrentScopeHydrated,
+    localOwnershipStatus,
+    createMigrationSnapshot: () => createAppStateSnapshot(persistableState, tabIdRef.current),
+    refreshCurrentAccountFromStorage,
     profile,
     tasks,
-    tasksHydrated: isHydrated,
+    tasksHydrated: isCurrentScopeHydrated,
     taskCompletionHistory,
     now,
     schedules,
     notifications,
     exams,
     courseNotes,
-    attendanceRecords,
     gradePlans,
     projects,
     chat,
@@ -403,13 +465,25 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     financeCategories,
     selectedFinanceMonth,
     updateProfile: (next) => setProfile((current) => ({ ...current, ...next })),
-    registerLocalAccount: (nextProfile, nextAcademicTerm) => {
-      setProfile(nextProfile);
-      setAcademicTerm(nextAcademicTerm);
-      window.sessionStorage.setItem(TALEVO_SESSION_STORAGE_KEY, "authenticated");
-      setIsAuthenticated(true);
+    registerLocalAccount: (nextProfile, nextAcademicTerm, nextUserId) => {
+      const accountStorage = createAccountStateStorage(window.localStorage, nextUserId);
+      const snapshot = createAppStateSnapshot({
+        ...defaultAppState,
+        profile: nextProfile,
+        academicTerm: nextAcademicTerm,
+      }, tabIdRef.current);
+      writeAppStateSnapshot(accountStorage, snapshot);
+      if (userId === nextUserId) {
+        activeStorageRef.current = accountStorage;
+        applySnapshot(snapshot);
+        setLocalOwnershipStatus("ready");
+        setHydratedScope(nextUserId);
+        setIsHydrated(true);
+      }
       setSessionNotice(null);
     },
+    adoptExistingLocalData,
+    startFreshLocalData,
     setSelectedFinanceMonth,
     updateSettings: (next) => setSettings((current) => ({ ...current, ...next })),
     updateNotificationPreferences: (next) => setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, ...next } })),
@@ -428,34 +502,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     },
     updateGoals: (next) => setGoals((current) => ({ ...current, ...next })),
     updateAcademicTerm: (next) => setAcademicTerm(next),
-    startSession: () => { window.sessionStorage.setItem(TALEVO_SESSION_STORAGE_KEY, "authenticated"); setIsAuthenticated(true); setSessionNotice(null); },
-    endSession: () => { window.sessionStorage.setItem(TALEVO_SESSION_STORAGE_KEY, "logged-out"); setIsAuthenticated(false); setSessionNotice("ออกจากระบบจากอุปกรณ์นี้แล้ว"); },
-    resetUserData: () => {
-      void clearAttachmentBlobs().catch(() => undefined);
-      clearAppStateStorage(window.localStorage);
-      window.sessionStorage.setItem(TALEVO_SESSION_STORAGE_KEY, "logged-out");
-      setIsAuthenticated(false);
-      setProfile({ displayName: "", email: "", major: "", university: "" });
-      setTasks([]);
-      setTaskCompletionHistory([]);
-      setSchedules([]);
-      setNotifications([]);
-      setDismissedNotificationEventKeys([]);
-      setChat(initialChat);
-      setProjects([]);
-      setSettings(initialSettings);
-      setGoals(initialLearningGoals);
-      setAcademicTerm({ level: "", term: "", academicYear: "" });
-      setFinanceTransactions([]);
-      setSavingGoals([]);
-      setFinanceSettings({ dailyBudget: 0 });
-      setFinanceCategories(initialFinanceCategories.map((category) => ({ ...category, monthlyBudget: undefined })));
-      setExams([]);
-      setCourseNotes([]);
-      setAttendanceRecords([]);
-      setGradePlans([]);
-      setSelectedFinanceMonth(getLocalMonthKey());
-      setSessionNotice("ลบข้อมูล TALEVO ในอุปกรณ์นี้แล้ว");
+    endSession: async () => {
+      const result = await signOut();
+      if (result.error) return result.error;
+      setSessionNotice("ออกจากระบบจากอุปกรณ์นี้แล้ว");
+      return null;
+    },
+    deleteUserAccount: async () => {
+      const currentUserId = userId;
+      if (!currentUserId) return "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่";
+      const attachmentIds = tasks.flatMap((task) => task.attachments?.map((attachment) => attachment.id) ?? []);
+      const result = await deleteAccount();
+      if (result.error) return result.error;
+      await Promise.allSettled(attachmentIds.map((id) => deleteAttachmentBlob(id)));
+      clearAccountStateStorage(window.localStorage, currentUserId);
+      activeStorageRef.current = null;
+      applySnapshot(createAppStateSnapshot(defaultAppState, tabIdRef.current));
+      setLocalOwnershipStatus("ready");
+      setHydratedScope("anonymous");
+      setSessionNotice("ลบบัญชีและข้อมูลของบัญชีนี้ออกจากอุปกรณ์แล้ว");
+      return null;
     },
     sessionNotice,
     clearSessionNotice: () => setSessionNotice(null),
@@ -518,17 +584,65 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addSchedule: (input) => {
       const id = uid("class");
       setSchedules((current) => {
-        const matchingCourse = current.find((item) => item.name.trim().toLocaleLowerCase() === input.name.trim().toLocaleLowerCase());
-        return [...current, { ...input, color: normalizeTalevoColor(input.color), id, courseId: matchingCourse?.courseId ?? uid("course") }];
+        const matchingCourse = current.find(
+          (item) => (Boolean(input.courseCode) && item.courseCode === input.courseCode) ||
+            item.name.trim().toLocaleLowerCase() === input.name.trim().toLocaleLowerCase()
+        );
+        const courseId = matchingCourse?.courseId ?? uid("course");
+        const color = matchingCourse?.color
+          ? normalizeTalevoColor(matchingCourse.color)
+          : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || courseId || input.name));
+        return [...current, { ...input, color, id, courseId }];
       });
       return id;
+    },
+    importSyllabus: (payload) => {
+      let importedSchedulesCount = 0;
+      setSchedules((current) => {
+        const imported = payload.schedules.map((input) => {
+          const matchingCourse = current.find(
+            (item) => item.courseId === input.courseId ||
+              Boolean(input.courseCode && item.courseCode === input.courseCode) ||
+              Boolean(input.name.trim() && item.name.trim().toLocaleLowerCase() === input.name.trim().toLocaleLowerCase())
+          );
+          const color = matchingCourse?.color
+            ? normalizeTalevoColor(matchingCourse.color)
+            : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || input.courseId || input.name));
+          return {
+            ...input,
+            id: uid("class"),
+            color,
+          };
+        });
+        importedSchedulesCount = imported.length;
+        return [...current, ...imported];
+      });
+      const importedTasks = payload.tasks.map((input) => ({ ...input, id: uid("task"), color: normalizeTaskColor(input.color), dueLabel: "กำหนดใหม่", subtasks: input.subtasks ?? [], attachments: input.attachments ?? [], status: "todo" as const }));
+      const importedExams = payload.exams.map((input) => { const timestamp = new Date().toISOString(); return { ...input, id: uid("exam"), topics: input.topics ?? [], createdAt: timestamp, updatedAt: timestamp }; });
+      // React batches these state updates from one confirmed user action; persistence observes one complete snapshot.
+      setTasks((current) => [...importedTasks, ...current]);
+      setExams((current) => [...current, ...importedExams]);
+      return { schedules: importedSchedulesCount, tasks: importedTasks.length, exams: importedExams.length };
     },
     updateSchedule: (id, input) => setSchedules((current) => {
       const previous = current.find((item) => item.id === id);
       if (!previous) return current;
       const name = input.name.trim();
+      const courseCode = input.courseCode !== undefined ? (input.courseCode.trim() || undefined) : previous.courseCode;
+      const section = input.section !== undefined ? (input.section.trim() || undefined) : previous.section;
+      const credits = input.credits !== undefined ? input.credits : previous.credits;
       return current.map((item) => item.courseId === previous.courseId
-        ? { ...item, ...(item.id === id ? input : {}), id: item.id, courseId: previous.courseId, name, color: normalizeTalevoColor(input.color) }
+        ? {
+            ...item,
+            ...(item.id === id ? input : {}),
+            id: item.id,
+            courseId: previous.courseId,
+            courseCode: item.id === id ? courseCode : (item.courseCode ?? courseCode),
+            section: item.id === id ? section : (item.section ?? section),
+            credits: item.id === id ? credits : (item.credits ?? credits),
+            name,
+            color: normalizeTalevoColor(input.color),
+          }
         : item);
     }),
     deleteSchedule: (id) => setSchedules((current) => current.filter((item) => item.id !== id)),
@@ -550,15 +664,28 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setNotifications(result.notifications);
       setDismissedNotificationEventKeys(result.dismissedEventKeys);
     },
-    sendChat: (content) => {
+    sendChat: (content, selectedContext) => {
       const trimmed = content.trim();
       if (!trimmed) return;
-      const response = buildLocalAIResponse({ content: trimmed, tasks, schedules, exams, now, language });
+      const response = buildLocalAIResponse({
+        content: trimmed,
+        tasks,
+        schedules,
+        exams,
+        now,
+        language,
+        selectedContext,
+      });
       setChat((current) => [
         ...current,
         { id: uid("chat-user"), role: "user", content: trimmed },
         { id: uid("chat-ai"), role: "assistant", content: response.content, kind: response.kind },
       ]);
+    },
+    appendChatMessages: (messages) => {
+      const safeMessages = messages.filter((message) => message.content.trim());
+      if (!safeMessages.length) return;
+      setChat((current) => [...current, ...safeMessages]);
     },
     addFinanceTransaction: (input) => {
       const id = uid("finance");
@@ -593,11 +720,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     updateCourseNote: (id, next) => setCourseNotes((current) => current.map((note) => note.id === id ? { ...note, ...next, updatedAt: new Date().toISOString() } : note)),
     deleteCourseNote: (id) => setCourseNotes((current) => current.filter((note) => note.id !== id)),
     toggleNotePinned: (id) => setCourseNotes((current) => current.map((note) => note.id === id ? { ...note, pinned: !note.pinned, updatedAt: new Date().toISOString() } : note)),
-    addAttendance: (input) => { const duplicate = attendanceRecords.find((item) => item.courseId === input.courseId && item.date === input.date && item.startTime === input.startTime); if (duplicate) return null; const id = uid("attendance"); setAttendanceRecords((current) => [...current, { ...input, id, createdAt: new Date().toISOString() }]); return id; },
-    updateAttendance: (id, next) => setAttendanceRecords((current) => current.map((record) => record.id === id ? { ...record, ...next, updatedAt: new Date().toISOString() } : record)),
-    deleteAttendance: (id) => setAttendanceRecords((current) => current.filter((record) => record.id !== id)),
     upsertGradePlan: (courseId, next) => setGradePlans((current) => { const existing = current.find((plan) => plan.courseId === courseId); return existing ? current.map((plan) => plan.id === existing.id ? { ...plan, ...next } : plan) : [...current, { ...next, id: uid("grade"), courseId }]; }),
-  }), [academicTerm, attendanceRecords, browserNotificationPermission, chat, courseNotes, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isHydrated, language, notifications, now, profile, projects, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, taskCompletionHistory, tasks]);
+  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, chat, courseNotes, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

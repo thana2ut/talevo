@@ -37,6 +37,44 @@ export const TALEVO_RECOMMENDED_COLORS = [
 
 export const talevoPresetColors = TALEVO_RECOMMENDED_COLORS;
 
+/**
+ * Curated 12-color semantic course palette tailored for TALEVO academic timetables.
+ * Avoids danger red to prevent confusion with errors/overdue notices.
+ * Highly contrasting on both light and dark backgrounds.
+ */
+export const TALEVO_COURSE_PALETTE = [
+  "#7656F6", // Signature Purple
+  "#3B82F6", // Blue
+  "#10B981", // Emerald
+  "#F59E0B", // Amber
+  "#EC4899", // Pink
+  "#6366F1", // Indigo
+  "#06B6D4", // Cyan
+  "#F97316", // Orange
+  "#22C55E", // Green
+  "#8B5CF6", // Violet
+  "#0F766E", // Deep Teal
+  "#D946EF", // Fuchsia
+] as const;
+
+/**
+ * Deterministically maps a course identity (courseCode, courseId, or courseName)
+ * to a stable palette color using a string hash.
+ * - Same course gets the exact same color on every occurrence and across reloads.
+ * - Leading zeroes in course codes (e.g. 0560201) are preserved as strings.
+ * - No Math.random() or non-deterministic behavior.
+ */
+export function getDeterministicCourseColor(courseIdentity?: string | null): string {
+  const normalized = courseIdentity?.trim().toLowerCase() ?? "";
+  if (!normalized) return defaultTalevoColor;
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i += 1) {
+    hash = ((hash << 5) - hash + normalized.charCodeAt(i)) | 0;
+  }
+  const index = Math.abs(hash) % TALEVO_COURSE_PALETTE.length;
+  return TALEVO_COURSE_PALETTE[index];
+}
+
 const legacyCourseColors: Record<SubjectColor, string> = {
   purple: "#7656F6", blue: "#5B8DEF", orange: "#F59E0B", yellow: "#EAB308",
   green: "#22A06B", cyan: "#19A7B8", pink: "#E668A7", magenta: "#B65CE6",

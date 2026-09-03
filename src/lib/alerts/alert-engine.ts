@@ -241,6 +241,7 @@ export function evaluateAcademicWeatherAlerts(context: AlertContext) {
 
 export function evaluateSmartAlerts(context: AlertContext) {
   if (!context.preferences.enabled) return [];
+  if (context.schedules.length === 0 && context.tasks.length === 0 && context.exams.length === 0) return [];
   const alerts: AppNotification[] = [];
   const morning = buildMorningSummary(context);
   if (morning) alerts.push(morning);

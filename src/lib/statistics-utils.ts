@@ -1,5 +1,5 @@
 import { addScheduleDays, createScheduleDate, mondayIndex, startOfScheduleWeek } from "@/lib/schedule-date";
-import { getClassDurationMinutes } from "@/lib/schedule-utils";
+import { getClassDurationMinutes, timeToMinutes } from "@/lib/schedule-utils";
 import { parseLocalTaskDate } from "@/lib/task-utils";
 import { calculateDeadlineRisk } from "@/lib/alerts/deadline-risk";
 import { getExamDate } from "@/lib/academic-utils";
@@ -71,8 +71,8 @@ export interface UpcomingScheduleOccurrence {
 export function getNextScheduleOccurrence(schedules: ClassSchedule[], now: Date): UpcomingScheduleOccurrence | null {
   const candidates = getScheduleOccurrences(schedules, startOfDay(now), addScheduleDays(now, 7))
     .map(({ schedule, date }) => {
-      const [hours, minutes] = schedule.startTime.split(":").map(Number);
-      return { schedule, date, startAt: new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes) };
+      const minutes = timeToMinutes(schedule.startTime);
+      return { schedule, date, startAt: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, minutes) };
     })
     .filter((occurrence) => occurrence.startAt >= now)
     .sort((first, second) => first.startAt.getTime() - second.startAt.getTime());

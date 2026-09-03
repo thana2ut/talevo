@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import { AppStateProvider } from "@/providers/app-state-provider";
+import { SupabaseAuthProvider } from "@/providers/auth-provider";
 import { LanguageProvider } from "@/providers/language-provider";
 import { LEGACY_KERNOVA_LANGUAGE_STORAGE_KEY, TALEVO_LANGUAGE_STORAGE_KEY } from "@/lib/talevo-storage-keys";
 import "./globals.css";
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${notoSansThai.variable} h-full antialiased`}
     >
       <head><script dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} /></head>
-      <body className="min-h-full"><LanguageProvider><AppStateProvider><AppShell>{children}</AppShell></AppStateProvider></LanguageProvider></body>
+      <body className="min-h-full"><LanguageProvider><SupabaseAuthProvider><AppStateProvider><AppShell>{children}</AppShell></AppStateProvider></SupabaseAuthProvider></LanguageProvider></body>
     </html>
   );
 }

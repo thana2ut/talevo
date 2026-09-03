@@ -83,7 +83,7 @@ const defaults = {
   profile: { displayName: "QA", email: "qa@example.com", major: "CS", university: "TALEVO" },
   academicTerm: { level: "ชั้นปีที่ 2", term: "ภาคเรียนที่ 1", academicYear: "2569" },
   schedules: [schedule], tasks: [task], taskCompletionHistory: [], exams: [exam],
-  gradePlans: [], courseNotes: [], attendanceRecords: [], financeTransactions: [], savingGoals: [],
+  gradePlans: [], courseNotes: [], financeTransactions: [], savingGoals: [],
   financeSettings: { dailyBudget: 200 }, financeCategories: [],
   goals: { weeklyStudyHours: 18, earlySubmissionDays: 2, examPreparationDays: 7, personalGoal: "Pass" },
   notifications: [notification],
@@ -108,6 +108,11 @@ const persistedRead = readAppStateSnapshot(storage, defaults);
 check(persistedRead.source === "primary", "written state should read from primary snapshot");
 check(persistedRead.state.schedules[0].id === schedule.id, "schedule id should survive serialization");
 check(persistedRead.state.schedules[0].room === "IT-301" && persistedRead.state.schedules[0].note === schedule.note, "all schedule fields should survive serialization");
+const legacyAttendanceSnapshot = parseAppStateSnapshot(JSON.stringify({
+  ...snapshot,
+  attendanceRecords: [{ id: "obsolete-attendance", courseId: schedule.courseId, date: "2026-09-01", status: "present" }],
+}), defaults);
+check(legacyAttendanceSnapshot?.schedules[0].id === schedule.id && !("attendanceRecords" in legacyAttendanceSnapshot), "obsolete attendance data must be ignored without discarding a legacy schedule snapshot");
 check(persistedRead.state.schedules[0].color === "#7656F6", "legacy named course colors should normalize without changing their visible accent");
 const deletedNotificationSnapshot = createAppStateSnapshot({ ...defaults, notifications: [], dismissedNotificationEventKeys: [notification.eventKey] }, "tab-delete", new Date("2026-08-31T01:10:00.000Z"));
 const deletedNotificationStorage = new MemoryStorage();

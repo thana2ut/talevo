@@ -1,0 +1,1 @@
+export { academicRangesOverlap as rangesOverlap, calculateAcademicDuration as calculateDuration, findAcademicTimeRange, formatAcademicTime, parseAcademicTime, parseAcademicTimeRange, timeToAcademicMinutes as timeToMinutes } from "@/lib/academic-time";

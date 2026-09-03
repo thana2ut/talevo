@@ -4,7 +4,7 @@
 
 ## ทุก route
 
-- เปิดแต่ละ route หลัก: Welcome, Auth, Today, Schedule, Tasks, Exams, Grades, Statistics, Finance, AI, Notifications, Profile, Settings, Help, Attendance และ Notes
+- เปิดแต่ละ route หลัก: Welcome, Auth, Today, Schedule, Tasks, Exams, Grades, Statistics, Finance, AI, Notifications, Profile, Settings, Help และ Notes
 - ตรวจว่ามีหัวข้อที่สื่อความหมาย, ไม่มีหน้า 404 หรือหน้าว่าง, และไม่มี console error
 - ตรวจ viewport 320px, 768px และ desktop ว่า `document.documentElement.scrollWidth` ไม่เกิน `clientWidth`
 - ตรวจลำดับ Tab, focus ที่เห็นชัด, ปุ่ม icon มี accessible name และข้อความสำคัญไม่พึ่งสีอย่างเดียว
