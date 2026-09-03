@@ -7,3 +7,15 @@ export function getGreetingByLocalTime(date: Date): string {
   if (hour >= 17 && hour < 22) return "สวัสดีตอนเย็น";
   return "สวัสดี";
 }
+
+/**
+ * Returns the personalized Today greeting for the authenticated user:
+ * - "สวัสดี {displayName}" if displayName exists and profile is loaded
+ * - "สวัสดี" if loading, empty, null, undefined, or email prefix
+ */
+export function formatHomeGreeting(displayName?: string | null, isLoading = false): string {
+  if (isLoading) return "สวัสดี";
+  const trimmed = displayName?.trim();
+  if (!trimmed || trimmed.includes("@")) return "สวัสดี";
+  return `สวัสดี ${trimmed}`;
+}

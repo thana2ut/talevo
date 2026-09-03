@@ -26,7 +26,8 @@
     "qa:ai-quota": "node scripts/qa-ai-quota.cjs",
     "qa:syllabus-import": "node scripts/qa-syllabus-import.cjs",
     "qa:security": "node scripts/qa-security.cjs",
-    "qa:reliability": "node scripts/qa-reliability.cjs"
+    "qa:reliability": "node scripts/qa-reliability.cjs",
+    "qa:cloud-persistence": "node scripts/qa-cloud-persistence.cjs"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",

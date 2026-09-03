@@ -1,3 +1,5 @@
-import { Suspense } from "react";
-import { NewFinancePage } from "@/features/finance/finance-pages";
-export default function Page() { return <Suspense><NewFinancePage /></Suspense>; }
+import { redirect } from "next/navigation";
+
+export default function Page() {
+  redirect("/today");
+}

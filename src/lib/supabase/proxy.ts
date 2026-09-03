@@ -46,6 +46,11 @@ export async function updateSession(request: NextRequest) {
   const { data, error } = await supabase.auth.getClaims();
   const isAuthenticated = !error && Boolean(data?.claims?.sub);
   const pathname = request.nextUrl.pathname;
+
+  if (matchesRoute(pathname, "/finance")) {
+    return NextResponse.redirect(new URL("/today", request.url));
+  }
+
   const isProtectedRoute = protectedRoutePrefixes.some((prefix) => matchesRoute(pathname, prefix));
 
   if (isProtectedRoute && !isAuthenticated) {

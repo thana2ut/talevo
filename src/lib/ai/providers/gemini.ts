@@ -8,6 +8,7 @@ import {
   isAIProviderConfigured,
   TALEVO_AI_SYSTEM_INSTRUCTION,
 } from "@/lib/ai/config";
+import { buildTemporalContextBlock, getAuthoritativeTemporalContext } from "@/lib/ai/temporal-context";
 import type {
   AIProviderAdapter,
   AIProviderRequest,
@@ -91,8 +92,13 @@ export function extractSafeProviderError(error: unknown): SafeAIProviderError {
 function formatPromptInput(request: AIProviderRequest): string {
   const sections: string[] = [];
 
-  if (request.contextBlock.trim()) {
-    sections.push(`[TALEVO CONTEXT]\n${request.contextBlock.trim()}\n[/TALEVO CONTEXT]`);
+  const temporalBlock = request.contextBlock.includes("[CURRENT_TIME_CONTEXT]")
+    ? ""
+    : buildTemporalContextBlock(getAuthoritativeTemporalContext());
+
+  const fullContext = [temporalBlock, request.contextBlock.trim()].filter(Boolean).join("\n\n").trim();
+  if (fullContext) {
+    sections.push(`[TALEVO CONTEXT]\n${fullContext}\n[/TALEVO CONTEXT]`);
   }
 
   if (request.history && request.history.length > 0) {

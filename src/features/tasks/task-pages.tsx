@@ -2,10 +2,11 @@
 /* eslint-disable @next/next/no-img-element -- local object URLs are not compatible with Next image optimization. */
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, CheckCircle2, ChevronDown, Clock3, Download, Eye, FileText, ImageIcon, MoreHorizontal, Paperclip, Pencil, Play, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { BottomSheet, Card, EmptyState, Field, Input, PageHeader, ProgressBar, StatusPill, Textarea } from "@/components/ui";
+import { GradesOverviewView } from "@/features/academic/academic-pages";
 import { TalevoColorPicker } from "@/components/talevo-color-picker";
 import { SubjectIcon, TaskCard } from "@/components/domain";
 import { getCourseById, getCourseScheduleSummary, getCurrentTermCourses, getTaskCourseLabel, type ScheduleCourse } from "@/lib/course-utils";
@@ -51,8 +52,15 @@ function readTaskActionNotice() {
 }
 
 export function TasksPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeView = searchParams.get("view") === "grades" ? "grades" : "tasks";
   const { tasks, schedules, now } = useAppState();
   const { t } = useLanguage();
+
+  const switchView = (nextView: "tasks" | "grades") => {
+    router.replace(nextView === "grades" ? "/tasks?view=grades" : "/tasks", { scroll: false });
+  };
   const [tab, setTab] = useState<TaskFilter>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -89,7 +97,83 @@ export function TasksPage() {
     setTab(nextFilter);
     moveTabFocus(nextFilter);
   };
-  return <div className="page tasks-page"><header className="tasks-heading"><div className="page-intro"><h1>{t("tasks.title")}</h1><p>{counts.pending} {t("tasks.countSuffix")} {t("tasks.pendingSummary")}</p></div><div><button className="icon-button" type="button" aria-label={t("tasks.searchLabel")} onClick={() => setSearchOpen((value) => !value)}><Search /></button><Link className="desktop-add-button primary-button" href="/tasks/new"><Plus /> {t("tasks.addTask")}</Link></div></header>{actionNotice && <div className="task-action-toast" role="status">{actionNotice === "deleted" ? t("tasks.taskDeleted") : t("tasks.taskUpdated")}</div>}{searchOpen && <div className="search-field"><Search /><Input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("tasks.searchPlaceholder")} aria-label={t("tasks.searchLabel")} /></div>}<div className="tabs" role="tablist" aria-label={t("tasks.filter.label")}>{filters.map(({ filter, label, count }) => <button id={`task-filter-${filter}`} type="button" role="tab" aria-controls="task-filter-results" aria-selected={tab === filter} aria-label={`${label} ${count} ${t("tasks.countSuffix")}`} className={tab === filter ? "active" : ""} key={filter} onClick={() => setTab(filter)} onKeyDown={(event) => handleTabKeyDown(event, filter)}>{label}<span aria-hidden="true">{count}</span></button>)}</div><div id="task-filter-results" role="tabpanel" aria-labelledby={`task-filter-${tab}`}>{active.length > 0 && <section><div className="section-header"><h2>{sectionTitle}</h2><span>{active.length} {t("tasks.countSuffix")}</span></div><div className="tasks-list-grid">{active.map((task) => <TaskCard key={task.id} task={task} />)}</div></section>}{completed.length > 0 && <section><div className="section-header"><h2>{t("tasks.filter.completed")}</h2><span>{completed.length} {t("tasks.countSuffix")}</span></div><div className="completed-list">{completed.map((task) => <TaskCard key={task.id} task={task} compact />)}</div></section>}{filtered.length === 0 && <EmptyState title={emptyState.title} description={emptyState.description} />}</div><Link href="/tasks/new" className="floating-add" aria-label={t("tasks.addTask")}><Plus /></Link></div>;
+  return (
+    <div className="page tasks-page">
+      <div className="segmented-control tasks-view-switcher" role="tablist" aria-label="เลือกมุมมองงานและคะแนน">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === "tasks"}
+          className={`tasks-view-tab tasks-view-tab-tasks ${activeView === "tasks" ? "active" : ""}`}
+          onClick={() => switchView("tasks")}
+        >
+          {t("nav.tasks")}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === "grades"}
+          className={`tasks-view-tab tasks-view-tab-grades ${activeView === "grades" ? "active" : ""}`}
+          onClick={() => switchView("grades")}
+        >
+          {t("grades.title")}
+        </button>
+      </div>
+
+      {activeView === "tasks" ? (
+        <>
+          <header className="tasks-heading">
+            <div className="page-intro">
+              <h1>{t("tasks.title")}</h1>
+              <p>{counts.pending} {t("tasks.countSuffix")} {t("tasks.pendingSummary")}</p>
+            </div>
+            <div>
+              <button className="icon-button" type="button" aria-label={t("tasks.searchLabel")} onClick={() => setSearchOpen((value) => !value)}>
+                <Search />
+              </button>
+              <Link className="desktop-add-button primary-button" href="/tasks/new">
+                <Plus /> {t("tasks.addTask")}
+              </Link>
+            </div>
+          </header>
+          {actionNotice && <div className="task-action-toast" role="status">{actionNotice === "deleted" ? t("tasks.taskDeleted") : t("tasks.taskUpdated")}</div>}
+          {searchOpen && (
+            <div className="search-field">
+              <Search />
+              <Input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("tasks.searchPlaceholder")} aria-label={t("tasks.searchLabel")} />
+            </div>
+          )}
+          <div className="tabs" role="tablist" aria-label={t("tasks.filter.label")}>
+            {filters.map(({ filter, label, count }) => (
+              <button id={`task-filter-${filter}`} type="button" role="tab" aria-controls="task-filter-results" aria-selected={tab === filter} aria-label={`${label} ${count} ${t("tasks.countSuffix")}`} className={tab === filter ? "active" : ""} key={filter} onClick={() => setTab(filter)} onKeyDown={(event) => handleTabKeyDown(event, filter)}>
+                {label}<span aria-hidden="true">{count}</span>
+              </button>
+            ))}
+          </div>
+          <div id="task-filter-results" role="tabpanel" aria-labelledby={`task-filter-${tab}`}>
+            {active.length > 0 && (
+              <section>
+                <div className="section-header"><h2>{sectionTitle}</h2><span>{active.length} {t("tasks.countSuffix")}</span></div>
+                <div className="tasks-list-grid">{active.map((task) => <TaskCard key={task.id} task={task} />)}</div>
+              </section>
+            )}
+            {completed.length > 0 && (
+              <section>
+                <div className="section-header"><h2>{t("tasks.filter.completed")}</h2><span>{completed.length} {t("tasks.countSuffix")}</span></div>
+                <div className="completed-list">{completed.map((task) => <TaskCard key={task.id} task={task} compact />)}</div>
+              </section>
+            )}
+            {filtered.length === 0 && <EmptyState title={emptyState.title} description={emptyState.description} />}
+          </div>
+          <Link href="/tasks/new" className="floating-add" aria-label={t("tasks.addTask")}>
+            <Plus />
+          </Link>
+        </>
+      ) : (
+        <GradesOverviewView />
+      )}
+    </div>
+  );
 }
 
 export function TaskDetailPage() {

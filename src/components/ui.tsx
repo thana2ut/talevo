@@ -6,6 +6,7 @@ import { Bell, ChevronLeft, GraduationCap, X, type LucideIcon } from "lucide-rea
 import { useEffect, useId, useRef, type ComponentProps, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 export { TalevoMascot } from "@/components/talevo-mascot";
+export { TalevoMascotAvatar } from "@/components/talevo-mascot-avatar";
 import type { SubjectColor } from "@/types";
 import { useAppState } from "@/providers/app-state-provider";
 import { getUnreadNotificationCount } from "@/lib/alerts/notification-utils";

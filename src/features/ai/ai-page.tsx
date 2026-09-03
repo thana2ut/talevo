@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AlertCircle, BarChart3, CalendarDays, Check, ChevronLeft, GraduationCap, Info, ListTodo, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, WifiOff, X, type LucideIcon } from "lucide-react";
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { BottomSheet, TalevoMascot } from "@/components/ui";
+import { BottomSheet, TalevoMascotAvatar } from "@/components/ui";
 import { getPendingTasks } from "@/lib/local-ai";
 import { formatTaskDateTime } from "@/lib/task-utils";
 import { EMPTY_AI_CONTEXT_SELECTION, type AIChatRequest, type AIChatSuccess, type AIContextKey, type AIContextSelection, type AIErrorResponse, type AIHistoryItem, type AIUsageStatusResponse } from "@/lib/ai/types";
@@ -713,9 +713,7 @@ export function AIPage() {
             <ChevronLeft />
           </Link>
           <div className="ai-brand-lockup">
-            <span className="ai-brand-mascot">
-              <TalevoMascot variant="thinking" crop="head" size="sm" decorative priority />
-            </span>
+            <TalevoMascotAvatar size="sm" priority />
             <div className="ai-brand-info">
               <div className="ai-title-row">
                 <span className="ai-brand-kicker">LEARN • PLAN • GROW</span>
@@ -761,8 +759,7 @@ export function AIPage() {
             {chat.length === 0 && !pendingMessage && (
               <div className="ai-empty-state">
                 <div className="ai-empty-orbit">
-                  <TalevoMascot variant="thinking" crop="head" size="lg" decorative priority />
-                  <span><Sparkles /></span>
+                  <TalevoMascotAvatar size="lg" priority showSparkle />
                 </div>
                 <h2>วันนี้อยากให้ TALEVO ช่วยอะไร?</h2>
                 <p>สรุปบทเรียน วางแผนอ่านหนังสือ จัดลำดับงาน หรือเตรียมสอบได้จากตรงนี้</p>
@@ -790,9 +787,7 @@ export function AIPage() {
             {chat.map((message, index) => (
               <div key={message.id} className={`ai-premium-message ${message.role}`}>
                 {message.role === "assistant" && (
-                  <span className="ai-message-avatar">
-                    <TalevoMascot variant="thinking" crop="head" size="xs" decorative priority={index === 0} />
-                  </span>
+                  <TalevoMascotAvatar size="xs" priority={index === 0} />
                 )}
                 <div className="ai-premium-bubble">
                   <AIMessageContent content={message.content} />
@@ -812,9 +807,7 @@ export function AIPage() {
                 </div>
                 {isLoading && (
                   <div className="ai-premium-message assistant is-loading">
-                    <span className="ai-message-avatar">
-                      <TalevoMascot variant="thinking" crop="head" size="xs" decorative />
-                    </span>
+                    <TalevoMascotAvatar size="xs" />
                     <div className="ai-premium-bubble">
                       <span className="ai-thinking-dots" aria-label="AI กำลังคิด">
                         <i /><i /><i />
@@ -932,7 +925,7 @@ export function AIPage() {
         className="ai-about-sheet"
       >
         <div className="ai-about-dialog">
-          <TalevoMascot className="ai-about-mascot" variant="neutral" crop="head" size="md" decorative />
+          <TalevoMascotAvatar size="md" className="ai-about-mascot" />
           <p className="ai-about-subtitle">TALEVO AI ช่วยวางแผนการเรียน ตอบคำถาม และให้คำแนะนำแบบอ่านอย่างเดียว</p>
           <section>
             <h3>โควตา AI ออนไลน์</h3>

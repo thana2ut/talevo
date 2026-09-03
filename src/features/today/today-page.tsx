@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
 import { AlertTriangle, ArrowUpRight, BookOpen, CircleCheck, ClipboardCheck, Clock3, GraduationCap, Sparkles, WalletCards } from "lucide-react";
-import { Card, EmptyState, IconTile, TalevoMascot, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
+import { BottomSheet, Card, EmptyState, Field, IconTile, Input, TalevoMascot, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getDailyBudgetStatus } from "@/lib/finance-utils";
 import { getTaskCourseLabel } from "@/lib/course-utils";
 import { getExamCountdown, getExamDate, getExamReadiness } from "@/lib/academic-utils";
-import { getGreetingByLocalTime } from "@/lib/greeting";
+import { formatHomeGreeting } from "@/lib/greeting";
 import { mondayIndex } from "@/lib/schedule-date";
 import { getScheduleDisplayName, timeToMinutes } from "@/lib/schedule-utils";
 import { calculateTaskProgress, getCompletedSubtaskCount, hasTaskProgress } from "@/lib/task-progress";
@@ -80,7 +80,7 @@ function DueTodayCard({ task, total, now, schedules }: { task?: Task; total: num
   return <Card className="smart-due-card"><IconTile tone={task.color === "orange" ? "orange" : "purple"}><ClipboardCheck /></IconTile><div className="smart-due-copy"><span>{t("today.dueToday")}</span><strong>{task.title}</strong><small>{getTaskCourseLabel(task, schedules)} · {dueLabel}</small>{hasTaskProgress(task) && subtaskTotal > 0 && <><ProgressBar value={calculateTaskProgress(task)} color={task.color} /><small>เหลือ {subtaskTotal - completed} จาก {subtaskTotal} ขั้นตอน</small></>}</div><div className="smart-due-actions"><Link href={`/tasks/${task.id}`}>ทำงานต่อ</Link>{total > 1 && <small>+ อีก {total - 1} งาน</small>}</div></Card>;
 }
 
-function RecommendationCard({ task, risk, gap, nextClass, dailyOverBudget, now }: { task?: Task; risk?: DeadlineRiskAssessment; gap?: FreeGap; nextClass?: ClassSchedule; dailyOverBudget: boolean; now: Date }) {
+function RecommendationCard({ task, risk, gap, nextClass, now }: { task?: Task; risk?: DeadlineRiskAssessment; gap?: FreeGap; nextClass?: ClassSchedule; now: Date }) {
   const { t } = useLanguage();
   let eyebrow = "เริ่มต้นพื้นที่เรียนของคุณ";
   let title = "เพิ่มตารางเรียนแรกเพื่อให้ TALEVO ช่วยวางแผน";
@@ -118,13 +118,6 @@ function RecommendationCard({ task, risk, gap, nextClass, dailyOverBudget, now }
     href = "/schedule";
     action = "ดูคาบเรียน";
     mascotVariant = "happy";
-  } else if (dailyOverBudget) {
-    eyebrow = "การเงินวันนี้";
-    title = "วันนี้ใช้เกินงบแล้ว";
-    metadata = "ลองตรวจรายจ่ายที่ยังไม่จำเป็น";
-    detail = "จัดการงบรายวันต่อเพื่อให้แผนการเงินยังเดินหน้าได้";
-    href = "/finance";
-    action = "ดูการเงิน";
   }
 
   return <section className="smart-recommendation"><div className="smart-recommendation-copy"><span className="smart-recommendation-label"><Sparkles /> {t("today.suggests")}</span><small>{eyebrow}</small><h2>{title}</h2><strong>{metadata}</strong><p>{detail}</p><Link href={href} className="smart-recommendation-action">{action} <ArrowUpRight /></Link></div><div className="smart-mascot-stage" aria-hidden="true"><span className="smart-mascot-aura" /><span className="smart-mascot-orbit" /><span className="smart-mascot-spark smart-mascot-spark-one" /><span className="smart-mascot-spark smart-mascot-spark-two" /><span className="smart-mascot-spark smart-mascot-spark-three" /><TalevoMascot variant={mascotVariant} crop="full" size="sm" sizes="(max-width: 390px) 112px, (max-width: 699px) 128px, 214px" decorative priority /><span className="smart-mascot-pedestal" /></div></section>;
@@ -141,8 +134,11 @@ export function WeeklyRadarSection({ now, schedules, tasks, exams }: { now: Date
 }
 
 export function TodayPage() {
-  const { profile, tasks, schedules, notifications, markNotificationRead, financeTransactions, financeSettings, exams, now: appNow } = useAppState();
+  const { profile, isAuthLoading, isHydrated, tasks, schedules, notifications, markNotificationRead, financeTransactions, financeSettings, updateFinanceSettings, exams, now: appNow } = useAppState();
   const { t, language } = useLanguage();
+  const [budgetOpen, setBudgetOpen] = useState(false);
+  const [draftBudget, setDraftBudget] = useState("");
+  const [budgetError, setBudgetError] = useState("");
   const clientReady = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const referenceDate = useMemo(() => clientReady ? appNow : new Date(2000, 0, 1, 0, 0), [appNow, clientReady]);
   const view = useMemo(() => {
@@ -158,16 +154,45 @@ export function TodayPage() {
   const dailyBudget = getDailyBudgetStatus(financeSettings, financeTransactions, referenceDate);
   const unread = getUnreadNotificationCount(notifications);
   const upcomingExam = [...exams].filter((exam) => { const examDate = getExamDate(exam); return examDate !== null && examDate >= referenceDate; }).sort((first, second) => getExamDate(first)!.getTime() - getExamDate(second)!.getTime())[0];
-  const greeting = clientReady ? getGreetingByLocalTime(referenceDate) : "สวัสดี";
+  const isLoadingProfile = isAuthLoading || !isHydrated || !clientReady;
+  const greeting = formatHomeGreeting(profile.displayName, isLoadingProfile);
+
+  const openBudgetDialog = () => {
+    setDraftBudget(dailyBudget.budget > 0 ? String(dailyBudget.budget) : "");
+    setBudgetError("");
+    setBudgetOpen(true);
+  };
+
+  const handleSaveBudget = (event: FormEvent) => {
+    event.preventDefault();
+    const trimmed = draftBudget.trim();
+    if (!trimmed) {
+      setBudgetError("กรุณาระบุงบรายวัน");
+      return;
+    }
+    const num = Number(trimmed);
+    if (!Number.isFinite(num) || Number.isNaN(num) || num < 0 || num > 1_000_000) {
+      setBudgetError("กรุณาระบุจำนวนเงินที่ถูกต้อง (0–1,000,000 บาท)");
+      return;
+    }
+    try {
+      updateFinanceSettings({ dailyBudget: Math.round(num) });
+      setBudgetOpen(false);
+      setBudgetError("");
+    } catch {
+      setBudgetError("บันทึกงบรายวันไม่สำเร็จ กรุณาลองอีกครั้ง");
+    }
+  };
 
   return <div className="page today-page smart-today-page">
-    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting}{profile.displayName ? ` ${profile.displayName}` : ""} <span aria-hidden="true">👋</span></h1><OverviewSentence classes={view.classes.length} dueCount={view.dueTasks.length} /></div><NotificationBell /></header>
-    <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.dueTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} dailyOverBudget={dailyBudget.isOverBudget} now={referenceDate} /></section>
+    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><OverviewSentence classes={view.classes.length} dueCount={view.dueTasks.length} /></div><NotificationBell /></header>
+    <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.dueTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} now={referenceDate} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     {upcomingExam && <Link className="smart-next-class smart-exam-context" href={`/exams/${upcomingExam.id}`}><IconTile tone="orange"><GraduationCap /></IconTile><div className="smart-next-copy"><span>{t("nav.exams")}</span><strong>{getTaskCourseLabel({ courseId: upcomingExam.courseId }, schedules)}</strong><small>{getExamCountdown(upcomingExam, referenceDate, language)}{getExamReadiness(upcomingExam) ? ` · พร้อม ${getExamReadiness(upcomingExam)?.completed}/${getExamReadiness(upcomingExam)?.total}` : ""}</small></div><ArrowUpRight aria-hidden="true" /></Link>}
-    <div className="smart-today-primary-grid"><NextClassCard classes={view.classes} nowMinutes={view.nowMinutes} /><DueTodayCard task={view.dueTasks[0]} total={view.dueTasks.length} now={referenceDate} schedules={schedules} /><Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong>{view.gaps.length > 1 && <Link href="/schedule">ดูทั้งหมด</Link>}</header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card><Card className={`smart-finance ${dailyBudget.isOverBudget ? "is-over" : ""}`}><header><span><WalletCards /></span><strong>{t("today.finance")}</strong><Link href={dailyBudget.budget === 0 ? "/finance/budgets" : "/finance"}>{dailyBudget.budget === 0 ? t("finance.setBudget") : t("finance.title")}</Link></header><div className="smart-finance-values"><div><span>วันนี้ใช้ไป</span><strong>{formatMoney(dailyBudget.spent)}</strong></div><div><span>{dailyBudget.budget === 0 ? "งบรายวัน" : dailyBudget.isOverBudget ? "เกินงบวันนี้" : "วันนี้เหลือ"}</span><strong>{dailyBudget.budget === 0 ? "ยังไม่ได้ตั้งงบ" : formatMoney(Math.abs(dailyBudget.remaining))}</strong></div></div><small>{dailyBudget.budget === 0 ? "ตั้งงบรายวันเพื่อดูยอดคงเหลือ" : `งบรายวัน ${formatMoney(dailyBudget.budget)}`}</small></Card></div>
+    <div className="smart-today-primary-grid"><NextClassCard classes={view.classes} nowMinutes={view.nowMinutes} /><DueTodayCard task={view.dueTasks[0]} total={view.dueTasks.length} now={referenceDate} schedules={schedules} /><Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong>{view.gaps.length > 1 && <Link href="/schedule">ดูทั้งหมด</Link>}</header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card><Card className={`smart-finance ${dailyBudget.isOverBudget ? "is-over" : ""}`} id="today-finance"><header><span><WalletCards /></span><strong>{t("today.finance")}</strong><button type="button" className="smart-finance-action text-button" onClick={openBudgetDialog}>{dailyBudget.budget === 0 ? "ตั้งงบ" : "แก้ไขงบ"}</button></header><div className="smart-finance-values"><div><span>วันนี้ใช้ไป</span><strong>{formatMoney(dailyBudget.spent)}</strong></div><div><span>งบรายวัน</span><strong>{dailyBudget.budget === 0 ? "ยังไม่ได้ตั้งงบ" : formatMoney(dailyBudget.budget)}</strong></div></div><small>{dailyBudget.budget === 0 ? "ตั้งงบรายวันเพื่อดูยอดคงเหลือ" : dailyBudget.isOverBudget ? "วันนี้ใช้เกินงบแล้ว" : `งบรายวัน ${formatMoney(dailyBudget.budget)}`}</small></Card></div>
     </section>
     <SemesterWeather />
     <div className="smart-today-bottom-grid"><section className="smart-later-section"><SectionHeader title="ภายหลังวันนี้" /><Card className="smart-later-card"><BookOpen /><div><strong>{view.nextClass ? `${view.nextClass.startTime} · ${getScheduleDisplayName(view.nextClass)}` : view.classes.length ? "วันนี้ไม่มีคาบเรียนต่อแล้ว" : "วันนี้ไม่มีคาบเรียน"}</strong><small>{view.nextClass ? `${view.nextClass.room}${view.nextClass.teacher ? ` · ${view.nextClass.teacher}` : ""}` : unread ? `มีการแจ้งเตือนใหม่ ${unread} รายการ` : "ไม่มีการแจ้งเตือนใหม่"}</small></div></Card></section><section className="smart-notification-section"><SectionHeader title="แจ้งเตือนล่าสุด" action="ดูทั้งหมด" href="/notifications" /><Card className="mini-notifications">{notifications.length ? notifications.slice(0, 3).map((item) => <Link href={item.href ?? "/notifications"} key={item.id} className={item.readAt ? "is-read" : ""} onClick={() => markNotificationRead(item.id)}><span className={`mini-tone tone-${item.priority === "high" ? "red" : item.priority === "medium" ? "orange" : "purple"}`} /><div><strong>{item.title}</strong><small>{formatNotificationTime(item.createdAt, language, referenceDate)}</small></div>{!item.readAt && <i aria-label="ยังไม่อ่าน" />}</Link>) : <div className="mini-notification-empty"><strong>ยังไม่มีการแจ้งเตือน</strong><small>TALEVO จะแจ้งจากงาน ตารางเรียน และการสอบที่คุณบันทึกไว้</small></div>}</Card></section></div>
+    <BottomSheet open={budgetOpen} title={dailyBudget.budget === 0 ? "ตั้งงบรายวัน" : "แก้ไขงบรายวัน"} onClose={() => { setBudgetOpen(false); setBudgetError(""); }} closeLabel="ปิด"><form onSubmit={handleSaveBudget} className="form-grid"><Field label="งบที่ต้องการใช้ต่อวัน" error={budgetError}><Input type="number" min="0" max="1000000" step="1" autoFocus placeholder="เช่น 200" value={draftBudget} onChange={(e) => { setDraftBudget(e.target.value); if (budgetError) setBudgetError(""); }} /></Field><div className="dialog-actions"><button type="button" className="secondary-button" onClick={() => { setBudgetOpen(false); setBudgetError(""); }}>ยกเลิก</button><button type="submit" className="primary-button">บันทึก</button></div></form></BottomSheet>
   </div>;
 }

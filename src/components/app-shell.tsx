@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bot, CalendarClock, CalendarDays, ChartNoAxesColumnIncreasing, ChartSpline, ClipboardList, GraduationCap, Home, MoreHorizontal, Plus, Settings, ShieldCheck, UserRound, WalletCards } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { Bot, CalendarClock, CalendarDays, ClipboardList, GraduationCap, Home, Menu, MoreHorizontal, Plus, Settings, UserRound, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BottomSheet, TalevoBrand, NotificationBell } from "@/components/ui";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
@@ -13,9 +13,6 @@ const primaryNavigationItems = [
   { href: "/schedule", key: "nav.schedule", icon: CalendarDays },
   { href: "/tasks", key: "nav.tasks", icon: ClipboardList },
   { href: "/exams", key: "nav.exams", icon: CalendarClock },
-  { href: "/grades", key: "nav.grades", icon: ChartSpline },
-  { href: "/statistics", key: "nav.statistics", icon: ChartNoAxesColumnIncreasing },
-  { href: "/finance", key: "nav.finance", icon: WalletCards },
   { href: "/ai", key: "nav.ai", icon: Bot },
 ];
 
@@ -31,27 +28,39 @@ function NavLink({ href, label, icon: Icon, active }: { href: string; label: str
   return <Link href={href} className={`nav-link ${active ? "active" : ""}`} aria-current={active ? "page" : undefined}><Icon aria-hidden="true" /><span>{label}</span></Link>;
 }
 
-function LocalOwnershipGate() {
-  const { adoptExistingLocalData, startFreshLocalData } = useAppState();
-  const adopt = () => {
-    if (window.confirm("นำข้อมูล TALEVO เดิมในอุปกรณ์นี้มาใช้กับบัญชีที่กำลังเข้าสู่ระบบใช่หรือไม่?")) adoptExistingLocalData();
-  };
-  const startFresh = () => {
-    if (window.confirm("เริ่มบัญชีใหม่โดยเก็บข้อมูล TALEVO เดิมไว้ในอุปกรณ์นี้ใช่หรือไม่?")) startFreshLocalData();
-  };
-  return <main className="local-ownership-gate"><section className="local-ownership-card" aria-labelledby="local-ownership-title"><span><ShieldCheck aria-hidden="true" /></span><h1 id="local-ownership-title">พบข้อมูล TALEVO เดิมในอุปกรณ์นี้</h1><p>ต้องการนำข้อมูลนี้มาใช้กับบัญชีนี้หรือเริ่มบัญชีใหม่? TALEVO จะไม่เลือกแทนคุณและจะไม่เปิดข้อมูลเดิมจนกว่าจะยืนยัน</p><button className="primary-button button-block" type="button" onClick={adopt}>นำข้อมูลมาใช้</button><button className="secondary-button button-block" type="button" onClick={startFresh}>เริ่มบัญชีใหม่</button><small>การเริ่มบัญชีใหม่จะไม่ลบ AppState v8 เดิม ไม่ล้าง IndexedDB และไม่อัปโหลดข้อมูลขึ้น Supabase</small></section></main>;
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, isAuthLoading, isHydrated, localOwnershipStatus } = useAppState();
+  const { isAuthenticated, isAuthLoading, isHydrated } = useAppState();
   const { t } = useLanguage();
   const [quickOpen, setQuickOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [desktopDrawerOpen, setDesktopDrawerOpen] = useState(false);
+  const [previousPathname, setPreviousPathname] = useState(pathname);
+  const hamburgerButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  // Close drawer on route navigation
+  if (previousPathname !== pathname) {
+    setPreviousPathname(pathname);
+    setDesktopDrawerOpen(false);
+  }
   const isPublicRoute = publicRoutes.includes(pathname);
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+
+
+  // Close drawer on Escape key and return focus to hamburger button
+  useEffect(() => {
+    if (!desktopDrawerOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDesktopDrawerOpen(false);
+        hamburgerButtonRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [desktopDrawerOpen]);
+
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated && !isPublicRoute && !isAdminRoute) {
       router.replace(`/login?auth-error=authentication-required&next=${encodeURIComponent(pathname)}`);
@@ -62,21 +71,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (isPublicRoute) return <>{children}</>;
   if (isAuthLoading || !isHydrated) return <div className="app-hydration-screen" role="status" aria-live="polite">กำลังโหลดข้อมูล TALEVO...</div>;
   if (!isAuthenticated) return null;
-  if (localOwnershipStatus === "needs-adoption") return <LocalOwnershipGate />;
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (href: string) =>
+    pathname === href ||
+    pathname.startsWith(`${href}/`) ||
+    (href === "/tasks" && pathname.startsWith("/grades"));
+
+  const closeDrawer = () => {
+    setDesktopDrawerOpen(false);
+    hamburgerButtonRef.current?.focus();
+  };
+
   const quickOptions = [
     { label: t("shell.addTask"), description: t("shell.addTaskDescription"), icon: ClipboardList, href: "/tasks/new" },
     { label: t("shell.addClass"), description: t("shell.addClassDescription"), icon: CalendarDays, href: "/schedule/new" },
     { label: t("shell.addExam"), description: t("shell.addExamDescription"), icon: GraduationCap, href: "/exams/new" },
-    { label: t("shell.addFinance"), description: t("shell.addFinanceDescription"), icon: WalletCards, href: "/finance/new" },
   ];
 
   const moreNavigationOptions = [
-    { label: "การสอบ", description: "ตารางสอบและหัวข้อทบทวน", icon: CalendarClock, href: "/exams" },
-    { label: "วางแผนคะแนน", description: "เป้าหมายเกรดและคะแนนเก็บ", icon: ChartSpline, href: "/grades" },
-    { label: "สรุปการเรียน", description: "สถิติและภาพรวมการเรียน", icon: ChartNoAxesColumnIncreasing, href: "/statistics" },
-    { label: "การเงิน", description: "งบรายวันและบันทึกรายรับรายจ่าย", icon: WalletCards, href: "/finance" },
+    { label: "การสอบ", description: "วันสอบและแผนอ่านหนังสือ", icon: CalendarClock, href: "/exams" },
     { label: "TALEVO AI", description: "ผู้ช่วยวางแผนและตอบคำถามการเรียน", icon: Bot, href: "/ai" },
     { label: "โปรไฟล์", description: "ข้อมูลส่วนตัวและการศึกษา", icon: UserRound, href: "/profile" },
     { label: "การตั้งค่า", description: "การแจ้งเตือนและระบบการใช้งาน", icon: Settings, href: "/settings" },
@@ -85,20 +98,91 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isMoreActive = moreNavigationOptions.some((item) => isActive(item.href));
 
   return (
-    <div className="app-shell">
-      <aside className="desktop-sidebar">
-        <Link href="/today" className="sidebar-brand" aria-label={t("nav.home") + " TALEVO"}><TalevoBrand variant="compact" /></Link>
-        <nav className="sidebar-main" aria-label={t("shell.mainMenu")}>
-          {primaryNavigationItems.map((item) => <NavLink key={item.href} href={item.href} label={t(item.key)} icon={item.icon} active={isActive(item.href)} />)}
+    <div className={`app-shell ${desktopDrawerOpen ? "desktop-drawer-open" : ""}`}>
+      {/* Desktop Navigation Drawer (>= 1200px) */}
+      <aside
+        id="desktop-nav-drawer"
+        className={`desktop-nav-drawer ${desktopDrawerOpen ? "is-open" : ""}`}
+        aria-label={t("shell.mainMenu")}
+      >
+        <div className="drawer-header">
+          <Link
+            href="/today"
+            className="drawer-brand"
+            onClick={() => setDesktopDrawerOpen(false)}
+            aria-label={t("nav.home") + " TALEVO"}
+          >
+            <TalevoBrand variant="compact" />
+          </Link>
+          <button
+            type="button"
+            className="drawer-close-button icon-button"
+            onClick={closeDrawer}
+            aria-label="ปิดเมนูหลัก"
+          >
+            <X aria-hidden="true" />
+          </button>
+        </div>
+
+        <nav className="drawer-main" aria-label={t("shell.mainMenu")}>
+          {primaryNavigationItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`drawer-nav-link ${isActive(item.href) ? "active" : ""}`}
+              aria-current={isActive(item.href) ? "page" : undefined}
+              onClick={() => setDesktopDrawerOpen(false)}
+            >
+              <item.icon aria-hidden="true" />
+              <span>{t(item.key)}</span>
+            </Link>
+          ))}
         </nav>
-        <nav className="sidebar-bottom" aria-label={t("shell.accountMenu")}><NavLink href="/profile" label={t("nav.profile")} icon={UserRound} active={isActive("/profile")} /><NavLink href="/settings" label={t("nav.settings")} icon={Settings} active={isActive("/settings")} /></nav>
+
+        <nav className="drawer-bottom" aria-label={t("shell.accountMenu")}>
+          <Link
+            href="/profile"
+            className={`drawer-nav-link ${isActive("/profile") ? "active" : ""}`}
+            aria-current={isActive("/profile") ? "page" : undefined}
+            onClick={() => setDesktopDrawerOpen(false)}
+          >
+            <UserRound aria-hidden="true" />
+            <span>{t("nav.profile")}</span>
+          </Link>
+          <Link
+            href="/settings"
+            className={`drawer-nav-link ${isActive("/settings") ? "active" : ""}`}
+            aria-current={isActive("/settings") ? "page" : undefined}
+            onClick={() => setDesktopDrawerOpen(false)}
+          >
+            <Settings aria-hidden="true" />
+            <span>{t("nav.settings")}</span>
+          </Link>
+        </nav>
       </aside>
 
       <div className="app-workspace">
-        <div className="desktop-topbar"><NotificationBell /></div>
+        <div className="desktop-topbar">
+          <button
+            ref={hamburgerButtonRef}
+            type="button"
+            className={`desktop-hamburger-button ${desktopDrawerOpen ? "is-active" : ""}`}
+            onClick={() => setDesktopDrawerOpen((prev) => !prev)}
+            aria-label={desktopDrawerOpen ? "ปิดเมนูหลัก" : "เปิดเมนูหลัก"}
+            aria-expanded={desktopDrawerOpen}
+            aria-controls="desktop-nav-drawer"
+          >
+            <Menu aria-hidden="true" />
+          </button>
+          <div className="desktop-topbar-right">
+            <NotificationBell />
+          </div>
+        </div>
+
         <main className={`app-main${pathname === "/ai" ? " app-main-ai" : ""}`}>{children}</main>
       </div>
 
+      {/* Mobile & Tablet Navigation (< 1200px) */}
       <nav className="mobile-bottom-nav" aria-label={t("shell.mobileMenu")}>
         <NavLink href={mobileNavigationItems[0].href} label={t(mobileNavigationItems[0].key)} icon={mobileNavigationItems[0].icon} active={isActive(mobileNavigationItems[0].href)} />
         <NavLink href={mobileNavigationItems[1].href} label={t(mobileNavigationItems[1].key)} icon={mobileNavigationItems[1].icon} active={isActive(mobileNavigationItems[1].href)} />

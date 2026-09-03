@@ -51,13 +51,28 @@ import {
   clearAccountStateStorage,
   createAccountStateStorage,
   getAccountStateKeys,
-  inspectLocalOwnership,
   recordLocalOwnershipDecision,
   type LocalOwnershipStatus,
 } from "@/lib/persistence/local-account-storage";
 import { createClient } from "@/lib/supabase/client";
 import { loadCloudAccountV8 } from "@/lib/supabase/cloud-v8-repository";
 import { hydrateCloudAccountToAppState } from "@/lib/supabase/cloud-hydration";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  persistClassSchedule,
+  persistClassSchedulesBatch,
+  deleteClassSchedule,
+  persistTask,
+  deleteTask as deleteTaskFromCloud,
+  persistExam,
+  deleteExam as deleteExamFromCloud,
+  persistGradePlan,
+  persistFinanceTransaction,
+  deleteFinanceTransaction as deleteFinanceTransactionFromCloud,
+  persistProfile,
+  persistAcademicTerm,
+  persistDailyBudget,
+} from "@/lib/supabase/cloud-mutations";
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
 import type { NotificationPreferences } from "@/types";
@@ -226,6 +241,29 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [gradePlans, setGradePlans] = useState<CourseGradePlan[]>(defaultAppState.gradePlans);
   const [selectedFinanceMonth, setSelectedFinanceMonth] = useState(() => getLocalMonthKey());
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const pendingCloudMutationsRef = useRef<Set<Promise<unknown>>>(new Set());
+
+  const runCloudMutation = useCallback((mutationFn: (client: SupabaseClient, uid: string) => Promise<{ error: Error | null }>) => {
+    if (!userId) return;
+    const currentUid = userId;
+    const client = createClient();
+    const promise = (async () => {
+      try {
+        const { error } = await mutationFn(client, currentUid);
+        if (error) {
+          console.warn("[TALEVO] Cloud persistence warning:", error.message);
+          setSessionNotice("บันทึกข้อมูลไปยังระบบคลาวด์ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต");
+        }
+      } catch (err) {
+        console.warn("[TALEVO] Cloud persistence error:", err);
+        setSessionNotice("บันทึกข้อมูลไปยังระบบคลาวด์ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต");
+      }
+    })();
+    pendingCloudMutationsRef.current.add(promise);
+    promise.finally(() => {
+      pendingCloudMutationsRef.current.delete(promise);
+    });
+  }, [userId]);
 
   const applySnapshot = useCallback((snapshot: PersistedAppState) => {
     setProfile(snapshot.profile);
@@ -268,16 +306,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const ownership = inspectLocalOwnership(window.localStorage, userId);
-      if (ownership === "needs-adoption") {
-        activeStorageRef.current = null;
-        applySnapshot(createAppStateSnapshot(accountDefaults, tabIdRef.current));
-        setLocalOwnershipStatus(ownership);
-        setHydratedScope(userId);
-        setIsHydrated(true);
-        return;
-      }
-
+      setLocalOwnershipStatus("ready");
       const accountStorage = createAccountStateStorage(window.localStorage, userId);
       activeStorageRef.current = accountStorage;
 
@@ -513,7 +542,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     financeSettings,
     financeCategories,
     selectedFinanceMonth,
-    updateProfile: (next) => setProfile((current) => ({ ...current, ...next })),
+    updateProfile: (next) => {
+      setProfile((current) => {
+        const updated = { ...current, ...next };
+        runCloudMutation((client, uid) => persistProfile(client, uid, updated));
+        return updated;
+      });
+    },
     registerLocalAccount: (nextProfile, nextAcademicTerm, nextUserId) => {
       const accountStorage = createAccountStateStorage(window.localStorage, nextUserId);
       const snapshot = createAppStateSnapshot({
@@ -550,8 +585,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: permission === "granted" } }));
     },
     updateGoals: (next) => setGoals((current) => ({ ...current, ...next })),
-    updateAcademicTerm: (next) => setAcademicTerm(next),
+    updateAcademicTerm: (next) => {
+      setAcademicTerm((current) => {
+        const updated = { ...current, ...next };
+        runCloudMutation((client, uid) => persistAcademicTerm(client, uid, updated));
+        return updated;
+      });
+    },
     endSession: async () => {
+      if (pendingCloudMutationsRef.current.size > 0) {
+        await Promise.race([
+          Promise.allSettled(Array.from(pendingCloudMutationsRef.current)),
+          new Promise((resolve) => setTimeout(resolve, 3000)),
+        ]);
+      }
       const result = await signOut();
       if (result.error) return result.error;
       setSessionNotice("ออกจากระบบจากอุปกรณ์นี้แล้ว");
@@ -576,20 +623,35 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     clearSessionNotice: () => setSessionNotice(null),
     addTask: (input, requestedId) => {
       const id = requestedId ?? uid("task");
-      setTasks((current) => [{ ...input, id, color: normalizeTaskColor(input.color), dueLabel: "กำหนดใหม่", subtasks: input.subtasks ?? [], attachments: input.attachments ?? [], status: "todo" }, ...current]);
+      const newTask: Task = { ...input, id, color: normalizeTaskColor(input.color), dueLabel: "กำหนดใหม่", subtasks: input.subtasks ?? [], attachments: input.attachments ?? [], status: "todo" };
+      setTasks((current) => [newTask, ...current]);
+      runCloudMutation((client, uid) => persistTask(client, uid, newTask));
       return id;
     },
-    updateTask: (id, input) => setTasks((current) => current.map((task) => task.id === id ? {
-      ...task,
-      ...input,
-      color: normalizeTaskColor(input.color),
-      title: input.title.trim(),
-      description: input.description.trim(),
-    } : task)),
+    updateTask: (id, input) => {
+      let updatedTask: Task | null = null;
+      setTasks((current) => current.map((task) => {
+        if (task.id !== id) return task;
+        const nextTask: Task = {
+          ...task,
+          ...input,
+          color: normalizeTaskColor(input.color),
+          title: input.title.trim(),
+          description: input.description.trim(),
+        };
+        updatedTask = nextTask;
+        return nextTask;
+      }));
+      if (updatedTask) {
+        const t = updatedTask;
+        runCloudMutation((client, uid) => persistTask(client, uid, t));
+      }
+    },
     deleteTask: (id) => {
       const task = tasks.find((item) => item.id === id);
       if (task) cleanupTaskAttachments([task]);
       setTasks((current) => current.filter((item) => item.id !== id));
+      runCloudMutation((client, uid) => deleteTaskFromCloud(client, uid, id));
     },
     addTaskAttachments: (taskId, attachments) => setTasks((current) => current.map((task) => task.id === taskId
       ? { ...task, attachments: [...(task.attachments ?? []), ...attachments] }
@@ -597,15 +659,35 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     removeTaskAttachment: (taskId, attachmentId) => setTasks((current) => current.map((task) => task.id === taskId
       ? { ...task, attachments: (task.attachments ?? []).filter((attachment) => attachment.id !== attachmentId) }
       : task)),
-    setTaskStatus: (id, status) => setTasks((current) => current.map((task) => {
-      if (task.id !== id) return task;
-      return { ...task, status, completedAt: undefined };
-    })),
-    completeTask: (id) => setTasks((current) => current.map((task) => {
-      if (task.id !== id || task.status === "completed") return task;
-      if ((task.subtasks?.length ?? 0) > 0 && task.subtasks?.some((item) => !item.completed)) return task;
-      return { ...task, status: "completed", completedAt: new Date().toISOString() };
-    })),
+    setTaskStatus: (id, status) => setTasks((current) => {
+      let updatedTask: Task | null = null;
+      const nextList = current.map((task) => {
+        if (task.id !== id) return task;
+        const nextTask = { ...task, status, completedAt: undefined };
+        updatedTask = nextTask;
+        return nextTask;
+      });
+      if (updatedTask) {
+        const t = updatedTask;
+        runCloudMutation((client, uid) => persistTask(client, uid, t));
+      }
+      return nextList;
+    }),
+    completeTask: (id) => setTasks((current) => {
+      let updatedTask: Task | null = null;
+      const nextList = current.map((task) => {
+        if (task.id !== id || task.status === "completed") return task;
+        if ((task.subtasks?.length ?? 0) > 0 && task.subtasks?.some((item) => !item.completed)) return task;
+        const nextTask = { ...task, status: "completed" as const, completedAt: new Date().toISOString() };
+        updatedTask = nextTask;
+        return nextTask;
+      });
+      if (updatedTask) {
+        const t = updatedTask;
+        runCloudMutation((client, uid) => persistTask(client, uid, t));
+      }
+      return nextList;
+    }),
     toggleSubtask: (taskId, subtaskId) => setTasks((current) => current.map((task) => {
       if (task.id !== taskId) return task;
       const subtasks = (task.subtasks ?? []).map((item) => item.id !== subtaskId ? item : { ...item, completed: !item.completed, completedAt: !item.completed ? new Date().toISOString() : undefined });
@@ -632,6 +714,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     })),
     addSchedule: (input) => {
       const id = uid("class");
+      let createdSchedule: ClassSchedule | null = null;
       setSchedules((current) => {
         const matchingCourse = current.find(
           (item) => (Boolean(input.courseCode) && item.courseCode === input.courseCode) ||
@@ -641,12 +724,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const color = matchingCourse?.color
           ? normalizeTalevoColor(matchingCourse.color)
           : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || courseId || input.name));
-        return [...current, { ...input, color, id, courseId }];
+        const newSchedule: ClassSchedule = { ...input, color, id, courseId };
+        createdSchedule = newSchedule;
+        return [...current, newSchedule];
       });
+      if (createdSchedule) {
+        const sched = createdSchedule;
+        runCloudMutation((client, uid) => persistClassSchedule(client, uid, sched));
+      }
       return id;
     },
     importSyllabus: (payload) => {
       let importedSchedulesCount = 0;
+      let importedSchedulesList: ClassSchedule[] = [];
       setSchedules((current) => {
         const imported = payload.schedules.map((input) => {
           const matchingCourse = current.find(
@@ -664,37 +754,64 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           };
         });
         importedSchedulesCount = imported.length;
+        importedSchedulesList = imported;
         return [...current, ...imported];
       });
-      const importedTasks = payload.tasks.map((input) => ({ ...input, id: uid("task"), color: normalizeTaskColor(input.color), dueLabel: "กำหนดใหม่", subtasks: input.subtasks ?? [], attachments: input.attachments ?? [], status: "todo" as const }));
-      const importedExams = payload.exams.map((input) => { const timestamp = new Date().toISOString(); return { ...input, id: uid("exam"), topics: input.topics ?? [], createdAt: timestamp, updatedAt: timestamp }; });
+      const importedTasks: Task[] = payload.tasks.map((input) => ({ ...input, id: uid("task"), color: normalizeTaskColor(input.color), dueLabel: "กำหนดใหม่", subtasks: input.subtasks ?? [], attachments: input.attachments ?? [], status: "todo" as const }));
+      const importedExams: Exam[] = payload.exams.map((input) => { const timestamp = new Date().toISOString(); return { ...input, id: uid("exam"), topics: input.topics ?? [], createdAt: timestamp, updatedAt: timestamp }; });
       // React batches these state updates from one confirmed user action; persistence observes one complete snapshot.
       setTasks((current) => [...importedTasks, ...current]);
       setExams((current) => [...current, ...importedExams]);
+
+      runCloudMutation(async (client, uid) => {
+        if (importedSchedulesList.length > 0) {
+          await persistClassSchedulesBatch(client, uid, importedSchedulesList);
+        }
+        for (const task of importedTasks) {
+          await persistTask(client, uid, task);
+        }
+        for (const exam of importedExams) {
+          await persistExam(client, uid, exam);
+        }
+        return { error: null };
+      });
+
       return { schedules: importedSchedulesCount, tasks: importedTasks.length, exams: importedExams.length };
     },
-    updateSchedule: (id, input) => setSchedules((current) => {
-      const previous = current.find((item) => item.id === id);
-      if (!previous) return current;
-      const name = input.name.trim();
-      const courseCode = input.courseCode !== undefined ? (input.courseCode.trim() || undefined) : previous.courseCode;
-      const section = input.section !== undefined ? (input.section.trim() || undefined) : previous.section;
-      const credits = input.credits !== undefined ? input.credits : previous.credits;
-      return current.map((item) => item.courseId === previous.courseId
-        ? {
-            ...item,
-            ...(item.id === id ? input : {}),
-            id: item.id,
-            courseId: previous.courseId,
-            courseCode: item.id === id ? courseCode : (item.courseCode ?? courseCode),
-            section: item.id === id ? section : (item.section ?? section),
-            credits: item.id === id ? credits : (item.credits ?? credits),
-            name,
-            color: normalizeTalevoColor(input.color),
-          }
-        : item);
-    }),
-    deleteSchedule: (id) => setSchedules((current) => current.filter((item) => item.id !== id)),
+    updateSchedule: (id, input) => {
+      let updatedSchedules: ClassSchedule[] = [];
+      setSchedules((current) => {
+        const previous = current.find((item) => item.id === id);
+        if (!previous) return current;
+        const name = input.name.trim();
+        const courseCode = input.courseCode !== undefined ? (input.courseCode.trim() || undefined) : previous.courseCode;
+        const section = input.section !== undefined ? (input.section.trim() || undefined) : previous.section;
+        const credits = input.credits !== undefined ? input.credits : previous.credits;
+        const nextList = current.map((item) => item.courseId === previous.courseId
+          ? {
+              ...item,
+              ...(item.id === id ? input : {}),
+              id: item.id,
+              courseId: previous.courseId,
+              courseCode: item.id === id ? courseCode : (item.courseCode ?? courseCode),
+              section: item.id === id ? section : (item.section ?? section),
+              credits: item.id === id ? credits : (item.credits ?? credits),
+              name,
+              color: normalizeTalevoColor(input.color),
+            }
+          : item);
+        updatedSchedules = nextList.filter((item) => item.courseId === previous.courseId);
+        return nextList;
+      });
+      if (updatedSchedules.length > 0) {
+        const list = updatedSchedules;
+        runCloudMutation((client, uid) => persistClassSchedulesBatch(client, uid, list));
+      }
+    },
+    deleteSchedule: (id) => {
+      setSchedules((current) => current.filter((item) => item.id !== id));
+      runCloudMutation((client, uid) => deleteClassSchedule(client, uid, id));
+    },
     markNotificationRead: (id) => setNotifications((current) => current.map((item) => item.id === id && !item.readAt ? { ...item, readAt: new Date().toISOString() } : item)),
     markAllNotificationsRead: () => setNotifications((current) => { const readAt = new Date().toISOString(); return current.map((item) => item.readAt ? item : { ...item, readAt }); }),
     deleteNotification: (id) => {
@@ -738,14 +855,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     },
     addFinanceTransaction: (input) => {
       const id = uid("finance");
-      setFinanceTransactions((current) => [{ ...input, id }, ...current]);
+      const newTx: FinanceTransaction = { ...input, id };
+      setFinanceTransactions((current) => [newTx, ...current]);
+      const matchingCategory = financeCategories.find((cat) => cat.name.trim().toLowerCase() === input.category.trim().toLowerCase());
+      runCloudMutation((client, uid) => persistFinanceTransaction(client, uid, newTx, matchingCategory?.id ?? null));
       return id;
     },
     updateFinanceTransaction: (id, input) => setFinanceTransactions((current) => current.map((item) => item.id === id ? { ...input, id } : item)),
-    deleteFinanceTransaction: (id) => setFinanceTransactions((current) => current.filter((item) => item.id !== id)),
+    deleteFinanceTransaction: (id) => {
+      setFinanceTransactions((current) => current.filter((item) => item.id !== id));
+      runCloudMutation((client, uid) => deleteFinanceTransactionFromCloud(client, uid, id));
+    },
     addSavingGoal: (title, targetAmount) => setSavingGoals((current) => [...current, { id: uid("saving"), title: title.trim(), targetAmount, savedAmount: 0 }]),
     contributeToSavingGoal: (id, amount) => setSavingGoals((current) => current.map((item) => item.id === id ? { ...item, savedAmount: Math.min(item.targetAmount, item.savedAmount + amount) } : item)),
-    updateFinanceSettings: (next) => setFinanceSettings((current) => ({ ...current, ...next, dailyBudget: Math.max(0, next.dailyBudget ?? current.dailyBudget) })),
+    updateFinanceSettings: (next) => {
+      let updatedBudget = 0;
+      setFinanceSettings((current) => {
+        const updated = {
+          ...current,
+          ...next,
+          dailyBudget: Math.max(0, next.dailyBudget ?? current.dailyBudget),
+        };
+        updatedBudget = updated.dailyBudget;
+        return updated;
+      });
+      runCloudMutation((client, uid) =>
+        persistDailyBudget(client, uid, updatedBudget, selectedFinanceMonth)
+      );
+    },
     addFinanceCategory: (input) => { const id = uid("category"); setFinanceCategories((current) => [...current, { ...input, id, createdAt: new Date().toISOString() }]); return id; },
     updateFinanceCategory: (id, next) => {
       const currentCategory = financeCategories.find((item) => item.id === id);
@@ -761,16 +898,71 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setFinanceCategories((current) => current.filter((item) => item.id !== id));
       return true;
     },
-    addExam: (input) => { const id = uid("exam"); const now = new Date().toISOString(); setExams((current) => [...current, { ...input, id, topics: input.topics ?? [], createdAt: now, updatedAt: now }]); return id; },
-    updateExam: (id, next) => setExams((current) => current.map((exam) => exam.id === id ? { ...exam, ...next, updatedAt: new Date().toISOString() } : exam)),
-    deleteExam: (id) => setExams((current) => current.filter((exam) => exam.id !== id)),
-    toggleExamTopic: (examId, topicId) => setExams((current) => current.map((exam) => exam.id !== examId ? exam : { ...exam, topics: exam.topics.map((topic) => topic.id !== topicId ? topic : { ...topic, completed: !topic.completed, completedAt: !topic.completed ? new Date().toISOString() : undefined }), updatedAt: new Date().toISOString() })),
+    addExam: (input) => {
+      const id = uid("exam");
+      const now = new Date().toISOString();
+      const newExam: Exam = { ...input, id, topics: input.topics ?? [], createdAt: now, updatedAt: now };
+      setExams((current) => [...current, newExam]);
+      runCloudMutation((client, uid) => persistExam(client, uid, newExam));
+      return id;
+    },
+    updateExam: (id, next) => {
+      let updatedExam: Exam | null = null;
+      setExams((current) => current.map((exam) => {
+        if (exam.id !== id) return exam;
+        const nextExam: Exam = { ...exam, ...next, updatedAt: new Date().toISOString() };
+        updatedExam = nextExam;
+        return nextExam;
+      }));
+      if (updatedExam) {
+        const ex = updatedExam;
+        runCloudMutation((client, uid) => persistExam(client, uid, ex));
+      }
+    },
+    deleteExam: (id) => {
+      setExams((current) => current.filter((exam) => exam.id !== id));
+      runCloudMutation((client, uid) => deleteExamFromCloud(client, uid, id));
+    },
+    toggleExamTopic: (examId, topicId) => {
+      let updatedExam: Exam | null = null;
+      setExams((current) => current.map((exam) => {
+        if (exam.id !== examId) return exam;
+        const nextExam: Exam = {
+          ...exam,
+          topics: exam.topics.map((topic) => topic.id !== topicId ? topic : { ...topic, completed: !topic.completed, completedAt: !topic.completed ? new Date().toISOString() : undefined }),
+          updatedAt: new Date().toISOString(),
+        };
+        updatedExam = nextExam;
+        return nextExam;
+      }));
+      if (updatedExam) {
+        const ex = updatedExam;
+        runCloudMutation((client, uid) => persistExam(client, uid, ex));
+      }
+    },
     addCourseNote: (input) => { const id = uid("note"); const now = new Date().toISOString(); setCourseNotes((current) => [{ ...input, id, createdAt: now, updatedAt: now }, ...current]); return id; },
     updateCourseNote: (id, next) => setCourseNotes((current) => current.map((note) => note.id === id ? { ...note, ...next, updatedAt: new Date().toISOString() } : note)),
     deleteCourseNote: (id) => setCourseNotes((current) => current.filter((note) => note.id !== id)),
     toggleNotePinned: (id) => setCourseNotes((current) => current.map((note) => note.id === id ? { ...note, pinned: !note.pinned, updatedAt: new Date().toISOString() } : note)),
-    upsertGradePlan: (courseId, next) => setGradePlans((current) => { const existing = current.find((plan) => plan.courseId === courseId); return existing ? current.map((plan) => plan.id === existing.id ? { ...plan, ...next } : plan) : [...current, { ...next, id: uid("grade"), courseId }]; }),
-  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, chat, courseNotes, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
+    upsertGradePlan: (courseId, next) => {
+      let targetPlan: CourseGradePlan | null = null;
+      setGradePlans((current) => {
+        const existing = current.find((plan) => plan.courseId === courseId);
+        if (existing) {
+          const updated = { ...existing, ...next };
+          targetPlan = updated;
+          return current.map((plan) => plan.id === existing.id ? updated : plan);
+        }
+        const created: CourseGradePlan = { ...next, id: uid("grade"), courseId };
+        targetPlan = created;
+        return [...current, created];
+      });
+      if (targetPlan) {
+        const gp = targetPlan;
+        runCloudMutation((client, uid) => persistGradePlan(client, uid, gp));
+      }
+    },
+  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, chat, courseNotes, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

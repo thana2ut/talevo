@@ -33,6 +33,7 @@ const files = {
   uiPage: "src/app/ai/page.tsx",
   migration: "supabase/migrations/20260902170000_talevo_ai_rolling_24h_quota.sql",
   localAI: "src/lib/local-ai.ts",
+  temporal: "src/lib/ai/temporal-context.ts",
 };
 
 for (const [key, file] of Object.entries(files)) {
@@ -52,6 +53,18 @@ const handler = read(files.handler);
 const statusRoute = read(files.statusRoute);
 const ui = read(files.ui);
 const localAI = read(files.localAI);
+const temporal = read(files.temporal);
+
+// -------------------------------------------------------------
+// Temporal Context & Timezone Grounding Contracts
+// -------------------------------------------------------------
+check(temporal.includes("Asia/Bangkok"), "Temporal context must explicitly use Asia/Bangkok timezone");
+check(temporal.includes("[CURRENT_TIME_CONTEXT]"), "Temporal context block must define [CURRENT_TIME_CONTEXT]");
+check(temporal.includes("วันจันทร์") && temporal.includes("วันศุกร์") && temporal.includes("วันอาทิตย์"), "Temporal context must define canonical Thai weekdays");
+check(context.includes("buildTemporalContextBlock") && context.includes("getAuthoritativeTemporalContext"), "talevo-context.ts must inject authoritative temporal context");
+check(localAI.includes("getAuthoritativeTemporalContext"), "local-ai.ts must use authoritative temporal context");
+check(groqAdapter.includes("CURRENT_TIME_CONTEXT"), "Groq adapter must include temporal grounding");
+check(geminiAdapter.includes("CURRENT_TIME_CONTEXT"), "Gemini adapter must include temporal grounding");
 
 // -------------------------------------------------------------
 // Point 1 & 2: Provider Configuration Detection & Model Defaults
@@ -380,6 +393,101 @@ async function runRuntimeContracts() {
     check(deniedRes.status === 429, "Rate-limited request must return HTTP 429");
     const deniedBody = await deniedRes.json();
     check(deniedBody.code === "AI_RATE_LIMIT", "Denied response must have code AI_RATE_LIMIT");
+
+    // Mascot Avatar contract checks
+    check(exists("public/brand/talevo-mascot-head.png"), "public/brand/talevo-mascot-head.png must exist");
+    check(exists("public/brand/talevo-ai-logo.png"), "public/brand/talevo-ai-logo.png must exist");
+    const mascotAvatarSource = read("src/components/talevo-mascot-avatar.tsx");
+    check(mascotAvatarSource.includes("/brand/talevo-mascot-head.png"), "TalevoMascotAvatar must retain brand mascot head asset reference");
+    check(mascotAvatarSource.includes("/brand/talevo-ai-logo.png"), "TalevoMascotAvatar must use new official AI logo");
+    check(ui.includes('<TalevoMascotAvatar size="sm"'), "AI page header must use TalevoMascotAvatar size sm");
+    check(ui.includes('<TalevoMascotAvatar size="lg"'), "AI empty state must use TalevoMascotAvatar size lg");
+    check(ui.includes('<TalevoMascotAvatar size="xs"'), "Assistant message avatar must use TalevoMascotAvatar size xs");
+    check(!mascotAvatarSource.includes("talevo-wordmark-upload.png"), "TalevoMascotAvatar must not use horizontal wordmark logo");
+    check(!mascotAvatarSource.includes("mascot-full"), "TalevoMascotAvatar must not use mascot full body");
+    const aiCss = read("src/styles/ai-composition.css");
+    check(aiCss.includes("object-fit: contain"), "Mascot avatar image must use object-fit: contain to prevent cropping ears/crown");
+    check(aiCss.includes(".talevo-avatar-sparkle"), "Sparkle badge must be styled on upper edge of avatar");
+
+    // -------------------------------------------------------------
+    // Temporal Grounding Runtime Unit Contracts
+    // -------------------------------------------------------------
+    const { getAuthoritativeTemporalContext, buildTemporalContextBlock } = require("../src/lib/ai/temporal-context.ts");
+    const { buildTalevoContext } = require("../src/lib/ai/talevo-context.ts");
+
+    // Boundary A: 2026-09-04T02:30 Asia/Bangkok (UTC 2026-09-03T19:30:00Z) -> Friday
+    const ctxA = getAuthoritativeTemporalContext(new Date("2026-09-03T19:30:00Z"));
+    check(ctxA.weekdayEn === "Friday" && ctxA.canonicalDay === 4 && ctxA.localDate === "2026-09-04", "Boundary A: 02:30 Asia/Bangkok must be Friday 2026-09-04");
+    check(ctxA.weekdayTh === "วันศุกร์", "Boundary A: Friday must map to วันศุกร์");
+    check(ctxA.timeZone === "Asia/Bangkok", "Boundary A: Timezone must be Asia/Bangkok");
+    const blockA = buildTemporalContextBlock(ctxA);
+    check(blockA.includes("Asia/Bangkok") && blockA.includes("Friday") && blockA.includes("วันศุกร์"), "buildTemporalContextBlock must include timezone and weekdays");
+
+    // Boundary B: Thursday 23:59 Asia/Bangkok (UTC 2026-09-03T16:59:00Z) -> Thursday
+    const ctxB = getAuthoritativeTemporalContext(new Date("2026-09-03T16:59:00Z"));
+    check(ctxB.weekdayEn === "Thursday" && ctxB.canonicalDay === 3 && ctxB.localDate === "2026-09-03", "Boundary B: Thursday 23:59 Asia/Bangkok must be Thursday 2026-09-03");
+
+    // Boundary C: One minute later Friday 00:00 Asia/Bangkok (UTC 2026-09-03T17:00:00Z) -> Friday
+    const ctxC = getAuthoritativeTemporalContext(new Date("2026-09-03T17:00:00Z"));
+    check(ctxC.weekdayEn === "Friday" && ctxC.canonicalDay === 4 && ctxC.localDate === "2026-09-04", "Boundary C: Midnight rollover must be Friday 2026-09-04");
+
+    // Boundary D: UTC date differs from Bangkok date -> Bangkok date must win
+    check(ctxA.localDate !== "2026-09-03", "Boundary D: Bangkok local date must win over UTC date");
+
+    // Boundary E: Sunday -> correctly maps to TALEVO schedule day 6
+    const ctxE = getAuthoritativeTemporalContext(new Date("2026-09-06T03:00:00Z"));
+    check(ctxE.weekdayEn === "Sunday" && ctxE.canonicalDay === 6 && ctxE.weekdayTh === "วันอาทิตย์", "Boundary E: Sunday must map to TALEVO schedule day 6");
+
+    // Boundary F: Monday -> correctly maps to TALEVO schedule day 0
+    const ctxF = getAuthoritativeTemporalContext(new Date("2026-09-07T03:00:00Z"));
+    check(ctxF.weekdayEn === "Monday" && ctxF.canonicalDay === 0 && ctxF.weekdayTh === "วันจันทร์", "Boundary F: Monday must map to TALEVO schedule day 0");
+
+    // Context builder temporal block test
+    const mockSupabase = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              order: () => ({ limit: async () => ({ data: [], error: null }) }),
+              limit: async () => ({ data: [], error: null }),
+            }),
+          }),
+        }),
+      }),
+    };
+
+    const emptyContextRes = await buildTalevoContext(mockSupabase, "u1", { schedule: false, tasks: false, exams: false, grades: false }, new Date("2026-09-03T19:30:00Z"));
+    check(emptyContextRes.attachedContext.length === 0, "Empty selection must report attachedContext as empty");
+    check(emptyContextRes.block.includes("[CURRENT_TIME_CONTEXT]"), "Empty selection must still contain [CURRENT_TIME_CONTEXT]");
+    check(emptyContextRes.block.includes("Asia/Bangkok"), "Context block must include Asia/Bangkok");
+    check(emptyContextRes.block.includes("Friday"), "Context block must include Friday for 2026-09-04");
+
+    // Local AI Friday schedule test with injected timestamp
+    const fridayClass = { id: "c1", courseId: "c1", name: "Algorithms", day: 4, startTime: "09:00", endTime: "12:00", room: "Lab 3" };
+    const localResFriday = buildLocalAIResponse({
+      content: "วันนี้มีเรียนกี่โมงครับ",
+      tasks: [],
+      schedules: [fridayClass],
+      exams: [],
+      now: new Date("2026-09-03T19:30:00Z"), // Friday in Bangkok
+      language: "th",
+      selectedContext: { schedule: true, tasks: false, exams: false, grades: false },
+    });
+    check(localResFriday.content.includes("Algorithms 09:00–12:00"), "Local AI must return Friday classes for Friday prompt");
+    check(localResFriday.content.includes("วันศุกร์"), "Local AI must confirm Friday in Thai");
+
+    // Local AI without schedule context selected
+    const localResNoSchedule = buildLocalAIResponse({
+      content: "วันนี้มีเรียนกี่โมงครับ",
+      tasks: [],
+      schedules: [fridayClass],
+      exams: [],
+      now: new Date("2026-09-03T19:30:00Z"),
+      language: "th",
+      selectedContext: { schedule: false, tasks: false, exams: false, grades: false },
+    });
+    check(localResNoSchedule.content.includes("วันศุกร์"), "Local AI must know today is Friday even when schedule context is unchecked");
+    check(localResNoSchedule.content.includes("เลือกข้อมูลตารางเรียน"), "Local AI must ask to select schedule data when unchecked");
 
   } finally {
     supabaseServer.createClient = origCreateClient;

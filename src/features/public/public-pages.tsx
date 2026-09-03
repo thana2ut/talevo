@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Bot, CalendarDays, ChartNoAxesColumnIncreasing, ClipboardCheck, Eye, EyeOff, LockKeyhole, Mail, Sparkles, TriangleAlert, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, Sparkles, TriangleAlert, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Field, Input, Select, TalevoBrand, TalevoMascot } from "@/components/ui";
 import { APP_BRAND } from "@/lib/brand";
@@ -59,7 +59,7 @@ export function WelcomePage() {
       <section className="welcome-benefits" aria-label="ความสามารถของ TALEVO">
         <article className="welcome-benefit"><CalendarDays aria-hidden="true" /><span><strong>จัดการตารางเรียน</strong><small>เห็นภาพเรียนชัดเจน</small></span></article>
         <article className="welcome-benefit"><ClipboardCheck aria-hidden="true" /><span><strong>ติดตามงาน</strong><small>ไม่พลาดกำหนดส่ง</small></span></article>
-        <article className="welcome-benefit"><ChartNoAxesColumnIncreasing aria-hidden="true" /><span><strong>สรุปการเรียน</strong><small>ดูเวลาที่ใช้จริง</small></span></article>
+        <article className="welcome-benefit"><GraduationCap aria-hidden="true" /><span><strong>การสอบและคะแนน</strong><small>วางแผนการเตรียมตัว</small></span></article>
         <article className="welcome-benefit"><Bot aria-hidden="true" /><span><strong>AI ช่วยวางแผน</strong><small>เริ่มวันได้ง่ายขึ้น</small></span></article>
       </section>
     </main>
@@ -77,6 +77,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   const [form, setForm] = useState<RegistrationDraft>(initialRegistrationDraft);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sent, setSent] = useState(false);
+  const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginNotice, setLoginNotice] = useState("");
   const [resendFeedback, setResendFeedback] = useState("");
@@ -96,9 +97,10 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       const authError = params.get("auth-error");
-      setShowConfirmationResend(authError === "invalid-link" || authError === "expired-link");
+      setShowConfirmationResend(authError === "invalid-link" || authError === "expired-link" || authError === "confirmation-failed");
       if (authError === "invalid-link") setLoginError("ลิงก์ยืนยันไม่ถูกต้อง กรุณาขอลิงก์ใหม่");
       if (authError === "expired-link") setLoginError("ลิงก์ยืนยันหมดอายุหรือถูกใช้ไปแล้ว กรุณาขอลิงก์ใหม่");
+      if (authError === "confirmation-failed") setLoginError("ยืนยันอีเมลไม่สำเร็จ กรุณาขอลิงก์ยืนยันใหม่อีกครั้ง");
       if (authError === "expired-recovery") setLoginError("ลิงก์ตั้งรหัสผ่านหมดอายุหรือถูกใช้ไปแล้ว กรุณาขอลิงก์ใหม่");
       if (authError === "callback-failed") setLoginError("ระบบตรวจสอบลิงก์ยืนยันไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่");
       if (authError === "confirmation-session") setLoginError("ยืนยันอีเมลสำเร็จ แต่ระบบปิดเซสชันชั่วคราวไม่สำเร็จ กรุณาปิดหน้านี้แล้วเข้าสู่ระบบใหม่");
@@ -189,27 +191,30 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
       });
       if (result.error) {
         setLoginError(result.error);
-      } else {
-        if (!result.userId) {
-          setLoginError("Supabase ไม่ได้ส่งข้อมูลบัญชีกลับมา กรุณาลองเข้าสู่ระบบก่อนบันทึกข้อมูลในอุปกรณ์");
-          setIsSubmitting(false);
-          submitLockRef.current = false;
-          return;
-        }
-        registerLocalAccount(registrationData.profile, registrationData.academicTerm, result.userId);
-        if (result.requiresEmailConfirmation) {
-          setSent(true);
-          setResendCooldown(60);
-        }
-        else {
-          router.push("/today");
-          router.refresh();
-        }
+        setIsSubmitting(false);
+        submitLockRef.current = false;
+        return;
       }
+      if (!result.userId) {
+        setLoginError("Supabase ไม่ได้ส่งข้อมูลบัญชีกลับมา กรุณาลองเข้าสู่ระบบก่อนบันทึกข้อมูลในอุปกรณ์");
+        setIsSubmitting(false);
+        submitLockRef.current = false;
+        return;
+      }
+      registerLocalAccount(registrationData.profile, registrationData.academicTerm, result.userId);
+      setIsRegisterSuccess(true);
+      setTimeout(() => {
+        router.push("/today");
+        router.refresh();
+      }, 700);
+      return;
     } else {
       const result = await signIn(form.email, form.password);
       if (result.error) {
         setLoginError(result.error);
+        if (result.error.includes("ยืนยันอีเมล")) {
+          setShowConfirmationResend(true);
+        }
       } else {
         const params = new URLSearchParams(window.location.search);
         router.push(getSafeInternalPath(params.get("next"), "/today"));
@@ -238,18 +243,21 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         <div className="auth-card">
           <span className="auth-kicker">TALEVO</span>
           <h1>{title}</h1><p>{subtitle}</p>
-          {sent ? (
+          {isRegisterSuccess ? (
+            <div className="register-success-transition" role="status">
+              <div className="register-success-icon-wrap">
+                <CheckCircle2 className="register-success-check" aria-hidden="true" />
+              </div>
+              <TalevoMascot variant="neutral" crop="head" size="sm" decorative priority />
+              <h2>สร้างบัญชีสำเร็จ</h2>
+              <p className="register-success-preparing">กำลังเตรียมพื้นที่ของคุณ...</p>
+              <small className="register-success-sub">ใช้เวลาเพียงครู่เดียว</small>
+            </div>
+          ) : sent ? (
             <div className="success-message">
               <Mail />
-              {mode === "register" ? (
-                <>
-                  <h2>สมัครสมาชิกสำเร็จ</h2>
-                  <h3>กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี</h3>
-                </>
-              ) : (
-                <h3>{mode === "forgot" ? "ส่งลิงก์ตั้งรหัสผ่านแล้ว" : "ตรวจสอบอีเมลเพื่อยืนยันบัญชี"}</h3>
-              )}
-              <p>{mode === "forgot" ? <>กรุณาตรวจสอบกล่องจดหมายของ <strong>{form.email}</strong> และทำตามขั้นตอนในอีเมล</> : <>ส่งลิงก์ยืนยันไปที่ <strong>{form.email}</strong> แล้ว กรุณากดลิงก์ก่อนเข้าสู่ระบบ และตรวจโฟลเดอร์สแปมหากยังไม่พบอีเมล</>}</p>
+              <h3>{mode === "forgot" ? "ส่งลิงก์ตั้งรหัสผ่านแล้ว" : "ตรวจสอบอีเมลเพื่อยืนยันบัญชี"}</h3>
+              <p>{mode === "forgot" ? <>กรุณาตรวจสอบกล่องจดหมายของ <strong>{form.email}</strong> และทำตามขั้นตอนในอีเมล</> : <>เราได้ส่งลิงก์ยืนยันไปที่ <strong>{form.email}</strong> แล้ว กรุณากดลิงก์ก่อนเข้าสู่ระบบ และตรวจโฟลเดอร์สแปมหากยังไม่พบอีเมล</>}</p>
               {mode !== "forgot" && (
                 <>
                   <button className="secondary-button button-block" type="button" onClick={resendSignupConfirmation} disabled={isResending || resendCooldown > 0}>
@@ -259,7 +267,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
                   {resendError && <p className="form-error" role="alert">{resendError}</p>}
                 </>
               )}
-              <Link className="primary-button button-block" href="/login">กลับไปเข้าสู่ระบบ</Link>
+              <Link className="primary-button button-block" href="/login">ไปหน้าเข้าสู่ระบบ</Link>
             </div>
           ) : (
             <form className="form-grid auth-form" onSubmit={submit} noValidate>
@@ -286,10 +294,10 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
               </>}
               {mode === "login" && <><p className="auth-local-notice">จัดการตารางเรียน งาน และเป้าหมายของคุณต่อได้อย่างเป็นระบบ</p>{loginNotice && <p className="auth-status-message" role="status">{loginNotice}</p>}{loginError && <><p className="form-error" role="alert">{loginError}</p>{showConfirmationResend && <Link className="auth-resend-link" href="/resend-confirmation">ขออีเมลยืนยันฉบับใหม่</Link>}</>}<div className="auth-helper"><span>เข้าสู่ระบบเพื่อกลับไปยังพื้นที่การเรียนของคุณ</span><Link href="/forgot-password">ลืมรหัสผ่าน?</Link></div></>}
               {mode !== "login" && loginError && <p className="form-error" role="alert">{loginError}</p>}
-              {mode === "register" && registrationStep === 1 ? <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{t("auth.next")} <ArrowRight /></button> : mode === "register" ? <div className="auth-registration-actions"><button className="secondary-button button-block auth-back-button" type="button" disabled={isSubmitting} onClick={() => setRegistrationStep(1)}><ArrowLeft />{t("auth.back")}</button><button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังเชื่อมต่อ..." : t("auth.createAccount")}</button></div> : <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังเชื่อมต่อ..." : mode === "login" ? t("auth.signIn") : mode === "resend" ? "ส่งอีเมลยืนยัน" : "ส่งลิงก์ตั้งรหัสผ่าน"}</button>}
+              {mode === "register" && registrationStep === 1 ? <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{t("auth.next")} <ArrowRight /></button> : mode === "register" ? <div className="auth-registration-actions"><button className="secondary-button button-block auth-back-button" type="button" disabled={isSubmitting} onClick={() => setRegistrationStep(1)}><ArrowLeft />{t("auth.back")}</button><button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังสร้างบัญชี..." : t("auth.createAccount")}</button></div> : <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังเชื่อมต่อ..." : mode === "login" ? t("auth.signIn") : mode === "resend" ? "ส่งอีเมลยืนยัน" : "ส่งลิงก์ตั้งรหัสผ่าน"}</button>}
             </form>
           )}
-          {!sent && <div className="auth-switch">{mode === "login" ? <>ยังไม่มีบัญชี? <Link href="/register">สมัครใช้งาน</Link></> : mode === "register" ? <>มีบัญชีแล้ว? <Link href="/login">เข้าสู่ระบบ</Link></> : <Link href="/login">กลับไปเข้าสู่ระบบ</Link>}</div>}
+          {!sent && !isRegisterSuccess && <div className="auth-switch">{mode === "login" ? <>ยังไม่มีบัญชี? <Link href="/register">สมัครใช้งาน</Link></> : mode === "register" ? <>มีบัญชีแล้ว? <Link href="/login">เข้าสู่ระบบ</Link></> : <Link href="/login">กลับไปเข้าสู่ระบบ</Link>}</div>}
         </div>
       </section>
     </main>

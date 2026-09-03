@@ -9,7 +9,15 @@ const originalResolveFilename = Module._resolveFilename;
 Module._resolveFilename = function resolveTalevoAlias(request, parent, isMain, options) { return originalResolveFilename.call(this, request.startsWith("@/") ? path.join(projectRoot, "src", request.slice(2)) : request, parent, isMain, options); };
 require.extensions[".ts"] = function compileTypeScript(module, filename) { const output = ts.transpileModule(fs.readFileSync(filename, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true }, fileName: filename }); module._compile(output.outputText, filename); };
 const { needsOcrForPdfPage, extractSyllabusDraft } = require("../src/lib/syllabus-scanner.ts");
-const { getAcademicWeather } = require("../src/lib/academic-planning.ts");
+const {
+  getAcademicWeather,
+  calculateScheduledClassMinutes,
+  classifyStudyLoad,
+  formatStudyDuration,
+  getMostDemandingDay,
+  STUDY_LOAD_SUPPORTIVE_COPY,
+  EMPTY_STUDY_LOAD_COPY,
+} = require("../src/lib/academic-planning.ts");
 const { findScheduleConflict, getClassDurationMinutes, getHorizontalEventPosition, getHorizontalTimelinePercent, getHorizontalTimetableRange, getScheduleDisplayName, getWeekEventPosition, getWeekTimeRange, layoutHorizontalDay } = require("../src/lib/schedule-utils.ts");
 const { createScheduleDate, getScheduleWeekDates, mondayIndex } = require("../src/lib/schedule-date.ts");
 let checks = 0; const check = (value, message) => { assert.ok(value, message); checks += 1; };
@@ -21,10 +29,10 @@ check(draft.assignments[0]?.issue === undefined, "explicit assignment deadline c
 const unreadableDraft = extractSyllabusDraft([""]);
 check(unreadableDraft.issues.some((issue) => issue.includes("แม้ลองอ่านข้อความและ OCR แล้ว")), "unreadable documents must truthfully describe the OCR attempt");
 const now = new Date(2026, 8, 7, 8, 0);
-const schedules = [{ id: "class", courseId: "course", name: "Design", teacher: "T", room: "1", color: "purple", day: 0, startTime: "08:00", endTime: "13:00" }];
+const schedules = [{ id: "class", courseId: "course", name: "Design", teacher: "T", room: "1", color: "purple", day: 0, startTime: "08:00", endTime: "15:00" }];
 const task = { id: "task", title: "Project", courseId: "course", description: "", dueLabel: "", dueDate: "2026-09-07T23:59", estimate: "90 นาที", status: "todo", color: "#6633ff", subtasks: [] };
 const weather = getAcademicWeather(schedules, [task], [], now);
-check(weather.state === "heavy" || weather.state === "storm", "real class duration and deadline must drive heavy weather");
+check(weather.state === "heavy" || weather.state === "storm", "real class duration (7h) must drive heavy study load");
 check(weather.reasons.length >= 2, "weather must expose inspectable reasons");
 const timetable = [
   { startTime: "08:30", endTime: "10:00" },
@@ -81,4 +89,178 @@ const manualWeekendSchedules = [
 ];
 check(manualWeekendSchedules.map((item) => item.day).join(",") === "5,6" && manualWeekendSchedules.every((item) => getScheduleDisplayName(item) === item.name), "Manual Saturday and Sunday schedules must retain their canonical rows and valid course names");
 check(getHorizontalEventPosition(manualWeekendSchedules[0], horizontalRange).widthPercent === 6.25 && getHorizontalEventPosition(manualWeekendSchedules[1], horizontalRange).leftPercent === 3.125, "Manual schedule times must use the same horizontal time geometry as imported schedules");
+
+const tasksSource = fs.readFileSync(path.join(projectRoot, "src/features/tasks/task-pages.tsx"), "utf8");
+check(tasksSource.includes('searchParams.get("view") === "grades"'), "TasksPage must parse searchParams for grades view");
+check(tasksSource.includes('switchView("tasks")') && tasksSource.includes('switchView("grades")'), "TasksPage must provide tab switching between tasks and grades");
+check(tasksSource.includes("<GradesOverviewView />"), "TasksPage must render GradesOverviewView when in grades view");
+
+const academicSource = fs.readFileSync(path.join(projectRoot, "src/features/academic/academic-pages.tsx"), "utf8");
+check(!academicSource.includes('switchView("grades")'), "ExamsPage must not contain grade planning switcher");
+check(academicSource.includes('backHref="/tasks?view=grades"'), "GradeDetailPage back link must lead to /tasks?view=grades");
+
+const gradesRouteSource = fs.readFileSync(path.join(projectRoot, "src/app/grades/page.tsx"), "utf8");
+check(gradesRouteSource.includes('redirect("/tasks?view=grades")'), "/grades must redirect to /tasks?view=grades");
+
+// 7-Day Study Encouragement QA Coverage
+// 1. 0 hours -> เบา
+check(classifyStudyLoad(0) === "light", "0 hours must classify as เบา (light)");
+// 2. 3 hours -> เบา
+check(classifyStudyLoad(180) === "light", "3 hours must classify as เบา (light)");
+// 3. >3 to 6 hours -> ปานกลาง
+check(classifyStudyLoad(181) === "moderate" && classifyStudyLoad(360) === "moderate" && classifyStudyLoad(300) === "moderate", ">3 to 6 hours must classify as ปานกลาง (moderate)");
+// 4. >6 to 8 hours -> หนัก
+check(classifyStudyLoad(361) === "heavy" && classifyStudyLoad(420) === "heavy", ">6 to 8 hours must classify as หนัก (heavy)");
+// 5. exactly 8 hours -> หนัก
+check(classifyStudyLoad(480) === "heavy", "exactly 8 hours must classify as หนัก (heavy)");
+// 6. >8 hours -> หนักมาก
+check(classifyStudyLoad(481) === "storm" && classifyStudyLoad(570) === "storm", ">8 hours must classify as หนักมาก (storm)");
+// 7. overlapping classes are not double-counted
+const overlapSchedules = [
+  { id: "c1", startTime: "08:00", endTime: "12:00", day: 0 }, // 4h
+  { id: "c2", startTime: "10:00", endTime: "14:00", day: 0 }, // 4h, overlaps 10-12
+];
+check(calculateScheduledClassMinutes(overlapSchedules, now) === 360, "overlapping classes must not double-count (08:00–14:00 is 6h = 360m)");
+// 8. supportive message matches severity
+check(STUDY_LOAD_SUPPORTIVE_COPY.light === "วันนี้สบาย ๆ ใช้เวลาว่างให้เต็มที่นะ", "light message must match exact supportive copy");
+check(STUDY_LOAD_SUPPORTIVE_COPY.moderate === "วันนี้กำลังพอดี ค่อย ๆ ทำไปทีละอย่างนะ", "moderate message must match exact supportive copy");
+check(STUDY_LOAD_SUPPORTIVE_COPY.heavy === "วันนี้ค่อนข้างแน่น อย่าลืมหาเวลาพักด้วยนะ", "heavy message must match exact supportive copy");
+check(STUDY_LOAD_SUPPORTIVE_COPY.storm === "วันนี้หนักเป็นพิเศษ ดูแลตัวเองและพักเป็นช่วง ๆ นะ", "storm message must match exact supportive copy");
+// 9. 8 hours uses "วันนี้ค่อนข้างแน่น อย่าลืมหาเวลาพักด้วยนะ"
+check(STUDY_LOAD_SUPPORTIVE_COPY[classifyStudyLoad(480)] === "วันนี้ค่อนข้างแน่น อย่าลืมหาเวลาพักด้วยนะ", "8 hours must use exact heavy supportive copy");
+// 10. duration displayed separately
+check(formatStudyDuration(480) === "เรียน 8 ชั่วโมง", "480 minutes must format as 'เรียน 8 ชั่วโมง'");
+check(formatStudyDuration(300) === "เรียน 5 ชั่วโมง", "300 minutes must format as 'เรียน 5 ชั่วโมง'");
+check(formatStudyDuration(120) === "เรียน 2 ชั่วโมง", "120 minutes must format as 'เรียน 2 ชั่วโมง'");
+check(formatStudyDuration(570) === "เรียน 9 ชม. 30 นาที", "570 minutes must format as 'เรียน 9 ชม. 30 นาที'");
+// 11. highest upcoming severity selected
+const mockForecast = [
+  { date: new Date(2026, 8, 7), classMinutes: 120, state: "light", reasons: [], score: 2, dueTasks: [] },
+  { date: new Date(2026, 8, 8), classMinutes: 300, state: "moderate", reasons: [], score: 5, dueTasks: [] },
+  { date: new Date(2026, 8, 9), classMinutes: 480, state: "heavy", reasons: [], score: 8, dueTasks: [] },
+  { date: new Date(2026, 8, 10), classMinutes: 570, state: "storm", reasons: [], score: 9.5, dueTasks: [] },
+];
+check(getMostDemandingDay(mockForecast)?.state === "storm", "highest upcoming severity must be selected");
+// 12. nearest day selected on severity tie
+const tieForecast = [
+  { date: new Date(2026, 8, 7), classMinutes: 120, state: "light", reasons: [], score: 2, dueTasks: [] },
+  { date: new Date(2026, 8, 8), classMinutes: 480, state: "heavy", reasons: [], score: 8, dueTasks: [] }, // Day 1
+  { date: new Date(2026, 8, 9), classMinutes: 300, state: "moderate", reasons: [], score: 5, dueTasks: [] },
+  { date: new Date(2026, 8, 10), classMinutes: 480, state: "heavy", reasons: [], score: 8, dueTasks: [] }, // Day 3
+];
+check(getMostDemandingDay(tieForecast)?.date.getDate() === 8, "nearest day must be selected on severity tie");
+// 13. empty schedule uses positive empty message
+const emptyForecast = [
+  { date: new Date(2026, 8, 7), classMinutes: 0, state: "light", reasons: [], score: 0, dueTasks: [] },
+  { date: new Date(2026, 8, 8), classMinutes: 0, state: "light", reasons: [], score: 0, dueTasks: [] },
+];
+check(getMostDemandingDay(emptyForecast) === null, "empty forecast returns null for positive empty message");
+check(EMPTY_STUDY_LOAD_COPY === "ช่วงนี้ตารางค่อนข้างสบาย ใช้เวลาพักหรือเตรียมตัวล่วงหน้าได้นะ", "empty schedule must use exact positive message");
+// 14. no warning-style 'วันที่ควรวางแผนล่วงหน้า' remains
+const semesterWeatherSrc = fs.readFileSync(path.join(projectRoot, "src/features/academic/semester-weather.tsx"), "utf8");
+check(!semesterWeatherSrc.includes("วันที่ควรวางแผนล่วงหน้า"), "warning-style 'วันที่ควรวางแผนล่วงหน้า' must be removed");
+check(!semesterWeatherSrc.includes("TriangleAlert"), "TriangleAlert warning icon must be removed");
+// 15. mobile no overflow
+const todayCss = fs.readFileSync(path.join(projectRoot, "src/styles/today-composition.css"), "utf8");
+check(todayCss.includes("overflow-wrap: break-word"), "supportive text must specify overflow-wrap: break-word for mobile wrapping");
+// 16. existing schedule behavior unchanged
+check(range.startMinutes === 480 && range.endMinutes === 1020, "existing timetable range grid remains unchanged");
+
+// 17. getDailyStudyLoad canonical calculator
+const { getDailyStudyLoad, getStudyLoadSupportiveCopy } = require(path.join(projectRoot, "src/lib/academic-planning.ts"));
+const daily4h = getDailyStudyLoad(now, [
+  { id: "s1", startTime: "08:00", endTime: "12:00", day: now.getDay() === 0 ? 6 : now.getDay() - 1 },
+]);
+check(daily4h.totalMinutes === 240, "daily load 08:00-12:00 must equal 240 minutes");
+check(daily4h.classCount === 1, "daily load must count 1 class");
+check(daily4h.severity === "moderate", "4 hours must classify as moderate");
+
+const daily8h = getDailyStudyLoad(now, [
+  { id: "s1", startTime: "08:00", endTime: "16:00", day: now.getDay() === 0 ? 6 : now.getDay() - 1 },
+]);
+check(daily8h.totalMinutes === 480, "daily load 08:00-16:00 must equal 480 minutes");
+check(daily8h.severity === "heavy", "8 hours must classify as heavy");
+
+// 18. date-aware supportive copy
+check(getStudyLoadSupportiveCopy("moderate", true) === "วันนี้กำลังพอดี ค่อย ๆ ทำไปทีละอย่างนะ", "today copy must use วันนี้");
+check(getStudyLoadSupportiveCopy("moderate", false) === "วันนั้นตารางกำลังพอดี ค่อย ๆ จัดการไปทีละอย่างนะ", "non-today copy must use วันนั้น");
+check(getStudyLoadSupportiveCopy("heavy", false) === "วันนั้นตารางค่อนข้างแน่น อย่าลืมเผื่อเวลาพักด้วยนะ", "non-today heavy copy must use วันนั้น");
+
+// 19. Grade Planning detail checks
+const gradePlannerSrc = fs.readFileSync(path.join(projectRoot, "src/features/academic/grade-planner.tsx"), "utf8");
+check(gradePlannerSrc.includes('router.push("/tasks?view=grades")'), "Grade planner back navigation must return to /tasks?view=grades");
+check(gradePlannerSrc.includes("วางแผนคะแนน"), "Grade planner must render proper title วางแผนคะแนน");
+check(gradePlannerSrc.includes("grade-kpi-grid"), "Grade planner must render clean KPI cards");
+check(gradePlannerSrc.includes("เป้าหมายของฉัน"), "Grade planner must render Step 1: เป้าหมายของฉัน");
+check(gradePlannerSrc.includes("คะแนนของวิชา"), "Grade planner must render Step 2: คะแนนของวิชา");
+check(gradePlannerSrc.includes("สรุปให้ฉัน"), "Grade planner must render Step 3: สรุปให้ฉัน");
+check(gradePlannerSrc.includes("+ เพิ่มคะแนน"), "Grade planner must offer + เพิ่มคะแนน action");
+check(gradePlannerSrc.includes("เพิ่มคะแนนของวิชาเพื่อเริ่มคำนวณ"), "Grade planner must show calm empty state text");
+check(gradePlannerSrc.includes("เกณฑ์การตัดเกรด"), "Grade planner must render เกณฑ์การตัดเกรด accordion");
+check(gradePlannerSrc.includes("upsertGradePlan(courseId, plan)"), "Grade planner must preserve Supabase cloud persistence");
+
+// 20. Grade Calculation logic regression checks
+const { calculateGradePlan: calcGrade, hasEarnedScore: hasEarned } = require(path.join(projectRoot, "src/lib/academic-utils.ts"));
+const sampleThresholds = [
+  { label: "A", minimumPercent: 80 },
+  { label: "B+", minimumPercent: 75 },
+  { label: "B", minimumPercent: 70 },
+  { label: "C+", minimumPercent: 65 },
+  { label: "C", minimumPercent: 60 },
+  { label: "D+", minimumPercent: 55 },
+  { label: "D", minimumPercent: 50 },
+  { label: "F", minimumPercent: 0 },
+];
+
+// Empty plan
+const emptyCalc = calcGrade({ targetGrade: "A", thresholds: sampleThresholds, components: [] });
+check(emptyCalc.totalMax === 0 && emptyCalc.earnedPoints === 0 && emptyCalc.targetPoints === null, "Empty plan must calculate 0 total points and null targetPoints");
+
+// Scored + Pending
+const activeCalc = calcGrade({
+  targetGrade: "A",
+  thresholds: sampleThresholds,
+  components: [
+    { id: "1", name: "งาน 1", maxScore: 20, earnedScore: 16, weight: 20 },
+    { id: "2", name: "กลางภาค", maxScore: 30, earnedScore: 25, weight: 30 },
+    { id: "3", name: "ปลายภาค", maxScore: 50, earnedScore: undefined, weight: 50 },
+  ],
+});
+check(activeCalc.totalMax === 100, "Total max must equal 100");
+check(activeCalc.earnedPoints === 41, "Earned points must equal 41 (16 + 25)");
+check(activeCalc.gradedMax === 50, "Graded max must equal 50 (20 + 30)");
+check(activeCalc.remainingPossible === 50, "Remaining possible must equal 50");
+check(activeCalc.targetPoints === 80, "Target points for grade A (80%) must equal 80");
+check(activeCalc.pointsNeeded === 39, "Points needed must equal 39 (80 - 41)");
+check(activeCalc.canReachTarget === true, "Student can reach target (41 + 50 >= 80)");
+check(activeCalc.targetReached === false, "Target is not reached yet (41 < 80)");
+
+// Target Reached
+const reachedCalc = calcGrade({
+  targetGrade: "A",
+  thresholds: sampleThresholds,
+  components: [
+    { id: "1", name: "งาน", maxScore: 50, earnedScore: 45, weight: 50 },
+    { id: "2", name: "กลางภาค", maxScore: 50, earnedScore: 40, weight: 50 },
+  ],
+});
+check(reachedCalc.targetReached === true && reachedCalc.pointsNeeded === 0, "85/100 must reach grade A target with 0 points needed");
+
+// Impossible target
+const impossibleCalc = calcGrade({
+  targetGrade: "A",
+  thresholds: sampleThresholds,
+  components: [
+    { id: "1", name: "งาน", maxScore: 50, earnedScore: 20, weight: 50 },
+    { id: "2", name: "กลางภาค", maxScore: 20, earnedScore: undefined, weight: 20 },
+  ],
+});
+check(impossibleCalc.canReachTarget === false, "20 earned + 20 remaining cannot reach 80% of 70 (56 points)");
+
+// Unknown score predicate
+check(!hasEarned({ id: "u1", name: "ปลายภาค", maxScore: 30 }), "Missing earnedScore must evaluate as not earned");
+check(!hasEarned({ id: "u2", name: "ปลายภาค", maxScore: 30, earnedScore: undefined }), "Undefined earnedScore must evaluate as not earned");
+check(hasEarned({ id: "u3", name: "กลางภาค", maxScore: 30, earnedScore: 0 }), "0 earned score must evaluate as earned");
+check(hasEarned({ id: "u4", name: "งาน 1", maxScore: 20, earnedScore: 16 }), "16 earned score must evaluate as earned");
+
 console.log(`Academic QA passed: ${checks} checks`);

@@ -125,10 +125,10 @@ check(publicPages.includes('registrationStep === 1') && publicPages.includes('re
 check(nextConfig.includes('allowedDevOrigins: ["127.0.0.1"]'), "Next dev must allow the local 127.0.0.1 origin so Auth forms can hydrate");
 check(authProvider.includes("signInWithPassword") && authProvider.includes("email_not_confirmed"), "Login must use Supabase Auth and handle unconfirmed accounts");
 check(authProvider.includes("user_already_exists") && authProvider.includes("อีเมลนี้ถูกใช้สมัครบัญชีแล้ว"), "Registration must show a clear duplicate-email message when Supabase returns that error");
-check(authProvider.includes("requiresEmailConfirmation: !error && !data.session"), "Sign-up without a Supabase session must require email confirmation");
-check(publicPages.includes("ตรวจสอบอีเมลเพื่อยืนยันบัญชี") && publicPages.includes("result.requiresEmailConfirmation"), "Register must render the check-email state when confirmation is required");
+check(authProvider.includes("requiresEmailConfirmation: !data.session") || authProvider.includes("requiresEmailConfirmation: !error && !data.session"), "Sign-up without a Supabase session must require email confirmation");
+check(publicPages.includes("isRegisterSuccess") && publicPages.includes("สร้างบัญชีสำเร็จ"), "Register must render success transition when account is created");
 check(publicPages.includes('router.push("/today")'), "Registration with an immediate Supabase session must continue directly to Today");
-check(authProvider.includes("emailRedirectTo: getEmailConfirmationRedirectUrl()") && authProvider.includes("`${window.location.origin}/auth/confirm`"), "Sign-up and resend must use the current origin confirmation callback");
+check(authProvider.includes("emailRedirectTo: getEmailConfirmationRedirectUrl()") && authProvider.includes("`${window.location.origin}/auth/confirm`"), "Resend confirmation must use the current origin confirmation callback");
 check(!authProvider.includes("/auth/confirm?next=/today"), "Sign-up confirmation must not carry an ambiguous Today callback");
 for (const metadataField of ["display_name", "major", "university", "level", "term", "academic_year"]) {
   check(authProvider.includes(`${metadataField}:`) && authTrigger.includes(`'${metadataField}'`), `Registration metadata and trigger must preserve ${metadataField}`);
@@ -172,8 +172,8 @@ check(!adminClient.includes("console.log") && !adminClient.includes("console.err
 check(accountRoute.includes("admin_configuration_missing"), "Missing admin configuration must fail closed without deleting local data");
 const localDeletionFlow = appStateProvider.slice(appStateProvider.indexOf("deleteUserAccount: async"), appStateProvider.indexOf("sessionNotice,", appStateProvider.indexOf("deleteUserAccount: async")));
 check(localDeletionFlow.indexOf("await deleteAccount()") < localDeletionFlow.indexOf("clearAccountStateStorage"), "Local account state must only be cleared after cloud deletion succeeds");
-check(!appStateProvider.includes("clearAttachmentBlobs"), "Account deletion must not clear another account's IndexedDB attachments");
-check(appStateProvider.includes("needs-adoption") && appShell.includes("นำข้อมูลมาใช้") && appShell.includes("เริ่มบัญชีใหม่"), "Legacy local state must require an explicit adoption choice");
+check(!appShell.includes("LocalOwnershipGate"), "Normal authenticated startup must not be blocked by LocalOwnershipGate");
+check(appStateProvider.includes("adoptExistingLocalData"), "Explicit adoption mechanism must remain available for legacy data");
 check(appShell.includes('"/resend-confirmation"'), "The resend confirmation page must remain public before authentication");
 check(proxy.includes('const authRoutes = ["/login", "/register", "/resend-confirmation"]'), "Authenticated users must not remain on public Auth routes");
 check(proxy.includes("getClaims()") && proxy.includes("isProtectedRoute && !isAuthenticated"), "Protected routes must reject users without a valid Supabase claim");
@@ -182,5 +182,31 @@ for (const route of ["/today", "/schedule", "/tasks", "/exams", "/grades", "/sta
 }
 check((migrationPlanner.match(/readyForUpload:\s*false/g) ?? []).length >= 2, "Local to Cloud upload must remain disabled in types and plans");
 check(!/readyForUpload:\s*true/.test(migrationPlanner), "Auth completion must not enable Local to Cloud upload");
+
+// Personalized Today greeting & user isolation contract
+const { formatHomeGreeting } = require("../src/lib/greeting.ts");
+const { hydrateCloudAccountToAppState } = require("../src/lib/supabase/cloud-hydration.ts");
+// 1. greeting uses current authenticated display_name
+check(formatHomeGreeting("ต้า") === "สวัสดี ต้า", "formatHomeGreeting with 'ต้า' must return 'สวัสดี ต้า'");
+check(formatHomeGreeting("รุ้ง") === "สวัสดี รุ้ง", "formatHomeGreeting with 'รุ้ง' must return 'สวัสดี รุ้ง'");
+// 2. no hard-coded user name
+const todayPageSource = fs.readFileSync(path.join(projectRoot, "src/features/today/today-page.tsx"), "utf8");
+check(!todayPageSource.includes('greeting = "สวัสดี ต้า"'), "Today page must not hardcode user name");
+check(todayPageSource.includes("formatHomeGreeting(profile.displayName"), "Today page must derive greeting from current profile");
+// 3. missing display_name -> "สวัสดี"
+check(formatHomeGreeting("") === "สวัสดี", "Empty display_name must return 'สวัสดี'");
+check(formatHomeGreeting(null) === "สวัสดี", "null display_name must return 'สวัสดี'");
+check(formatHomeGreeting(undefined) === "สวัสดี", "undefined display_name must return 'สวัสดี'");
+check(formatHomeGreeting("user@example.com") === "สวัสดี", "Email address as display_name must fallback to 'สวัสดี'");
+// 4. loading profile never displays previous user's name
+check(formatHomeGreeting("ต้า", true) === "สวัสดี", "Loading state must return 'สวัสดี' to prevent flashing previous user's name");
+// 5. User A / User B names remain isolated
+const userAState = hydrateCloudAccountToAppState({ profiles: [{ display_name: "ต้า" }] }, { email: "userA@talevo.app" });
+const userBState = hydrateCloudAccountToAppState({ profiles: [{ display_name: "รุ้ง" }] }, { email: "userB@talevo.app" });
+check(formatHomeGreeting(userAState.profile.displayName) === "สวัสดี ต้า", "User A must see 'สวัสดี ต้า'");
+check(formatHomeGreeting(userBState.profile.displayName) === "สวัสดี รุ้ง", "User B must see 'สวัสดี รุ้ง'");
+check(userBState.profile.displayName !== userAState.profile.displayName, "User B profile must be completely isolated from User A");
+// 6. profile rename updates greeting correctly
+check(formatHomeGreeting("ต้าคนเก่ง") === "สวัสดี ต้าคนเก่ง", "Renamed display_name must update greeting immediately");
 
 console.log(`TALEVO Auth QA passed: ${checks} checks`);

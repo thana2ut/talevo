@@ -39,7 +39,6 @@ const syllabusScanner = read("src/features/academic/syllabus-scanner.tsx");
 const syllabusCss = read("src/styles/syllabus-import-composition.css");
 const profilePages = read("src/features/profile/profile-pages.tsx");
 const taskCreatePage = read("src/features/tasks/task-create-page.tsx");
-const financePages = read("src/features/finance/finance-pages.tsx");
 const packageJson = JSON.parse(read("package.json"));
 
 check(exists("docs/talevo-ui-ux-inventory.md"), "Route/component UI inventory is missing");
@@ -59,7 +58,7 @@ for (const token of [
 ]) check(globals.includes(token), `Missing canonical design token: ${token}`);
 
 check(globals.includes("--tap-target: 44px") && globals.includes('button[aria-label], [role="button"][aria-label]'), "Mobile touch-target contract is missing");
-for (const selector of [".finance-tabs button", ".statistics-periods button", ".notification-page-actions button", ".ai-selected-context button"]) {
+for (const selector of [".notification-page-actions button", ".ai-selected-context button"]) {
   check(globals.includes(selector), `Missing mobile touch-target override: ${selector}`);
 }
 check(globals.includes("env(safe-area-inset-top)") && globals.includes("env(safe-area-inset-bottom)"), "Mobile safe-area support is incomplete");
@@ -82,12 +81,16 @@ check(!mobileNavSource.includes('href: "/finance"'), "Finance must not appear in
 check(appShell.includes('aria-label="เพิ่มเติม"') && appShell.includes("setMoreOpen(true)"), "Mobile navigation must include 'เพิ่มเติม' button");
 check(appShell.includes('aria-haspopup="dialog"') && appShell.includes('aria-expanded={quickOpen}'), "Quick Add must expose its dialog state");
 check(appShell.includes('aria-expanded={moreOpen}'), "More navigation must expose its dialog state");
-for (const href of ["/exams", "/grades", "/statistics", "/finance", "/ai", "/profile", "/settings"]) {
+for (const href of ["/exams", "/ai", "/profile", "/settings"]) {
   check(appShell.includes(`href: "${href}"`), `More navigation sheet is missing ${href}`);
 }
-for (const href of ["/tasks/new", "/schedule/new", "/exams/new", "/finance/new"]) {
+check(!appShell.includes('href: "/finance"'), "Finance must not appear in More navigation or desktop sidebar");
+check(!appShell.includes('href: "/grades"'), "Grades should no longer be a standalone destination in More navigation or Sidebar");
+check(!appShell.includes('href: "/statistics"'), "Statistics must be completely removed from navigation");
+for (const href of ["/tasks/new", "/schedule/new", "/exams/new"]) {
   check(appShell.includes(`href: "${href}"`), `Quick Add creation sheet is missing ${href}`);
 }
+check(!appShell.includes('href: "/finance/new"'), "Quick Add must not contain finance/new");
 check(appShell.includes('grid-column: 3') || globals.includes('grid-column: 3'), "Quick Add button must occupy the centered mobile-nav grid column");
 check(globals.includes('.quick-add-button { display: grid; width: 56px; height: 56px; grid-column: 3;'), "Quick Add needs a centered 44px-or-larger touch target");
 check(schedulePages.includes('"ยังไม่ได้ตั้งค่าภาคเรียน"') && schedulePages.includes("formatAcademicTermSummary(academicTerm)"), "Empty academic-term summaries must not render stray separators");
@@ -113,7 +116,74 @@ check(/@media\s*\(max-width:\s*699px\)[\s\S]*?\.bottom-sheet\.syllabus-import-sh
 check(/\.bottom-sheet\.syllabus-import-sheet\s*\{[^}]*overflow:\s*hidden/i.test(syllabusCss), "Modal container must have overflow: hidden to prevent double vertical scrollbars");
 check(profilePages.includes("joinAcademicDetails") && profilePages.includes('academicTerm.level || "ยังไม่ได้ระบุ"'), "Empty profile academic details need readable fallbacks");
 check(taskCreatePage.includes('aria-label={t("tasks.subtasks")}'), "Task subtask input needs an accessible name");
-check(financePages.includes('className="finance-tabs" role="group"') && financePages.includes("aria-pressed={filter === item}"), "Finance filters must expose button selection state");
+check(!exists("src/features/finance/finance-pages.tsx"), "Standalone finance page must be removed");
+check(read("src/app/finance/page.tsx").includes('redirect("/today")'), "/finance must redirect to /today");
+check(read("src/app/finance/new/page.tsx").includes('redirect("/today")'), "/finance/new must redirect to /today");
+check(todayPage.includes('t("today.finance")') && todayPage.includes("วันนี้ใช้ไป") && todayPage.includes("งบรายวัน"), "Today page must display compact 'การเงินวันนี้' card");
+check(todayPage.includes("openBudgetDialog") && todayPage.includes("ตั้งงบรายวัน"), "Today page must support editing daily budget via modal");
+check(todayPage.includes("formatHomeGreeting(profile.displayName"), "Today page must format personalized greeting from authenticated profile");
+check(!todayPage.includes('displayName = "'), "Today page must not hardcode any user name");
+
+const aiPage = read("src/features/ai/ai-page.tsx");
+check(aiPage.includes('<TalevoMascotAvatar size="sm"'), "AI header must use TalevoMascotAvatar size sm");
+check(aiPage.includes('<TalevoMascotAvatar size="lg"'), "AI empty state must use TalevoMascotAvatar size lg");
+check(exists("public/brand/talevo-mascot-head.png"), "Approved brand mascot head asset must exist");
+
+// Responsive Desktop Hamburger Navigation & Tablet Mobile Navigation Contract
+check(globals.includes("@media (min-width: 1200px)"), "Desktop layout must activate at >= 1200px breakpoint");
+check(globals.includes(".desktop-hamburger-button"), "Desktop hamburger button styles must exist");
+check(appShell.includes('className={`desktop-hamburger-button'), "AppShell must render desktop hamburger button");
+check(globals.includes(".desktop-sidebar { display: none !important; }"), "Permanent desktop sidebar must be absent from desktop layout");
+check(appShell.includes('setDesktopDrawerOpen((prev) => !prev)'), "Hamburger button must toggle desktop drawer open/closed");
+check(!appShell.includes("drawer-backdrop"), "Desktop backdrop must be removed from AppShell");
+check(globals.includes(".drawer-backdrop {") && globals.includes("display: none !important"), "Desktop backdrop must be disabled in CSS");
+check(globals.includes("width: 260px") && globals.includes(".app-shell.desktop-drawer-open .desktop-nav-drawer"), "Desktop drawer width must be 260px in open state");
+check(globals.includes(".desktop-topbar {") && globals.includes("padding: 16px 24px 0"), "Desktop topbar must align controls close to viewport edges");
+check(appShell.includes("className=\"drawer-close-button icon-button\"") && appShell.includes("onClick={closeDrawer}"), "Drawer close button must trigger closeDrawer");
+check(appShell.includes('event.key === "Escape"') && appShell.includes("setDesktopDrawerOpen(false)"), "Escape key must close desktop drawer");
+check(appShell.includes('onClick={() => setDesktopDrawerOpen(false)}') && appShell.includes("drawer-nav-link"), "Navigation links in drawer must close drawer on click");
+check(globals.includes(".app-main {") && globals.includes("max-width: 1240px") && globals.includes("margin: 0 auto"), "Desktop content must be centered with max-width and auto margins");
+check(globals.includes("@media (max-width: 1199px)") && globals.includes(".mobile-bottom-nav { display: grid; }"), "Tablet (< 1200px including 1024px, 834px, 768px) must display mobile navigation");
+check(globals.includes("@media (max-width: 1199px)") && globals.includes(".desktop-topbar { display: none !important; }"), "Tablet (< 1200px) must hide desktop topbar");
+check(globals.includes("@media (max-width: 1199px)") && globals.includes(".desktop-nav-drawer { display: none !important; }"), "Tablet (< 1200px) must hide desktop drawer");
+check(appShell.includes('className="mobile-bottom-nav"'), "Mobile bottom nav component must remain in AppShell");
+check(appShell.includes('setQuickOpen(true)') && appShell.includes('quickOptions'), "Quick Add modal functionality must remain intact");
+check(appShell.includes('setMoreOpen(true)') && appShell.includes('moreNavigationOptions'), "More navigation sheet must remain intact");
+check(!appShell.includes('href: "/finance"'), "Finance must not be restored in navigation");
+check(!appShell.includes('href: "/statistics"'), "Statistics must not be restored in navigation");
+check(!appShell.includes('href: "/grades"') && !appShell.includes('key: "nav.grades"'), "Standalone Grade Planning must not appear in navigation drawer");
+check(read("src/styles/today-composition.css").includes("grid-template-columns: repeat(2, minmax(0, 1fr))"), "Today cards must support 2-column layout on tablet/desktop");
+check(read("src/features/ai/ai-page.tsx").includes("ai-premium-page"), "AI page layout and workspace must remain unaffected");
+check(read("src/features/schedule/schedule-pages.tsx").includes("getScheduleWeekDates"), "Schedule page timeline calculations must remain unaffected");
+
+// Tasks Segmented Control Contract
+const taskPagesSrc = read("src/features/tasks/task-pages.tsx");
+const gradePlanningCss = read("src/styles/grade-planning-composition.css");
+check(taskPagesSrc.includes("tasks-view-switcher"), "Tasks page must use tasks-view-switcher");
+check(taskPagesSrc.includes("tasks-view-tab-tasks") && taskPagesSrc.includes("tasks-view-tab-grades"), "Tasks switcher must assign tab classes");
+check(gradePlanningCss.includes("min-width: 360px") && gradePlanningCss.includes("max-width: 420px"), "Desktop tasks switcher must be constrained to 360-420px");
+check(gradePlanningCss.includes("flex: 45 1 0%") && gradePlanningCss.includes("flex: 55 1 0%"), "Tasks switcher must maintain 45/55 tab proportions");
+check(gradePlanningCss.includes("width: min(100%, 520px)"), "Tablet tasks switcher must use min(100%, 520px)");
+check(gradePlanningCss.includes("width: 100%"), "Phone tasks switcher must use 100% width");
+check(gradePlanningCss.includes(".tasks-view-tab.active"), "Active tab must have dedicated styling");
+
+// Grade Planning Detail UI Contract
+const gradePlannerSrc = read("src/features/academic/grade-planner.tsx");
+check(gradePlannerSrc.includes("grade-planner-shell"), "Grade planner must render grade-planner-shell container");
+check(gradePlannerSrc.includes("grade-planner-topbar"), "Grade planner must render organized header topbar");
+check(gradePlannerSrc.includes('router.push("/tasks?view=grades")'), "Grade planner back button must navigate to /tasks?view=grades");
+check(gradePlannerSrc.includes("grade-planner-save-btn"), "Grade planner must render save action button");
+check(gradePlannerSrc.includes("grade-kpi-grid"), "Grade planner must render KPI score cards");
+check(gradePlannerSrc.includes("คะแนนปัจจุบัน") && gradePlannerSrc.includes("เป้าหมาย") && gradePlannerSrc.includes("ยังต้องทำ"), "Grade planner must display 3 canonical KPI metrics");
+check(gradePlannerSrc.includes("เพิ่มองค์ประกอบคะแนนเพื่อเริ่มคำนวณ"), "Grade planner must use neutral empty state instead of 0/0 progress");
+check(gradePlannerSrc.includes("grade-components-card"), "Grade planner must render components section card");
+check(gradePlannerSrc.includes("grade-components-empty"), "Grade planner must render compact empty component card");
+check(gradePlannerSrc.includes("grade-target-card"), "Grade planner must render target grade section card");
+check(gradePlannerSrc.includes("grade-recommendation-callout"), "Grade planner must render recommendation callout");
+check(gradePlanningCss.includes("max-width: 920px") && gradePlanningCss.includes(".grade-planner-flow"), "Desktop grade planner must use a focused single-column flow with max-width around 900-1000px");
+check(gradePlannerSrc.includes("เป้าหมายของฉัน") && gradePlannerSrc.includes("คะแนนของวิชา") && gradePlannerSrc.includes("สรุปให้ฉัน"), "Grade planner must follow the 3-step student mental model");
+check(gradePlannerSrc.includes("+ เพิ่มคะแนน"), "Grade planner must offer clear + เพิ่มคะแนน action");
+check(gradePlannerSrc.includes("upsertGradePlan"), "Grade planner must preserve Supabase cloud persistence");
 
 check(globals.includes(".primary-button") && globals.includes(".secondary-button") && globals.includes(".icon-button") && source.includes(".danger-button"), "Canonical button variants are incomplete");
 check(ui.includes("export function EmptyState") && ui.includes('className="empty-state"'), "Canonical empty state is missing");
@@ -132,7 +202,7 @@ for (const collection of ["schedules", "tasks", "exams", "gradePlans", "financeT
 check(!/localStorage\.clear\s*\(/.test(source) && !/indexedDB\.deleteDatabase\s*\(/.test(source), "UI source must not clear all local user data");
 
 check(publicPages.includes('registrationStep === 1') && publicPages.includes('registrationStep === 2'), "Two-step registration regressed");
-check(publicPages.includes('router.push("/today")') && publicPages.includes("requiresEmailConfirmation"), "Register success/confirmation flow regressed");
+check(publicPages.includes('router.push("/today")') && (publicPages.includes("isRegisterSuccess") || publicPages.includes("requiresEmailConfirmation")), "Register success flow regressed");
 check(proxy.includes('process.env.NODE_ENV !== "development"') && proxy.includes('startsWith("/qa/")'), "Production QA-route proxy guard is missing");
 check(qaPage.includes('process.env.NODE_ENV !== "development"') && qaPage.includes("notFound()"), "Production QA page guard is missing");
 check(aiProvider.includes('process.env.NODE_ENV === "development"') && !aiUi.includes("providerDebug") && !aiUi.includes("interactions.create"), "AI provenance must stay out of the student-facing UI");

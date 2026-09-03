@@ -58,6 +58,13 @@ function hasCanonicalState(storage: StorageLike) {
   ].some((key) => storage.getItem(key) !== null);
 }
 
+export function hasLegacyLocalData(storage: StorageLike, userId?: string): boolean {
+  if (!hasCanonicalState(storage)) return false;
+  const owner = readOwnerBinding(storage);
+  if (owner && userId && owner.userId !== userId) return false;
+  return true;
+}
+
 export function inspectLocalOwnership(storage: StorageLike, userId: string): LocalOwnershipStatus {
   const keys = getAccountStateKeys(userId);
   const owner = readOwnerBinding(storage);

@@ -326,3 +326,69 @@
   .auth-term-fields { grid-template-columns: 1fr; }
   .profile-hero-static { grid-template-columns: 1fr; justify-items: center; text-align: center; }
 }
+
+/* Registration Success Transition */
+.register-success-transition {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 16px;
+  gap: 12px;
+  animation: register-success-fade-in 0.3s ease-out;
+}
+
+.register-success-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--success-soft, #ecfdf3);
+  color: var(--success, #16b364);
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 16px rgba(22, 179, 100, 0.16);
+}
+
+.register-success-icon-wrap svg {
+  width: 30px;
+  height: 30px;
+}
+
+.register-success-transition h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.register-success-preparing {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--purple-700, #5734cf);
+  margin: 0;
+}
+
+.register-success-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+@keyframes register-success-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-success-transition {
+    animation: none;
+  }
+}

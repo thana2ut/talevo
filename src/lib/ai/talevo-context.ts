@@ -1,6 +1,12 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AI_CONTEXT_MAX_CHARACTERS } from "@/lib/ai/config";
+import {
+  buildTemporalContextBlock,
+  getAuthoritativeTemporalContext,
+  getWeekdayNameEn,
+  getWeekdayNameTh,
+} from "@/lib/ai/temporal-context";
 import { AI_CONTEXT_KEYS, type AIContextKey, type AIContextSelection } from "@/lib/ai/types";
 
 export class AIContextReadError extends Error {
@@ -30,9 +36,13 @@ export async function buildTalevoContext(
   supabase: SupabaseClient,
   userId: string,
   selected: AIContextSelection,
+  now: Date = new Date(),
 ): Promise<AIContextResult> {
+  const temporal = getAuthoritativeTemporalContext(now);
+  const temporalBlock = buildTemporalContextBlock(temporal);
+
   const attachedContext = AI_CONTEXT_KEYS.filter((key) => selected[key]);
-  if (attachedContext.length === 0) return { block: "", attachedContext: [] };
+  if (attachedContext.length === 0) return { block: temporalBlock, attachedContext: [] };
 
   const context: Record<string, unknown> = {};
   let courseNames = new Map<string, string>();
@@ -51,6 +61,8 @@ export async function buildTalevoContext(
       context.schedule = (data ?? []).map((row) => ({
         subject: row.name,
         day: row.day,
+        weekday: getWeekdayNameTh(row.day),
+        weekdayEn: getWeekdayNameEn(row.day),
         startTime: row.start_time,
         endTime: row.end_time,
       }));
@@ -126,5 +138,5 @@ export async function buildTalevoContext(
     }));
   }
 
-  return { block: withinBudget(context), attachedContext };
+  return { block: `${temporalBlock}\n\n${withinBudget(context)}`, attachedContext };
 }

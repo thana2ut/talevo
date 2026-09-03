@@ -13,6 +13,7 @@ import {
   type AIProviderErrorKind,
   type SafeAIProviderError,
 } from "@/lib/ai/providers/gemini";
+import { buildTemporalContextBlock, getAuthoritativeTemporalContext } from "@/lib/ai/temporal-context";
 import type {
   AIProviderAdapter,
   AIProviderRequest,
@@ -87,12 +88,16 @@ function formatChatMessages(request: AIProviderRequest): Groq.Chat.ChatCompletio
     },
   ];
 
+  const temporalBlock = request.contextBlock.includes("[CURRENT_TIME_CONTEXT]")
+    ? ""
+    : buildTemporalContextBlock(getAuthoritativeTemporalContext());
+
   // Keep context bounded (max 8,000 chars for Groq Free token safety)
-  const trimmedContext = request.contextBlock.trim();
-  if (trimmedContext) {
-    const boundedContext = trimmedContext.length > 8_000
-      ? trimmedContext.slice(0, 8_000) + "\n[Context truncated for length]"
-      : trimmedContext;
+  const fullContext = [temporalBlock, request.contextBlock.trim()].filter(Boolean).join("\n\n").trim();
+  if (fullContext) {
+    const boundedContext = fullContext.length > 8_000
+      ? fullContext.slice(0, 8_000) + "\n[Context truncated for length]"
+      : fullContext;
     messages.push({
       role: "system",
       content: `[TALEVO CONTEXT]\n${boundedContext}\n[/TALEVO CONTEXT]`,

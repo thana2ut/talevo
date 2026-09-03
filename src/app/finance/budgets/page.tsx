@@ -1,2 +1,5 @@
-import { FinanceBudgetsPage } from "@/features/finance/finance-pages";
-export default function Page() { return <FinanceBudgetsPage />; }
+import { redirect } from "next/navigation";
+
+export default function Page() {
+  redirect("/today");
+}

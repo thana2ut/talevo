@@ -21,7 +21,100 @@ const dateNow = () => toLocalDateKey(new Date());
 function CourseSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) { const { schedules } = useAppState(); const courses = getCurrentTermCourses(schedules); return <Select value={value} onChange={(event) => onChange(event.target.value)}><option value="">เลือกวิชา</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.name}</option>)}</Select>; }
 function courseName(courseId: string, schedules: ReturnType<typeof useAppState>["schedules"]) { return getCourseById(schedules, courseId)?.name ?? "วิชาที่ถูกนำออกจากตารางเรียน"; }
 
-export function ExamsPage() { const { exams, schedules } = useAppState(); const { t, language } = useLanguage(); const now = new Date(); const sorted = [...exams].sort((first, second) => (getExamDate(first)?.getTime() ?? Number.MAX_SAFE_INTEGER) - (getExamDate(second)?.getTime() ?? Number.MAX_SAFE_INTEGER)); const upcoming = sorted.filter((exam) => { const examDate = getExamDate(exam); return !exam.completedAt && examDate !== null && examDate >= now; }); const completed = sorted.filter((exam) => { const examDate = getExamDate(exam); return examDate === null || examDate < now || Boolean(exam.completedAt); }); const next = upcoming[0]; return <div className="page academic-page"><header className="academic-page-header"><div><h1>{t("nav.exams")}</h1><p>จัดการวันสอบและแผนอ่านหนังสือ</p></div><Link className="primary-button" href="/exams/new"><Plus />เพิ่มการสอบ</Link></header>{next && <Card className="academic-highlight"><small>สอบครั้งถัดไป</small><h2>{courseName(next.courseId,schedules)}</h2><strong>{thaiExamTypes[next.type]} · {next.title}</strong><p>{formatExamDateTime(next, language)}</p><b>{getExamCountdown(next, now, language)}</b></Card>}<section className="academic-list-section"><h2>กำลังจะมาถึง</h2>{upcoming.length ? upcoming.map((exam) => <ExamRow key={exam.id} exam={exam} />) : <><EmptyState title="ยังไม่มีการสอบ" description="เพิ่มวันสอบเพื่อวางแผนอ่านหนังสือ"/><Link className="primary-button" href="/exams/new"><Plus/>เพิ่มการสอบ</Link></>}</section>{completed.length > 0 && <section className="academic-list-section"><h2>สอบแล้ว</h2>{completed.map((exam) => <ExamRow key={exam.id} exam={exam} />)}</section>}</div>; }
+export function ExamsPage() {
+  const { exams, schedules } = useAppState();
+  const { t, language } = useLanguage();
+  const now = new Date();
+
+  const sorted = [...exams].sort((first, second) => (getExamDate(first)?.getTime() ?? Number.MAX_SAFE_INTEGER) - (getExamDate(second)?.getTime() ?? Number.MAX_SAFE_INTEGER));
+  const upcoming = sorted.filter((exam) => { const examDate = getExamDate(exam); return !exam.completedAt && examDate !== null && examDate >= now; });
+  const completed = sorted.filter((exam) => { const examDate = getExamDate(exam); return examDate === null || examDate < now || Boolean(exam.completedAt); });
+  const next = upcoming[0];
+
+  return (
+    <div className="page academic-page">
+      <header className="academic-page-header">
+        <div>
+          <h1>{t("nav.exams")}</h1>
+          <p>จัดการวันสอบและแผนอ่านหนังสือ</p>
+        </div>
+        <Link className="primary-button" href="/exams/new"><Plus />เพิ่มการสอบ</Link>
+      </header>
+      {next && (
+        <Card className="academic-highlight">
+          <small>สอบครั้งถัดไป</small>
+          <h2>{courseName(next.courseId, schedules)}</h2>
+          <strong>{thaiExamTypes[next.type]} · {next.title}</strong>
+          <p>{formatExamDateTime(next, language)}</p>
+          <b>{getExamCountdown(next, now, language)}</b>
+        </Card>
+      )}
+      <section className="academic-list-section">
+        <h2>กำลังจะมาถึง</h2>
+        {upcoming.length ? upcoming.map((exam) => <ExamRow key={exam.id} exam={exam} />) : (
+          <>
+            <EmptyState title="ยังไม่มีการสอบ" description="เพิ่มวันสอบเพื่อวางแผนอ่านหนังสือ" />
+            <Link className="primary-button" href="/exams/new"><Plus />เพิ่มการสอบ</Link>
+          </>
+        )}
+      </section>
+      {completed.length > 0 && (
+        <section className="academic-list-section">
+          <h2>สอบแล้ว</h2>
+          {completed.map((exam) => <ExamRow key={exam.id} exam={exam} />)}
+        </section>
+      )}
+    </div>
+  );
+}
+
+export function GradesOverviewView() {
+  const { schedules, gradePlans } = useAppState();
+  const { t } = useLanguage();
+  const courses = getCurrentTermCourses(schedules);
+
+  return (
+    <div className="grades-overview-section">
+      <header className="academic-page-header">
+        <div>
+          <h1>{t("grades.title")}</h1>
+          <p>{t("grades.intro")}</p>
+        </div>
+      </header>
+      {courses.length ? (
+        <div className="academic-card-grid">
+          {courses.map((course) => {
+            const plan = gradePlans.find((item) => item.courseId === course.id);
+            const summary = plan ? calculateGradePlan(plan) : null;
+            return (
+              <Link className="academic-summary-card grade-overview-card" href={`/grades/${course.id}`} key={course.id}>
+                <span className="grade-overview-accent" aria-hidden="true" style={{ backgroundColor: normalizeTalevoColor(course.color) }} />
+                <strong>{course.name}</strong>
+                {summary ? (
+                  <>
+                    <span>{t("grades.currentScore")} {formatScore(summary.earnedPoints)} / {formatScore(summary.totalMax, 0)}</span>
+                    <b>{t("grades.target")}: {plan?.targetGrade ?? "—"}</b>
+                    <small>{summary.targetReached ? t("grades.targetReached") : summary.canReachTarget && summary.pointsNeeded !== null ? `${t("grades.needed")} ${formatScore(summary.pointsNeeded)} ${t("grades.points")}` : t("grades.targetImpossible")}</small>
+                  </>
+                ) : (
+                  <>
+                    <span>{t("grades.noPlan")}</span>
+                    <b>{t("grades.startPlan")}</b>
+                  </>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <>
+          <EmptyState title="ยังไม่มีรายวิชาสำหรับวางแผนเกรด" description="เพิ่มตารางเรียนก่อน แล้วคุณจะเริ่มสร้างแผนคะแนนรายวิชาได้" />
+          <Link className="primary-button" href="/schedule/new"><Plus />เพิ่มตารางเรียน</Link>
+        </>
+      )}
+    </div>
+  );
+}
 function ExamRow({ exam }: { exam: ReturnType<typeof useAppState>["exams"][number] }) { const { schedules } = useAppState(); const { language } = useLanguage(); const readiness = getExamReadiness(exam); return <Link href={`/exams/${exam.id}`} className="academic-row"><span className="academic-row-icon"><GraduationCap /></span><div><strong>{courseName(exam.courseId,schedules)}</strong><span>{thaiExamTypes[exam.type]} · {exam.title}</span><small>{formatExamDateTime(exam, language)}</small><small>{getExamCountdown(exam,new Date(),language)}{readiness ? ` · พร้อม ${readiness.completed}/${readiness.total}` : ""}</small></div></Link>; }
 export function ExamFormPage() {
   const router = useRouter();
@@ -57,14 +150,7 @@ function inputNumber(value: string) {
 }
 
 export function GradesPage() {
-  const { schedules, gradePlans } = useAppState();
-  const { t } = useLanguage();
-  const courses = getCurrentTermCourses(schedules);
-  return <div className="page academic-page grades-overview-page"><header className="academic-page-header"><div><h1>{t("grades.title")}</h1><p>{t("grades.intro")}</p></div></header>{courses.length ? <div className="academic-card-grid">{courses.map((course) => {
-    const plan = gradePlans.find((item) => item.courseId === course.id);
-    const summary = plan ? calculateGradePlan(plan) : null;
-    return <Link className="academic-summary-card grade-overview-card" href={`/grades/${course.id}`} key={course.id}><span className="grade-overview-accent" aria-hidden="true" style={{ backgroundColor: normalizeTalevoColor(course.color) }} /><strong>{course.name}</strong>{summary ? <><span>{t("grades.currentScore")} {formatScore(summary.earnedPoints)} / {formatScore(summary.totalMax, 0)}</span><b>{t("grades.target")}: {plan?.targetGrade ?? "—"}</b><small>{summary.targetReached ? t("grades.targetReached") : summary.canReachTarget && summary.pointsNeeded !== null ? `${t("grades.needed")} ${formatScore(summary.pointsNeeded)} ${t("grades.points")}` : t("grades.targetImpossible")}</small></> : <><span>{t("grades.noPlan")}</span><b>{t("grades.startPlan")}</b></>}</Link>;
-  })}</div> : <><EmptyState title="ยังไม่มีรายวิชาสำหรับวางแผนเกรด" description="เพิ่มตารางเรียนก่อน แล้วคุณจะเริ่มสร้างแผนคะแนนรายวิชาได้"/><Link className="primary-button" href="/schedule/new"><Plus/>เพิ่มตารางเรียน</Link></>}</div>;
+  return <ExamsPage />;
 }
 
 export function GradeDetailPage() {
@@ -80,7 +166,7 @@ export function GradeDetailPage() {
   const [attemptedSave, setAttemptedSave] = useState(false);
   const [whatIfScores, setWhatIfScores] = useState<Record<string, number | undefined>>({});
 
-  if (!course) return <div className="page"><PageHeader title={t("grades.title")} backHref="/grades" /><EmptyState title="ไม่พบวิชา" description="วิชานี้อาจถูกนำออกจากตาราง" /></div>;
+  if (!course) return <div className="page"><PageHeader title={t("grades.title")} backHref="/tasks?view=grades" /><EmptyState title="ไม่พบวิชา" description="วิชานี้อาจถูกนำออกจากตาราง" /></div>;
 
   const previewPlan: CourseGradePlan = { ...plan, id: "preview", courseId };
   const summary = getGradePlanSummary(previewPlan);
@@ -107,7 +193,7 @@ export function GradeDetailPage() {
     setSaved(true);
   };
   const leave = () => {
-    if (!isDirty || window.confirm(t("grades.unsavedChanges"))) router.push("/grades");
+    if (!isDirty || window.confirm(t("grades.unsavedChanges"))) router.push("/tasks?view=grades");
   };
   const simulatedComponents = plan.components.map((component) => !hasEarnedScore(component) && whatIfScores[component.id] !== undefined ? { ...component, earnedScore: whatIfScores[component.id] } : component);
   const invalidSimulation = plan.components.some((component) => {
@@ -118,7 +204,7 @@ export function GradeDetailPage() {
   const targetTone = summary.targetReached ? "green" : summary.possible ? "orange" : "red";
 
   return <div className="page grade-planner-page">
-    <PageHeader title={course.name} backHref="/grades" onBack={leave} action={t("common.save")} onAction={save} />
+    <PageHeader title={course.name} backHref="/tasks?view=grades" onBack={leave} action={t("common.save")} onAction={save} />
     <p className="grade-course-context">{t("grades.currentTermCourse")}</p>
     {saved && <p className="grade-save-toast" role="status"><CircleCheck />{t("grades.planSaved")}</p>}
     {attemptedSave && !validation.isValid && <p className="grade-save-error" role="alert"><CircleAlert />{t("grades.saveBlocked")}</p>}
@@ -153,7 +239,7 @@ export function SimplifiedGradeDetailPage() {
   const [whatIfOpen, setWhatIfOpen] = useState(false);
   const [whatIfScores, setWhatIfScores] = useState<Record<string, number | undefined>>({});
 
-  if (!course) return <div className="page"><PageHeader title={t("grades.title")} backHref="/grades" /><EmptyState title="ไม่พบวิชา" description="วิชานี้อาจถูกนำออกจากตาราง" /></div>;
+  if (!course) return <div className="page"><PageHeader title={t("grades.title")} backHref="/tasks?view=grades" /><EmptyState title="ไม่พบวิชา" description="วิชานี้อาจถูกนำออกจากตาราง" /></div>;
 
   const previewPlan: CourseGradePlan = { ...plan, id: "preview", courseId };
   const summary = getGradePlanSummary(previewPlan);
@@ -167,7 +253,7 @@ export function SimplifiedGradeDetailPage() {
   const addComponent = () => { const id = `component-${Date.now()}`; changePlan({ ...plan, components: [...plan.components, { id, name: "", weight: 0, maxScore: 0 }] }); window.requestAnimationFrame(() => document.getElementById(`grade-name-${id}`)?.focus()); };
   const removeComponent = (component: GradeComponent) => { if (isGradeComponentUsed(component) && !window.confirm(`${t("grades.confirmDeleteComponent")} “${component.name || t("grades.component")}?`)) return; changePlan({ ...plan, components: plan.components.filter((item) => item.id !== component.id) }); setWhatIfScores((current) => { const next = { ...current }; delete next[component.id]; return next; }); };
   const save = () => { setAttemptedSave(true); if (!validation.isValid) return; upsertGradePlan(courseId, plan); setSaved(true); };
-  const leave = () => { if (!isDirty || window.confirm(t("grades.unsavedChanges"))) router.push("/grades"); };
+  const leave = () => { if (!isDirty || window.confirm(t("grades.unsavedChanges"))) router.push("/tasks?view=grades"); };
   const simulatedComponents = plan.components.map((component) => !hasEarnedScore(component) && whatIfScores[component.id] !== undefined ? { ...component, earnedScore: whatIfScores[component.id] } : component);
   const invalidSimulation = plan.components.some((component) => { const score = whatIfScores[component.id]; return score !== undefined && (score < 0 || score > component.maxScore || component.maxScore <= 0); });
   const simulatedSummary = Object.values(whatIfScores).some((value) => value !== undefined) && !invalidSimulation ? getGradePlanSummary({ ...previewPlan, components: simulatedComponents }) : null;
@@ -175,7 +261,7 @@ export function SimplifiedGradeDetailPage() {
   const neededMetric = summary.targetReached ? t("grades.targetReachedShort") : !summary.possible ? t("grades.targetImpossibleShort") : formatScore(summary.requiredPoints);
 
   return <div className="page grade-planner-page grade-planner-simplified">
-    <PageHeader title={course.name} backHref="/grades" onBack={leave} action={t("common.save")} onAction={save} />
+    <PageHeader title={course.name} backHref="/tasks?view=grades" onBack={leave} action={t("common.save")} onAction={save} />
     {saved && <p className="grade-save-toast" role="status"><CircleCheck />{t("grades.planSaved")}</p>}
     {attemptedSave && !validation.isValid && <p className="grade-save-error" role="alert"><CircleAlert />{t("grades.saveBlocked")}</p>}
 
