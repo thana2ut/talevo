@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, GraduationCap, Languages, Sparkles, Trash2 } from "lucide-react";
+import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, GraduationCap, Languages, Smartphone, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BottomSheet, Card, PageHeader, Select } from "@/components/ui";
 import { NotificationCard } from "@/components/domain";
@@ -45,20 +45,60 @@ export function NotificationsPage() {
 
   return <div className="page notifications-page">
     <PageHeader title={t("notifications.title")} backHref="/today" />
-    <section className="notification-summary-card" aria-labelledby="notification-summary-title">
-      <span className="notification-summary-icon" aria-hidden="true"><Bell /></span>
-      <div className="notification-summary-copy">
-        <div><h2 id="notification-summary-title">{t("notifications.centerTitle")}</h2>{unread > 0 && <span className="notification-unread-badge">{unreadBadge}</span>}</div>
-        <p>{unread > 0 ? t("notifications.unreadSummary").replace("{count}", String(unread)) : t("notifications.allCaughtUp")}</p>
-      </div>
-      {(notifications.length > 0) && <div className="notification-summary-actions" aria-label={t("notifications.actionsLabel")}>
-        <button className="secondary-button notification-mark-read-button" type="button" onClick={handleMarkAllRead} disabled={unread === 0}><CheckCheck aria-hidden="true" />{t("notifications.markAllRead")}</button>
-        {readCount > 0 && <button className="notification-delete-read-button" type="button" onClick={() => setDeleteReadDialogOpen(true)}><Trash2 aria-hidden="true" />{t("notifications.deleteRead")}</button>}
-      </div>}
-    </section>
-    {notice && <p className="notification-action-notice" role="status">{notice}</p>}
-    {notifications.length ? <div className="notification-groups">{groupOrder.map((group) => groups[group].length > 0 && <section className="notification-group" key={group} aria-labelledby={`notification-group-${group}`}><h2 id={`notification-group-${group}`}>{t(`notifications.groups.${group}`)}</h2><div className="notification-list">{groups[group].map((item) => <NotificationCard key={item.id} item={item} onClick={() => markNotificationRead(item.id)} onDelete={item.readAt ? () => handleDeleteNotification(item.id) : undefined} deleteLabel={t("notifications.deleteOne")} />)}</div></section>)}</div> : <Card className="notification-empty"><CheckCircle2 aria-hidden="true" /><h2>{t("notifications.emptyTitle")}</h2><p>{t("notifications.emptyDescription")}</p></Card>}
-    <p className="notification-local-note">{language === "th" ? "การแจ้งเตือนและสถานะอ่านเก็บไว้บนอุปกรณ์นี้" : "Notifications and read status are stored on this device."}</p>
+    {notifications.length ? (
+      <>
+        <section className="notification-summary-card" aria-labelledby="notification-summary-title">
+          <span className="notification-summary-icon" aria-hidden="true"><Bell /></span>
+          <div className="notification-summary-copy">
+            <div><h2 id="notification-summary-title">{t("notifications.centerTitle")}</h2>{unread > 0 && <span className="notification-unread-badge">{unreadBadge}</span>}</div>
+            <p>{unread > 0 ? t("notifications.unreadSummary").replace("{count}", String(unread)) : t("notifications.allCaughtUp")}</p>
+          </div>
+          <div className="notification-summary-actions" aria-label={t("notifications.actionsLabel")}>
+            <button className="secondary-button notification-mark-read-button" type="button" onClick={handleMarkAllRead} disabled={unread === 0}><CheckCheck aria-hidden="true" />{t("notifications.markAllRead")}</button>
+            {readCount > 0 && <button className="notification-delete-read-button" type="button" onClick={() => setDeleteReadDialogOpen(true)}><Trash2 aria-hidden="true" />{t("notifications.deleteRead")}</button>}
+          </div>
+        </section>
+        {notice && <p className="notification-action-notice" role="status">{notice}</p>}
+        <div className="notification-groups">
+          {groupOrder.map((group) => groups[group].length > 0 && (
+            <section className="notification-group" key={group} aria-labelledby={`notification-group-${group}`}>
+              <h2 id={`notification-group-${group}`}>{t(`notifications.groups.${group}`)}</h2>
+              <div className="notification-list">
+                {groups[group].map((item) => (
+                  <NotificationCard key={item.id} item={item} onClick={() => markNotificationRead(item.id)} onDelete={item.readAt ? () => handleDeleteNotification(item.id) : undefined} deleteLabel={t("notifications.deleteOne")} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+        <div className="notification-device-strip notification-device-strip-footer">
+          <Smartphone size={14} aria-hidden="true" />
+          <span>{language === "th" ? "สถานะอ่านจะบันทึกไว้บนอุปกรณ์นี้" : "Read status is stored on this device."}</span>
+        </div>
+      </>
+    ) : (
+      <Card className="notification-empty-unified-card">
+        <div className="notification-empty-card-header">
+          <span className="notification-summary-icon" aria-hidden="true"><Bell /></span>
+          <div className="notification-summary-copy">
+            <h2>{t("notifications.centerTitle")}</h2>
+            <p>{language === "th" ? "อัปเดตสิ่งสำคัญจาก TALEVO" : "Important updates from TALEVO"}</p>
+          </div>
+        </div>
+        <div className="notification-empty-card-divider" />
+        <div className="notification-empty-card-body">
+          <span className="notification-empty-check-badge" aria-hidden="true">
+            <CheckCircle2 size={36} />
+          </span>
+          <h2>{t("notifications.emptyTitle")}</h2>
+          <p>{language === "th" ? "TALEVO จะแจ้งเตือนจากงาน ตารางเรียน และการสอบของคุณเมื่อมีสิ่งที่ต้องรู้" : "TALEVO will alert you from your tasks, class schedule, and exams when there is something to know."}</p>
+          <div className="notification-device-strip">
+            <Smartphone size={14} aria-hidden="true" />
+            <span>{language === "th" ? "สถานะอ่านจะบันทึกไว้บนอุปกรณ์นี้" : "Read status is stored on this device."}</span>
+          </div>
+        </div>
+      </Card>
+    )}
     <BottomSheet open={deleteReadDialogOpen} title={t("notifications.deleteReadTitle")} onClose={() => setDeleteReadDialogOpen(false)} closeLabel={t("common.close")} className="notification-delete-dialog"><p>{t("notifications.deleteReadConfirm")}</p><div className="notification-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDeleteReadDialogOpen(false)}>{t("common.cancel")}</button><button className="notification-delete-confirm-button" type="button" onClick={handleDeleteRead}>{t("notifications.deleteRead")}</button></div></BottomSheet>
   </div>;
 }

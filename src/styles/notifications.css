@@ -3,3 +3,131 @@
 
 /* Read-notification actions keep the existing card hierarchy usable on touch and desktop. */
 .notification-page-actions{display:flex;flex-wrap:wrap;gap:9px;margin:-10px 0 20px}.notification-page-actions button{min-height:42px;padding:9px 14px;font-size:13px}.notification-mark-read-button{flex:1 1 150px}.notification-delete-read-button,.notification-delete-confirm-button{border:1px solid rgba(210,61,75,.2);border-radius:14px;background:var(--danger-soft);color:var(--danger);font-weight:750;cursor:pointer}.notification-delete-read-button{flex:1 1 132px}.notification-action-notice{margin:-8px 0 16px;padding:10px 13px;border:1px solid rgba(28,157,90,.18);border-radius:13px;background:var(--success-soft);color:var(--success);font-size:13px;font-weight:700}.notification-card-with-delete{grid-template-columns:minmax(0,1fr) 46px!important;gap:0!important;padding:0!important}.notification-card-with-delete .notification-card-main{display:grid;min-width:0;min-height:86px;grid-template-columns:auto minmax(0,1fr) 8px auto;align-items:start;gap:12px;padding:13px 0 13px 14px;text-align:left}.notification-card-with-delete .notification-card-main:focus-visible,.notification-delete-button:focus-visible,.notification-delete-read-button:focus-visible,.notification-delete-confirm-button:focus-visible{position:relative;z-index:1;outline:3px solid var(--focus-ring);outline-offset:-3px}.notification-delete-button{display:grid;width:46px;min-height:100%;place-items:center;border-left:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer}.notification-delete-button:hover{background:var(--danger-soft);color:var(--danger)}.notification-delete-button svg{width:17px;height:17px}.notification-delete-dialog{display:grid;gap:18px}.notification-delete-dialog>p{margin:0;color:var(--text-secondary);line-height:1.55}.notification-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.notification-dialog-actions button{min-height:48px;padding:10px}.notification-delete-confirm-button{background:var(--danger);border-color:var(--danger);color:#fff}@media (min-width:700px){.notification-page-actions{justify-content:flex-end}.notification-page-actions button{flex:none}.notification-delete-button{opacity:.68;transition:opacity .18s ease,background .18s ease,color .18s ease}.notification-card-with-delete:hover .notification-delete-button,.notification-delete-button:focus-visible{opacity:1}}html[data-theme="dark"] .notification-delete-button{border-color:var(--border)}
+
+/* Unified Empty State Card */
+.notification-empty-unified-card {
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+  margin: 16px auto 32px;
+  padding: 32px 28px;
+  border-radius: 24px;
+  border: 1px solid rgba(118, 86, 246, 0.15);
+  background: linear-gradient(135deg, var(--surface), var(--purple-50));
+  box-shadow: 0 12px 32px rgba(74, 55, 130, 0.06);
+  box-sizing: border-box;
+}
+.notification-empty-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+.notification-empty-card-header .notification-summary-copy h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 750;
+  color: var(--text-primary);
+}
+.notification-empty-card-header .notification-summary-copy p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.notification-empty-card-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(118, 86, 246, 0.2), transparent);
+  margin: 24px 0 28px;
+}
+.notification-empty-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+.notification-empty-check-badge {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--purple-100);
+  color: var(--purple-700);
+  box-shadow: 0 8px 20px rgba(118, 86, 246, 0.15);
+  margin-bottom: 4px;
+}
+.notification-empty-check-badge svg {
+  width: 34px;
+  height: 34px;
+}
+.notification-empty-card-body h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.notification-empty-card-body p {
+  margin: 0;
+  max-width: 480px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.notification-device-strip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(121, 85, 250, 0.08);
+  border: 1px solid rgba(121, 85, 250, 0.15);
+  color: var(--purple-700);
+  font-size: 12px;
+  font-weight: 650;
+}
+.notification-device-strip svg {
+  flex-shrink: 0;
+}
+.notification-device-strip-footer {
+  display: flex;
+  max-width: 400px;
+  margin: 24px auto 16px;
+}
+@media (max-width: 600px) {
+  .notification-empty-unified-card {
+    padding: 24px 18px;
+    border-radius: 20px;
+    margin: 12px auto 24px;
+  }
+  .notification-empty-check-badge {
+    width: 56px;
+    height: 56px;
+  }
+  .notification-empty-check-badge svg {
+    width: 28px;
+    height: 28px;
+  }
+  .notification-empty-card-body h2 {
+    font-size: 18px;
+  }
+  .notification-empty-card-body p {
+    font-size: 13px;
+  }
+  .notification-device-strip {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+}
+html[data-theme="dark"] .notification-empty-unified-card {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+html[data-theme="dark"] .notification-device-strip {
+  background: rgba(121, 85, 250, 0.14);
+  border-color: rgba(121, 85, 250, 0.25);
+  color: var(--purple-300, #b197fc);
+}

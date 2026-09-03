@@ -11,7 +11,7 @@ import { formatHomeGreeting } from "@/lib/greeting";
 import { mondayIndex } from "@/lib/schedule-date";
 import { getScheduleDisplayName, timeToMinutes } from "@/lib/schedule-utils";
 import { calculateTaskProgress, getCompletedSubtaskCount, hasTaskProgress } from "@/lib/task-progress";
-import { getTaskDueState, getTasksDueToday, parseLocalTaskDate } from "@/lib/task-utils";
+import { formatTodayTaskDeadline, getPendingTasksForToday, getTaskDueState, getTasksDueToday, parseLocalTaskDate } from "@/lib/task-utils";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ClassSchedule, Exam, Task } from "@/types";
@@ -24,41 +24,49 @@ import type { MascotVariant } from "@/lib/mascot";
 const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
 const formatMoney = (amount: number) => new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 }).format(amount);
-const formatMinutes = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-const formatDuration = (minutes: number) => minutes < 60 ? `${minutes} นาที` : `${Math.floor(minutes / 60)} ชม.${minutes % 60 ? ` ${minutes % 60} นาที` : ""}`;
 
 type FreeGap = { start: number; end: number };
 
-function getTodayClasses(schedules: ClassSchedule[], date: Date) {
-  return schedules.filter((item) => item.day === mondayIndex(date)).sort((first, second) => timeToMinutes(first.startTime) - timeToMinutes(second.startTime));
+function formatDuration(minutes: number) {
+  if (minutes < 60) return `${minutes} นาที`;
+  const hours = Math.floor(minutes / 60);
+  const remaining = minutes % 60;
+  return remaining === 0 ? `${hours} ชม.` : `${hours} ชม. ${remaining} น.`;
+}
+
+function formatMinutes(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remaining = minutes % 60;
+  return `${hours.toString().padStart(2, "0")}:${remaining.toString().padStart(2, "0")}`;
+}
+
+function getTodayClasses(classes: ClassSchedule[], now: Date) {
+  const targetDay = mondayIndex(now);
+  return classes.filter((item) => item.day === targetDay).sort((first, second) => timeToMinutes(first.startTime) - timeToMinutes(second.startTime));
 }
 
 function getFreeGaps(classes: ClassSchedule[]) {
-  const gaps: FreeGap[] = [];
+  const gaps: Array<{ start: number; end: number }> = [];
   let cursor = DAY_START;
-  classes.forEach((item) => {
+  for (const item of classes) {
     const start = Math.max(DAY_START, timeToMinutes(item.startTime));
     const end = Math.min(DAY_END, timeToMinutes(item.endTime));
     if (start - cursor >= 30) gaps.push({ start: cursor, end: start });
     cursor = Math.max(cursor, end);
-  });
+  }
   if (DAY_END - cursor >= 30) gaps.push({ start: cursor, end: DAY_END });
   return gaps;
 }
 
-function sortDueTasks(tasks: Task[], now: Date) {
-  const rank = (task: Task) => ({ overdue: 0, urgent: 1, today: 2, future: 3, unknown: 4 })[getTaskDueState(task, now)];
-  return [...tasks].sort((first, second) => {
-    const rankDifference = rank(first) - rank(second);
-    if (rankDifference) return rankDifference;
-    return (parseLocalTaskDate(first.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER) - (parseLocalTaskDate(second.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER);
-  });
-}
-
-function OverviewSentence({ classes, dueCount }: { classes: number; dueCount: number }) {
+function OverviewSentence({ classes, pendingCount, dueTodayCount }: { classes: number; pendingCount: number; dueTodayCount: number }) {
   const classText = classes === 0 ? "วันนี้ไม่มีเรียน" : `วันนี้มีเรียน ${classes} คาบ`;
-  const dueText = dueCount === 0 ? "ไม่มีงานที่ต้องส่ง" : `มีงานส่ง ${dueCount} งาน`;
-  return <p className="smart-today-overview">{classText} · {dueText}</p>;
+  let taskText = "ไม่มีงานค้าง";
+  if (dueTodayCount > 0) {
+    taskText = `มีงานส่งวันนี้ ${dueTodayCount} งาน`;
+  } else if (pendingCount > 0) {
+    taskText = `มีงานที่ต้องทำ ${pendingCount} งาน`;
+  }
+  return <p className="smart-today-overview">{classText} · {taskText}</p>;
 }
 
 function NextClassCard({ classes, nowMinutes }: { classes: ClassSchedule[]; nowMinutes: number }) {
@@ -70,14 +78,170 @@ function NextClassCard({ classes, nowMinutes }: { classes: ClassSchedule[]; nowM
   return <Link href="/schedule" className={`smart-next-class${current ? " is-current" : ""}`}><IconTile tone="purple"><GraduationCap /></IconTile><div className="smart-next-copy"><span>{t("today.nextClass")}</span>{item ? <><strong>{getScheduleDisplayName(item)}</strong><small>{current ? "กำลังเรียนอยู่" : `${item.startTime} · ${state}`}</small><small>{item.room}{item.teacher ? ` · ${item.teacher}` : ""}</small></> : <><strong>{state}</strong><small>ดูตารางเรียนหรือเพิ่มคาบเรียนได้จากหน้านี้</small></>}</div><ArrowUpRight aria-hidden="true" /></Link>;
 }
 
-function DueTodayCard({ task, total, now, schedules }: { task?: Task; total: number; now: Date; schedules: ClassSchedule[] }) {
-  const { t } = useLanguage();
-  if (!task) return <Card className="smart-due-card smart-empty-card"><CircleCheck /><div><span>{t("today.dueToday")}</span><strong>ยังไม่มีงานที่ต้องส่ง</strong><small>เพิ่มงานแรกเพื่อเริ่มติดตามกำหนดส่ง</small></div><div className="smart-due-actions"><Link href="/tasks/new">เพิ่มงานแรก</Link></div></Card>;
+function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; schedules: ClassSchedule[] }) {
+  if (!task) {
+    return (
+      <Card className="smart-due-card smart-empty-card">
+        <CircleCheck />
+        <div className="smart-due-copy">
+          <span>งานที่ควรทำต่อ</span>
+          <strong>ยังไม่มีงานที่ต้องทำ</strong>
+          <small>เพิ่มงานแรกเพื่อเริ่มติดตามกำหนดส่ง</small>
+        </div>
+        <div className="smart-due-actions">
+          <Link href="/tasks/new">เพิ่มงานแรก</Link>
+        </div>
+      </Card>
+    );
+  }
+
   const subtaskTotal = task.subtasks?.length ?? 0;
   const completed = getCompletedSubtaskCount(task);
-  const due = parseLocalTaskDate(task.dueDate);
-  const dueLabel = getTaskDueState(task, now) === "overdue" ? "เกินกำหนดแล้ว" : due ? `ส่งวันนี้ ${formatMinutes(due.getHours() * 60 + due.getMinutes())}` : task.dueLabel;
-  return <Card className="smart-due-card"><IconTile tone={task.color === "orange" ? "orange" : "purple"}><ClipboardCheck /></IconTile><div className="smart-due-copy"><span>{t("today.dueToday")}</span><strong>{task.title}</strong><small>{getTaskCourseLabel(task, schedules)} · {dueLabel}</small>{hasTaskProgress(task) && subtaskTotal > 0 && <><ProgressBar value={calculateTaskProgress(task)} color={task.color} /><small>เหลือ {subtaskTotal - completed} จาก {subtaskTotal} ขั้นตอน</small></>}</div><div className="smart-due-actions"><Link href={`/tasks/${task.id}`}>ทำงานต่อ</Link>{total > 1 && <small>+ อีก {total - 1} งาน</small>}</div></Card>;
+  const courseLabel = getTaskCourseLabel(task, schedules);
+  const deadline = formatTodayTaskDeadline(task, now);
+  const dueState = getTaskDueState(task, now);
+  const isOverdue = dueState === "overdue";
+
+  return (
+    <Card className="smart-due-card">
+      <IconTile tone={task.color === "orange" ? "orange" : "purple"}>
+        <ClipboardCheck />
+      </IconTile>
+      <div className="smart-due-copy">
+        <div className="smart-due-header-row">
+          <span>งานที่ควรทำต่อ</span>
+          <small className="smart-due-subtitle">
+            {isOverdue ? "เลยกำหนดส่งแล้ว" : "งานที่ใกล้ถึงกำหนดที่สุด"}
+          </small>
+        </div>
+        <strong>{task.title}</strong>
+        <div className="smart-due-meta">
+          {courseLabel && <span className="smart-due-course">{courseLabel}</span>}
+          {courseLabel && <span className="smart-due-meta-dot">·</span>}
+          <span className={isOverdue ? "due-overdue" : "due-normal"}>
+            {deadline}
+          </span>
+        </div>
+        {hasTaskProgress(task) && subtaskTotal > 0 && (
+          <div className="smart-task-progress-wrap">
+            <ProgressBar value={calculateTaskProgress(task)} color={task.color} />
+            <small>เหลือ {subtaskTotal - completed} จาก {subtaskTotal} ขั้นตอน</small>
+          </div>
+        )}
+      </div>
+      <div className="smart-due-actions">
+        <Link href={`/tasks/${task.id}`}>ทำงานต่อ</Link>
+      </div>
+    </Card>
+  );
+}
+
+function DailyBudgetCard({
+  dailyBudget,
+  onOpenBudgetDialog,
+  onUpdateTodaySpent,
+}: {
+  dailyBudget: {
+    budget: number;
+    spent: number;
+    remaining: number;
+    isOverBudget: boolean;
+  };
+  onOpenBudgetDialog: () => void;
+  onUpdateTodaySpent: (amount: number) => void;
+}) {
+  const { t } = useLanguage();
+  const [editingValue, setEditingValue] = useState<string | null>(null);
+
+  const displayValue = editingValue !== null
+    ? editingValue
+    : dailyBudget.spent > 0
+    ? String(dailyBudget.spent)
+    : "";
+
+  const handleSpendChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value.replace(/[^\d]/g, "");
+    if (raw.length > 7) return;
+    setEditingValue(raw);
+    const num = raw === "" ? 0 : Number(raw);
+    if (!Number.isNaN(num) && num >= 0) {
+      onUpdateTodaySpent(num);
+    }
+  };
+
+  const handleBlur = () => {
+    if (editingValue !== null) {
+      const num = editingValue === "" ? 0 : Number(editingValue);
+      onUpdateTodaySpent(Number.isFinite(num) && num >= 0 ? Math.round(num) : 0);
+      setEditingValue(null);
+    }
+  };
+
+  const hasBudget = dailyBudget.budget > 0;
+  const isOver = dailyBudget.isOverBudget;
+  const overAmount = Math.max(0, dailyBudget.spent - dailyBudget.budget);
+  const remainingAmount = Math.max(0, dailyBudget.budget - dailyBudget.spent);
+
+  return (
+    <Card className={`smart-finance ${isOver ? "is-over" : ""}`} id="today-finance">
+      <header>
+        <span><WalletCards /></span>
+        <strong>{t("today.finance")}</strong>
+        <button type="button" className="smart-finance-action text-button" onClick={onOpenBudgetDialog}>
+          {!hasBudget ? "ตั้งงบ" : "แก้ไขงบ"}
+        </button>
+      </header>
+      <div className="smart-finance-columns">
+        <div className="smart-finance-col col-spend">
+          <label htmlFor="today-spend-input">วันนี้ใช้ไป</label>
+          <div className="smart-finance-input-wrap">
+            <span className="currency-symbol">฿</span>
+            <input
+              id="today-spend-input"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="smart-finance-spend-input"
+              placeholder="0"
+              value={displayValue}
+              onChange={handleSpendChange}
+              onBlur={handleBlur}
+              autoComplete="off"
+            />
+          </div>
+        </div>
+        <div className="smart-finance-col col-budget">
+          <span>งบรายวัน</span>
+          <strong>{hasBudget ? formatMoney(dailyBudget.budget) : "ยังไม่ได้ตั้งงบ"}</strong>
+        </div>
+        <div className={`smart-finance-col col-status ${isOver ? "status-over" : hasBudget ? "status-ok" : "status-none"}`}>
+          <span>{hasBudget ? (isOver ? "เกินงบ" : "เหลือวันนี้") : "สถานะ"}</span>
+          <strong>
+            {hasBudget ? (
+              isOver ? (
+                `฿${overAmount.toLocaleString("th-TH")}`
+              ) : (
+                `฿${remainingAmount.toLocaleString("th-TH")}`
+              )
+            ) : (
+              <button type="button" onClick={onOpenBudgetDialog} className="smart-set-budget-link">
+                ตั้งงบ
+              </button>
+            )}
+          </strong>
+        </div>
+      </div>
+      <div className="smart-finance-footer">
+        <small>
+          {!hasBudget
+            ? "ตั้งงบรายวันเพื่อคำนวณยอดเงินที่เหลือใช้ได้วันนี้"
+            : isOver
+            ? `วันนี้ใช้เกินงบรายวันไปแล้ว ฿${overAmount.toLocaleString("th-TH")}`
+            : `ยังใช้ได้อีก ฿${remainingAmount.toLocaleString("th-TH")} จากงบ ${formatMoney(dailyBudget.budget)}`}
+        </small>
+      </div>
+    </Card>
+  );
 }
 
 function RecommendationCard({ task, risk, gap, nextClass, now }: { task?: Task; risk?: DeadlineRiskAssessment; gap?: FreeGap; nextClass?: ClassSchedule; now: Date }) {
@@ -134,7 +298,7 @@ export function WeeklyRadarSection({ now, schedules, tasks, exams }: { now: Date
 }
 
 export function TodayPage() {
-  const { profile, isAuthLoading, isHydrated, tasks, schedules, notifications, markNotificationRead, financeTransactions, financeSettings, updateFinanceSettings, exams, now: appNow } = useAppState();
+  const { profile, isAuthLoading, isHydrated, tasks, schedules, notifications, markNotificationRead, financeTransactions, financeSettings, updateFinanceSettings, setTodaySpent, exams, now: appNow } = useAppState();
   const { t, language } = useLanguage();
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [draftBudget, setDraftBudget] = useState("");
@@ -143,13 +307,14 @@ export function TodayPage() {
   const referenceDate = useMemo(() => clientReady ? appNow : new Date(2000, 0, 1, 0, 0), [appNow, clientReady]);
   const view = useMemo(() => {
     const classes = getTodayClasses(schedules, referenceDate);
-    const dueTasks = sortDueTasks(getTasksDueToday(tasks, referenceDate), referenceDate);
+    const pendingTasks = getPendingTasksForToday(tasks, referenceDate);
+    const dueTodayTasks = getTasksDueToday(tasks, referenceDate);
     const nowMinutes = referenceDate.getHours() * 60 + referenceDate.getMinutes();
     const gaps = getFreeGaps(classes);
     const usefulGap = gaps.find((gap) => gap.end > nowMinutes);
     const nextClass = classes.find((item) => timeToMinutes(item.startTime) > nowMinutes);
     const risks = tasks.map((task) => ({ task, assessment: calculateDeadlineRisk(task, schedules, referenceDate) })).filter((item) => item.assessment?.level === "at_risk");
-    return { classes, dueTasks, nowMinutes, gaps, usefulGap, nextClass, atRisk: risks[0] };
+    return { classes, pendingTasks, dueTodayTasks, nowMinutes, gaps, usefulGap, nextClass, atRisk: risks[0] };
   }, [referenceDate, schedules, tasks]);
   const dailyBudget = getDailyBudgetStatus(financeSettings, financeTransactions, referenceDate);
   const unread = getUnreadNotificationCount(notifications);
@@ -185,11 +350,20 @@ export function TodayPage() {
   };
 
   return <div className="page today-page smart-today-page">
-    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><OverviewSentence classes={view.classes.length} dueCount={view.dueTasks.length} /></div><NotificationBell /></header>
-    <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.dueTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} now={referenceDate} /></section>
+    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><OverviewSentence classes={view.classes.length} pendingCount={view.pendingTasks.length} dueTodayCount={view.dueTodayTasks.length} /></div><NotificationBell /></header>
+    <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.pendingTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} now={referenceDate} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     {upcomingExam && <Link className="smart-next-class smart-exam-context" href={`/exams/${upcomingExam.id}`}><IconTile tone="orange"><GraduationCap /></IconTile><div className="smart-next-copy"><span>{t("nav.exams")}</span><strong>{getTaskCourseLabel({ courseId: upcomingExam.courseId }, schedules)}</strong><small>{getExamCountdown(upcomingExam, referenceDate, language)}{getExamReadiness(upcomingExam) ? ` · พร้อม ${getExamReadiness(upcomingExam)?.completed}/${getExamReadiness(upcomingExam)?.total}` : ""}</small></div><ArrowUpRight aria-hidden="true" /></Link>}
-    <div className="smart-today-primary-grid"><NextClassCard classes={view.classes} nowMinutes={view.nowMinutes} /><DueTodayCard task={view.dueTasks[0]} total={view.dueTasks.length} now={referenceDate} schedules={schedules} /><Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong>{view.gaps.length > 1 && <Link href="/schedule">ดูทั้งหมด</Link>}</header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card><Card className={`smart-finance ${dailyBudget.isOverBudget ? "is-over" : ""}`} id="today-finance"><header><span><WalletCards /></span><strong>{t("today.finance")}</strong><button type="button" className="smart-finance-action text-button" onClick={openBudgetDialog}>{dailyBudget.budget === 0 ? "ตั้งงบ" : "แก้ไขงบ"}</button></header><div className="smart-finance-values"><div><span>วันนี้ใช้ไป</span><strong>{formatMoney(dailyBudget.spent)}</strong></div><div><span>งบรายวัน</span><strong>{dailyBudget.budget === 0 ? "ยังไม่ได้ตั้งงบ" : formatMoney(dailyBudget.budget)}</strong></div></div><small>{dailyBudget.budget === 0 ? "ตั้งงบรายวันเพื่อดูยอดคงเหลือ" : dailyBudget.isOverBudget ? "วันนี้ใช้เกินงบแล้ว" : `งบรายวัน ${formatMoney(dailyBudget.budget)}`}</small></Card></div>
+    <div className="smart-today-primary-grid">
+      <NextClassCard classes={view.classes} nowMinutes={view.nowMinutes} />
+      <TodayTaskCard task={view.pendingTasks[0]} now={referenceDate} schedules={schedules} />
+      <Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong>{view.gaps.length > 1 && <Link href="/schedule">ดูทั้งหมด</Link>}</header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card>
+      <DailyBudgetCard
+        dailyBudget={dailyBudget}
+        onOpenBudgetDialog={openBudgetDialog}
+        onUpdateTodaySpent={(amount) => setTodaySpent(amount, referenceDate)}
+      />
+    </div>
     </section>
     <SemesterWeather />
     <div className="smart-today-bottom-grid"><section className="smart-later-section"><SectionHeader title="ภายหลังวันนี้" /><Card className="smart-later-card"><BookOpen /><div><strong>{view.nextClass ? `${view.nextClass.startTime} · ${getScheduleDisplayName(view.nextClass)}` : view.classes.length ? "วันนี้ไม่มีคาบเรียนต่อแล้ว" : "วันนี้ไม่มีคาบเรียน"}</strong><small>{view.nextClass ? `${view.nextClass.room}${view.nextClass.teacher ? ` · ${view.nextClass.teacher}` : ""}` : unread ? `มีการแจ้งเตือนใหม่ ${unread} รายการ` : "ไม่มีการแจ้งเตือนใหม่"}</small></div></Card></section><section className="smart-notification-section"><SectionHeader title="แจ้งเตือนล่าสุด" action="ดูทั้งหมด" href="/notifications" /><Card className="mini-notifications">{notifications.length ? notifications.slice(0, 3).map((item) => <Link href={item.href ?? "/notifications"} key={item.id} className={item.readAt ? "is-read" : ""} onClick={() => markNotificationRead(item.id)}><span className={`mini-tone tone-${item.priority === "high" ? "red" : item.priority === "medium" ? "orange" : "purple"}`} /><div><strong>{item.title}</strong><small>{formatNotificationTime(item.createdAt, language, referenceDate)}</small></div>{!item.readAt && <i aria-label="ยังไม่อ่าน" />}</Link>) : <div className="mini-notification-empty"><strong>ยังไม่มีการแจ้งเตือน</strong><small>TALEVO จะแจ้งจากงาน ตารางเรียน และการสอบที่คุณบันทึกไว้</small></div>}</Card></section></div>

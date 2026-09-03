@@ -302,6 +302,219 @@ html[data-theme="dark"] .academic-weather-empty {
 .smart-finance-action { font-size: 13px; font-weight: 750; color: var(--purple-700); background: transparent; border: 0; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: background-color .15s ease; }
 .smart-finance-action:hover { background: var(--purple-50); }
 
+/* Smart Today Task Card (Single Priority Card) */
+.smart-due-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 148px;
+  padding: 18px 20px;
+}
+.smart-due-card .smart-due-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.smart-due-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.smart-due-header-row > span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.smart-due-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.smart-due-card .smart-due-copy > strong {
+  font-size: 15px;
+  font-weight: 750;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 1px 0;
+}
+.smart-due-card .smart-due-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+.smart-due-course {
+  font-weight: 600;
+}
+.smart-due-meta-dot {
+  opacity: 0.5;
+}
+.smart-due-meta .due-overdue {
+  color: #e03131;
+  font-weight: 750;
+}
+.smart-due-meta .due-normal {
+  color: var(--text-secondary);
+}
+.smart-due-card .smart-task-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+.smart-due-card .smart-task-progress-wrap small {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.smart-due-card .smart-due-actions {
+  flex: 0 0 auto;
+}
+.smart-due-card .smart-due-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--purple-700);
+  background: var(--purple-50);
+  padding: 8px 16px;
+  border-radius: 12px;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.smart-due-card .smart-due-actions a:hover {
+  background: var(--purple-100);
+  transform: translateY(-1px);
+}
+.smart-empty-card > svg {
+  width: 28px;
+  height: 28px;
+  color: var(--purple-400);
+  flex-shrink: 0;
+}
+@media (max-width: 500px) {
+  .smart-due-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+  }
+  .smart-due-card .smart-due-actions {
+    width: 100%;
+  }
+  .smart-due-card .smart-due-actions a {
+    width: 100%;
+  }
+}
+
+/* Smart Daily Budget Card */
+.smart-finance {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+.smart-finance-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+@media (min-width: 600px) {
+  .smart-finance-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+.smart-finance-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-subtle, rgba(121, 85, 250, 0.03));
+  border: 1px solid var(--border);
+}
+.smart-finance-col label,
+.smart-finance-col span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+}
+.smart-finance-col strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+}
+.smart-finance-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.smart-finance-input-wrap .currency-symbol {
+  position: absolute;
+  left: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+.smart-finance-spend-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 8px 0 26px;
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.smart-finance-spend-input:focus {
+  border-color: var(--purple-500);
+  box-shadow: 0 0 0 3px rgba(121, 85, 250, 0.18);
+}
+.status-over strong {
+  color: #e03131;
+}
+.status-ok strong {
+  color: var(--purple-700);
+}
+.smart-set-budget-link {
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--purple-700);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.smart-finance-footer small {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.smart-finance.is-over {
+  border-color: rgba(224, 49, 49, 0.3);
+}
+
 .ai-header { column-gap: 12px; grid-template-columns: 44px 50px minmax(0, 1fr) 44px; margin-bottom: 18px; }
 .ai-header .talevo-mascot { height: 48px; }
 .ai-header > div:not(.talevo-mascot) { display: grid; gap: 3px; }

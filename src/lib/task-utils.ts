@@ -33,6 +33,61 @@ export function getTasksDueToday(tasks: Task[], referenceDate = new Date()) {
   });
 }
 
+export function getPendingTasksForToday(tasks: Task[], referenceDate = new Date()): Task[] {
+  const pending = tasks.filter((task) => task.completedAt == null && task.status !== "completed");
+
+  const getRank = (task: Task) => {
+    const state = getTaskDueState(task, referenceDate);
+    if (state === "overdue") return 0;
+    if (state === "urgent" || state === "today") return 1;
+    if (state === "future") return 2;
+    return 3;
+  };
+
+  return [...pending].sort((first, second) => {
+    const rankDifference = getRank(first) - getRank(second);
+    if (rankDifference !== 0) return rankDifference;
+
+    const firstDate = parseLocalTaskDate(first.dueDate);
+    const secondDate = parseLocalTaskDate(second.dueDate);
+
+    if (firstDate && secondDate) {
+      const rank = getRank(first);
+      if (rank === 0) {
+        // Overdue: nearest overdue deadline to now (highest timestamp among overdue)
+        const diff = secondDate.getTime() - firstDate.getTime();
+        if (diff !== 0) return diff;
+      } else {
+        const timeDiff = firstDate.getTime() - secondDate.getTime();
+        if (timeDiff !== 0) return timeDiff;
+      }
+    } else if (firstDate && !secondDate) {
+      return -1;
+    } else if (!firstDate && secondDate) {
+      return 1;
+    }
+
+    return 0;
+  });
+}
+
+export function formatTodayTaskDeadline(task: Task, referenceDate = new Date()): string {
+  const due = parseLocalTaskDate(task.dueDate);
+  if (!due) return "ไม่มีกำหนดส่ง";
+
+  const state = getTaskDueState(task, referenceDate);
+  if (state === "overdue") return "เลยกำหนด";
+
+  const timeStr = `${pad(due.getHours())}:${pad(due.getMinutes())}`;
+  if (state === "urgent" || state === "today") {
+    return `ส่งวันนี้ • ${timeStr}`;
+  }
+
+  const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  const thaiYear = due.getFullYear() + 543;
+  return `${due.getDate()} ${thaiMonths[due.getMonth()]} ${thaiYear} • ${timeStr}`;
+}
+
 export type TaskDueState = "overdue" | "urgent" | "today" | "future" | "unknown";
 
 export function getTaskDueState(task: Task, referenceDate = new Date()): TaskDueState {

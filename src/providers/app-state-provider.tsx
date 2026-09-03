@@ -29,7 +29,7 @@ import type {
   TaskAttachment,
   TaskCompletionHistory,
 } from "@/types";
-import { getLocalMonthKey } from "@/lib/finance-utils";
+import { getLocalMonthKey, toLocalDateKey } from "@/lib/finance-utils";
 import { normalizeTaskColor } from "@/lib/task-color-utils";
 import { getDeterministicCourseColor, normalizeTalevoColor } from "@/lib/talevo-color-utils";
 import { deleteAttachmentBlob } from "@/lib/task-attachment-storage";
@@ -141,6 +141,7 @@ interface AppStateValue {
   addFinanceTransaction: (value: NewFinanceTransactionInput) => string;
   updateFinanceTransaction: (id: string, value: NewFinanceTransactionInput) => void;
   deleteFinanceTransaction: (id: string) => void;
+  setTodaySpent: (amount: number, referenceDate?: Date) => void;
   addSavingGoal: (title: string, targetAmount: number) => void;
   contributeToSavingGoal: (id: string, amount: number) => void;
   updateFinanceSettings: (value: Partial<FinanceSettings>) => void;
@@ -861,10 +862,58 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       runCloudMutation((client, uid) => persistFinanceTransaction(client, uid, newTx, matchingCategory?.id ?? null));
       return id;
     },
-    updateFinanceTransaction: (id, input) => setFinanceTransactions((current) => current.map((item) => item.id === id ? { ...input, id } : item)),
+    updateFinanceTransaction: (id, input) => {
+      const updatedTx: FinanceTransaction = { ...input, id };
+      setFinanceTransactions((current) => current.map((item) => item.id === id ? updatedTx : item));
+      const matchingCategory = financeCategories.find((cat) => cat.name.trim().toLowerCase() === input.category.trim().toLowerCase());
+      runCloudMutation((client, uid) => persistFinanceTransaction(client, uid, updatedTx, matchingCategory?.id ?? null));
+    },
     deleteFinanceTransaction: (id) => {
       setFinanceTransactions((current) => current.filter((item) => item.id !== id));
       runCloudMutation((client, uid) => deleteFinanceTransactionFromCloud(client, uid, id));
+    },
+    setTodaySpent: (amount, referenceDate) => {
+      const targetDate = referenceDate ?? new Date();
+      const dateKey = toLocalDateKey(targetDate);
+      const safeAmount = Math.max(0, Math.round(Number.isFinite(amount) ? amount : 0));
+      const todayExpenses = financeTransactions.filter((tx) => tx.date === dateKey && tx.type === "expense");
+      const dailyTx = todayExpenses.find((tx) => tx.note === "ใช้จ่ายประจำวัน") ?? todayExpenses[0];
+
+      if (!dailyTx) {
+        if (safeAmount > 0) {
+          const id = uid("finance");
+          const newTx: FinanceTransaction = {
+            id,
+            type: "expense",
+            title: "ค่าใช้จ่ายวันนี้",
+            amount: safeAmount,
+            category: "ทั่วไป",
+            note: "ใช้จ่ายประจำวัน",
+            date: dateKey,
+          };
+          setFinanceTransactions((current) => [newTx, ...current]);
+          runCloudMutation((client, uid) => persistFinanceTransaction(client, uid, newTx, null));
+        }
+        return;
+      }
+
+      const otherExpensesTotal = todayExpenses
+        .filter((tx) => tx.id !== dailyTx.id)
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      const neededForDaily = Math.max(0, safeAmount - otherExpensesTotal);
+
+      if (neededForDaily === 0 && otherExpensesTotal >= safeAmount && dailyTx.note === "ใช้จ่ายประจำวัน") {
+        setFinanceTransactions((current) => current.filter((item) => item.id !== dailyTx.id));
+        runCloudMutation((client, uid) => deleteFinanceTransactionFromCloud(client, uid, dailyTx.id));
+      } else {
+        const updatedTx: FinanceTransaction = {
+          ...dailyTx,
+          amount: neededForDaily,
+        };
+        setFinanceTransactions((current) => current.map((item) => item.id === dailyTx.id ? updatedTx : item));
+        const matchingCategory = financeCategories.find((cat) => cat.name.trim().toLowerCase() === dailyTx.category.trim().toLowerCase());
+        runCloudMutation((client, uid) => persistFinanceTransaction(client, uid, updatedTx, matchingCategory?.id ?? null));
+      }
     },
     addSavingGoal: (title, targetAmount) => setSavingGoals((current) => [...current, { id: uid("saving"), title: title.trim(), targetAmount, savedAmount: 0 }]),
     contributeToSavingGoal: (id, amount) => setSavingGoals((current) => current.map((item) => item.id === id ? { ...item, savedAmount: Math.min(item.targetAmount, item.savedAmount + amount) } : item)),
