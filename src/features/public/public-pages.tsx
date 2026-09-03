@@ -238,7 +238,30 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         <div className="auth-card">
           <span className="auth-kicker">TALEVO</span>
           <h1>{title}</h1><p>{subtitle}</p>
-          {sent ? <div className="success-message"><Mail /><h3>{mode === "forgot" ? "ส่งลิงก์ตั้งรหัสผ่านแล้ว" : "ตรวจสอบอีเมลเพื่อยืนยันบัญชี"}</h3><p>{mode === "forgot" ? <>กรุณาตรวจสอบกล่องจดหมายของ <strong>{form.email}</strong> และทำตามขั้นตอนในอีเมล</> : <>ส่งลิงก์ยืนยันไปที่ <strong>{form.email}</strong> แล้ว กรุณากดลิงก์ก่อนเข้าสู่ระบบ และตรวจโฟลเดอร์สแปมหากยังไม่พบอีเมล</>}</p>{mode !== "forgot" && <><button className="secondary-button button-block" type="button" onClick={resendSignupConfirmation} disabled={isResending || resendCooldown > 0}>{isResending ? "กำลังส่งอีกครั้ง..." : resendCooldown > 0 ? `ส่งอีกครั้งได้ใน ${resendCooldown} วินาที` : "ส่งอีเมลยืนยันอีกครั้ง"}</button>{resendFeedback && <p className="auth-status-message" role="status">{resendFeedback}</p>}{resendError && <p className="form-error" role="alert">{resendError}</p>}</>}<Link className="primary-button button-block" href="/login">กลับไปเข้าสู่ระบบ</Link></div> : (
+          {sent ? (
+            <div className="success-message">
+              <Mail />
+              {mode === "register" ? (
+                <>
+                  <h2>สมัครสมาชิกสำเร็จ</h2>
+                  <h3>กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี</h3>
+                </>
+              ) : (
+                <h3>{mode === "forgot" ? "ส่งลิงก์ตั้งรหัสผ่านแล้ว" : "ตรวจสอบอีเมลเพื่อยืนยันบัญชี"}</h3>
+              )}
+              <p>{mode === "forgot" ? <>กรุณาตรวจสอบกล่องจดหมายของ <strong>{form.email}</strong> และทำตามขั้นตอนในอีเมล</> : <>ส่งลิงก์ยืนยันไปที่ <strong>{form.email}</strong> แล้ว กรุณากดลิงก์ก่อนเข้าสู่ระบบ และตรวจโฟลเดอร์สแปมหากยังไม่พบอีเมล</>}</p>
+              {mode !== "forgot" && (
+                <>
+                  <button className="secondary-button button-block" type="button" onClick={resendSignupConfirmation} disabled={isResending || resendCooldown > 0}>
+                    {isResending ? "กำลังส่งอีกครั้ง..." : resendCooldown > 0 ? `ส่งอีกครั้งได้ใน ${resendCooldown} วินาที` : "ส่งอีเมลยืนยันอีกครั้ง"}
+                  </button>
+                  {resendFeedback && <p className="auth-status-message" role="status">{resendFeedback}</p>}
+                  {resendError && <p className="form-error" role="alert">{resendError}</p>}
+                </>
+              )}
+              <Link className="primary-button button-block" href="/login">กลับไปเข้าสู่ระบบ</Link>
+            </div>
+          ) : (
             <form className="form-grid auth-form" onSubmit={submit} noValidate>
               {mode === "register" && <div className="auth-registration-progress" role="status"><span>{t("auth.step").replace("{step}", String(registrationStep))}</span><i style={{ "--registration-progress": `${registrationStep * 50}%` } as React.CSSProperties} /></div>}
               {mode === "register" && registrationStep === 1 && <>

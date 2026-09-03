@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Bot, CalendarClock, CalendarDays, ChartNoAxesColumnIncreasing, ChartSpline, CircleHelp, ClipboardList, GraduationCap, Home, Plus, Settings, ShieldCheck, UserRound, WalletCards } from "lucide-react";
+import { Bot, CalendarClock, CalendarDays, ChartNoAxesColumnIncreasing, ChartSpline, ClipboardList, GraduationCap, Home, MoreHorizontal, Plus, Settings, ShieldCheck, UserRound, WalletCards } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { BottomSheet, TalevoBrand, NotificationBell } from "@/components/ui";
 import { useAppState } from "@/providers/app-state-provider";
@@ -23,7 +23,6 @@ const mobileNavigationItems = [
   { href: "/today", key: "nav.home", icon: Home },
   { href: "/schedule", key: "nav.schedule", icon: CalendarDays },
   { href: "/tasks", key: "nav.tasks", icon: ClipboardList },
-  { href: "/ai", key: "nav.ai", icon: Bot },
 ];
 
 const publicRoutes = ["/", "/welcome", "/login", "/register", "/forgot-password", "/resend-confirmation", "/reset-password"];
@@ -49,6 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { isAuthenticated, isAuthLoading, isHydrated, localOwnershipStatus } = useAppState();
   const { t } = useLanguage();
   const [quickOpen, setQuickOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const isPublicRoute = publicRoutes.includes(pathname);
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
@@ -71,16 +71,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     { label: t("shell.addExam"), description: t("shell.addExamDescription"), icon: GraduationCap, href: "/exams/new" },
     { label: t("shell.addFinance"), description: t("shell.addFinanceDescription"), icon: WalletCards, href: "/finance/new" },
   ];
-  const quickDestinationOptions = [
-    { label: t("nav.exams"), icon: CalendarClock, href: "/exams" },
-    { label: t("nav.grades"), icon: ChartSpline, href: "/grades" },
-    { label: t("nav.statistics"), icon: ChartNoAxesColumnIncreasing, href: "/statistics" },
-    { label: t("nav.finance"), icon: WalletCards, href: "/finance" },
-    { label: t("notifications.title"), icon: Bell, href: "/notifications" },
-    { label: t("nav.profile"), icon: UserRound, href: "/profile" },
-    { label: t("nav.settings"), icon: Settings, href: "/settings" },
-    { label: t("profile.help"), icon: CircleHelp, href: "/help" },
+
+  const moreNavigationOptions = [
+    { label: "การสอบ", description: "ตารางสอบและหัวข้อทบทวน", icon: CalendarClock, href: "/exams" },
+    { label: "วางแผนคะแนน", description: "เป้าหมายเกรดและคะแนนเก็บ", icon: ChartSpline, href: "/grades" },
+    { label: "สรุปการเรียน", description: "สถิติและภาพรวมการเรียน", icon: ChartNoAxesColumnIncreasing, href: "/statistics" },
+    { label: "การเงิน", description: "งบรายวันและบันทึกรายรับรายจ่าย", icon: WalletCards, href: "/finance" },
+    { label: "TALEVO AI", description: "ผู้ช่วยวางแผนและตอบคำถามการเรียน", icon: Bot, href: "/ai" },
+    { label: "โปรไฟล์", description: "ข้อมูลส่วนตัวและการศึกษา", icon: UserRound, href: "/profile" },
+    { label: "การตั้งค่า", description: "การแจ้งเตือนและระบบการใช้งาน", icon: Settings, href: "/settings" },
   ];
+
+  const isMoreActive = moreNavigationOptions.some((item) => isActive(item.href));
 
   return (
     <div className="app-shell">
@@ -102,19 +104,44 @@ export function AppShell({ children }: { children: ReactNode }) {
         <NavLink href={mobileNavigationItems[1].href} label={t(mobileNavigationItems[1].key)} icon={mobileNavigationItems[1].icon} active={isActive(mobileNavigationItems[1].href)} />
         <button type="button" className="quick-add-button" onClick={() => setQuickOpen(true)} aria-label={t("shell.quickAdd")} aria-haspopup="dialog" aria-expanded={quickOpen}><Plus aria-hidden="true" /></button>
         <NavLink href={mobileNavigationItems[2].href} label={t(mobileNavigationItems[2].key)} icon={mobileNavigationItems[2].icon} active={isActive(mobileNavigationItems[2].href)} />
-        <NavLink href={mobileNavigationItems[3].href} label={t(mobileNavigationItems[3].key)} icon={mobileNavigationItems[3].icon} active={isActive(mobileNavigationItems[3].href)} />
+        <button
+          type="button"
+          className={`nav-link nav-link-more ${isMoreActive ? "active" : ""}`}
+          onClick={() => setMoreOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={moreOpen}
+          aria-label="เพิ่มเติม"
+        >
+          <MoreHorizontal aria-hidden="true" />
+          <span>เพิ่มเติม</span>
+        </button>
       </nav>
 
       <BottomSheet open={quickOpen} title={t("shell.quickAdd")} onClose={() => setQuickOpen(false)} className="quick-add-sheet">
-        <div className="quick-add-groups">
-          <section className="quick-add-section" aria-labelledby="quick-add-destinations-title">
-            <h3 id="quick-add-destinations-title">ไปยังหน้า</h3>
-            <div className="quick-options quick-options-destinations">{quickDestinationOptions.map(({ label, icon: Icon, href }) => <Link key={href} href={href} onClick={() => setQuickOpen(false)}><span><Icon aria-hidden="true" /></span><strong>{label}</strong></Link>)}</div>
-          </section>
-          <section className="quick-add-section" aria-labelledby="quick-add-create-title">
-            <h3 id="quick-add-create-title">เพิ่มข้อมูลด่วน</h3>
-            <div className="quick-options quick-options-create">{quickOptions.map(({ label, description, icon: Icon, href }) => <Link key={href} href={href} onClick={() => setQuickOpen(false)}><span><Icon aria-hidden="true" /></span><div><strong>{label}</strong><small>{description}</small></div></Link>)}</div>
-          </section>
+        <div className="quick-options quick-options-create">
+          {quickOptions.map(({ label, description, icon: Icon, href }) => (
+            <Link key={href} href={href} onClick={() => setQuickOpen(false)}>
+              <span><Icon aria-hidden="true" /></span>
+              <div>
+                <strong>{label}</strong>
+                <small>{description}</small>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={moreOpen} title="เพิ่มเติม" onClose={() => setMoreOpen(false)} className="more-navigation-sheet">
+        <div className="quick-options more-navigation-options">
+          {moreNavigationOptions.map(({ label, description, icon: Icon, href }) => (
+            <Link key={href} href={href} onClick={() => setMoreOpen(false)}>
+              <span><Icon aria-hidden="true" /></span>
+              <div>
+                <strong>{label}</strong>
+                {description && <small>{description}</small>}
+              </div>
+            </Link>
+          ))}
         </div>
       </BottomSheet>
     </div>

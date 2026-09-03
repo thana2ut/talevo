@@ -77,11 +77,16 @@ check(globals.includes(":focus-visible") && !globals.includes(":focus-visible { 
 check(globals.includes("prefers-reduced-motion: reduce"), "Reduced-motion support is missing");
 check(appShell.includes('aria-current={active ? "page" : undefined}'), "Active navigation links must expose aria-current");
 const mobileNavSource = appShell.match(/const mobileNavigationItems = \[([\s\S]*?)\];/)?.[1] ?? "";
-check(["/today", "/schedule", "/tasks", "/ai"].every((href) => mobileNavSource.includes(`href: "${href}"`)), "Mobile navigation must contain Home, Schedule, Tasks, and AI routes");
+check(["/today", "/schedule", "/tasks"].every((href) => mobileNavSource.includes(`href: "${href}"`)), "Mobile navigation must contain Home, Schedule, and Tasks routes");
 check(!mobileNavSource.includes('href: "/finance"'), "Finance must not appear in the mobile navigation");
+check(appShell.includes('aria-label="เพิ่มเติม"') && appShell.includes("setMoreOpen(true)"), "Mobile navigation must include 'เพิ่มเติม' button");
 check(appShell.includes('aria-haspopup="dialog"') && appShell.includes('aria-expanded={quickOpen}'), "Quick Add must expose its dialog state");
-for (const href of ["/exams", "/grades", "/statistics", "/finance", "/notifications", "/profile", "/settings", "/help"]) {
-  check(appShell.includes(`href: "${href}"`), `Quick Add is missing ${href}`);
+check(appShell.includes('aria-expanded={moreOpen}'), "More navigation must expose its dialog state");
+for (const href of ["/exams", "/grades", "/statistics", "/finance", "/ai", "/profile", "/settings"]) {
+  check(appShell.includes(`href: "${href}"`), `More navigation sheet is missing ${href}`);
+}
+for (const href of ["/tasks/new", "/schedule/new", "/exams/new", "/finance/new"]) {
+  check(appShell.includes(`href: "${href}"`), `Quick Add creation sheet is missing ${href}`);
 }
 check(appShell.includes('grid-column: 3') || globals.includes('grid-column: 3'), "Quick Add button must occupy the centered mobile-nav grid column");
 check(globals.includes('.quick-add-button { display: grid; width: 56px; height: 56px; grid-column: 3;'), "Quick Add needs a centered 44px-or-larger touch target");

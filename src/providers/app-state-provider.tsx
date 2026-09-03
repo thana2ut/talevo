@@ -48,7 +48,6 @@ import {
 } from "@/lib/persistence/app-state-storage";
 import {
   bindCanonicalStateToAccount,
-  canonicalStateBelongsToAccount,
   clearAccountStateStorage,
   createAccountStateStorage,
   getAccountStateKeys,
@@ -56,6 +55,9 @@ import {
   recordLocalOwnershipDecision,
   type LocalOwnershipStatus,
 } from "@/lib/persistence/local-account-storage";
+import { createClient } from "@/lib/supabase/client";
+import { loadCloudAccountV8 } from "@/lib/supabase/cloud-v8-repository";
+import { hydrateCloudAccountToAppState } from "@/lib/supabase/cloud-hydration";
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
 import type { NotificationPreferences } from "@/types";
@@ -254,7 +256,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isAuthLoading) return;
-    const timer = window.setTimeout(() => {
+    let cancelled = false;
+
+    const initialize = async () => {
       if (!userId) {
         activeStorageRef.current = null;
         applySnapshot(createAppStateSnapshot(defaultAppState, tabIdRef.current));
@@ -275,34 +279,79 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
 
       const accountStorage = createAccountStateStorage(window.localStorage, userId);
-      const accountKeys = getAccountStateKeys(userId);
-      if (canonicalStateBelongsToAccount(window.localStorage, userId)
-          && window.localStorage.getItem(accountKeys.primary) === null
-          && window.localStorage.getItem(accountKeys.backup) === null) {
-        const canonical = readAppStateSnapshot(window.localStorage, accountDefaults);
-        writeAppStateSnapshot(accountStorage, canonical.state);
-      }
       activeStorageRef.current = accountStorage;
-      const result = readAppStateSnapshot(accountStorage, accountDefaults);
-      const expiredTasks = getExpiredCompletedTasks(result.state.tasks, new Date());
-      const expiredIds = new Set(expiredTasks.map((task) => task.id));
-      const hydratedState: PersistedAppState = expiredTasks.length ? {
-        ...result.state,
-        tasks: result.state.tasks.filter((task) => !expiredIds.has(task.id)),
-        taskCompletionHistory: appendCompletionHistory(result.state.taskCompletionHistory, expiredTasks),
-      } : result.state;
-      cleanupTaskAttachments(expiredTasks);
-      applySnapshot(hydratedState);
-      setBrowserNotificationPermission("Notification" in window ? window.Notification.permission : "unsupported");
-      if (result.source !== "primary" && result.source !== "defaults" || result.warnings.length) {
-        console.warn("[TALEVO] AppState recovery", { source: result.source, warnings: result.warnings });
+
+      let hydratedState: PersistedAppState | null = null;
+
+      try {
+        const supabase = createClient();
+        const cloudResult = await loadCloudAccountV8(supabase);
+        if (cancelled) return;
+
+        if (cloudResult.status === "loaded") {
+          hydratedState = hydrateCloudAccountToAppState(cloudResult.tables, {
+            email: userEmail ?? "",
+            defaults: accountDefaults,
+            writerId: tabIdRef.current,
+          });
+          writeAppStateSnapshot(accountStorage, hydratedState);
+        } else if (cloudResult.status === "empty") {
+          const cloudProfile = cloudResult.tables.profiles?.[0];
+          const cloudAcademic = cloudResult.tables.academic_terms?.[0];
+          const initialProfile = cloudProfile ? {
+            displayName: typeof cloudProfile.display_name === "string" ? cloudProfile.display_name : accountDefaults.profile.displayName,
+            email: userEmail ?? accountDefaults.profile.email,
+            major: typeof cloudProfile.major === "string" ? cloudProfile.major : accountDefaults.profile.major,
+            university: typeof cloudProfile.university === "string" ? cloudProfile.university : accountDefaults.profile.university,
+          } : accountDefaults.profile;
+          const initialAcademic = cloudAcademic ? {
+            level: typeof cloudAcademic.level === "string" ? cloudAcademic.level : accountDefaults.academicTerm.level,
+            term: typeof cloudAcademic.term === "string" ? cloudAcademic.term : accountDefaults.academicTerm.term,
+            academicYear: typeof cloudAcademic.academic_year === "string" ? cloudAcademic.academic_year : accountDefaults.academicTerm.academicYear,
+          } : accountDefaults.academicTerm;
+
+          const freshDefaults: AppStateDefaults = {
+            ...accountDefaults,
+            profile: initialProfile,
+            academicTerm: initialAcademic,
+          };
+          hydratedState = createAppStateSnapshot(freshDefaults, tabIdRef.current);
+          writeAppStateSnapshot(accountStorage, hydratedState);
+        }
+      } catch (err) {
+        console.warn("[TALEVO] Supabase cloud load error, falling back to user-scoped storage", err);
       }
+
+      if (cancelled) return;
+
+      if (!hydratedState) {
+        // Fallback exclusively to the user's OWN account storage (never global unscoped storage)
+        const result = readAppStateSnapshot(accountStorage, accountDefaults);
+        hydratedState = result.state;
+      }
+
+      const expiredTasks = getExpiredCompletedTasks(hydratedState.tasks, new Date());
+      const expiredIds = new Set(expiredTasks.map((task) => task.id));
+      const finalState: PersistedAppState = expiredTasks.length ? {
+        ...hydratedState,
+        tasks: hydratedState.tasks.filter((task) => !expiredIds.has(task.id)),
+        taskCompletionHistory: appendCompletionHistory(hydratedState.taskCompletionHistory, expiredTasks),
+      } : hydratedState;
+
+      cleanupTaskAttachments(expiredTasks);
+      applySnapshot(finalState);
+      setBrowserNotificationPermission("Notification" in window ? window.Notification.permission : "unsupported");
       setLocalOwnershipStatus("ready");
       setHydratedScope(userId);
       setIsHydrated(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [accountDefaults, applySnapshot, isAuthLoading, userId]);
+    };
+
+    void initialize();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountDefaults, applySnapshot, isAuthLoading, userEmail, userId]);
 
   const persistableState = useMemo<AppStateDefaults>(() => ({
     profile,
