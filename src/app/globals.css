@@ -12,6 +12,7 @@
 @import "../styles/ai-composition.css";
 @import "../styles/syllabus-import-composition.css";
 @import "../styles/grade-planning-composition.css";
+@import "../styles/mobile-app.css";
 
 :root {
   --bg: #f8f6ff;
