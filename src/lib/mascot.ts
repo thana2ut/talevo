@@ -12,7 +12,7 @@ type MascotAsset = { src: string; width: number; height: number };
 type MascotAssetSet = Record<MascotCrop, MascotAsset>;
 
 const neutralAssets: MascotAssetSet = {
-  head: { src: "/brand/talevo-mascot-head.png", width: 470, height: 500 },
+  head: { src: "/brand/talevo-mascot-head.png", width: 544, height: 544 },
   upper: { src: "/assets/mascot/mascot-upper-neutral.png", width: 470, height: 588 },
   full: { src: "/assets/mascot/mascot-full-turnaround-v2.png", width: 1086, height: 1448 },
 };
