@@ -5,5 +5,6 @@
 [build.environment]
   # Webpack's build cache is never deployed, but it records env values and trips secret scanning.
   SECRETS_SCAN_OMIT_PATHS = ".next/cache/**,.netlify/.next/cache/**"
-  # NEXT_PUBLIC_* values are shipped to the browser by design.
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+  # NEXT_PUBLIC_* values are shipped to the browser by design; the AI provider/model
+  # are plain config words (e.g. "groq") that appear throughout the source.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,TALEVO_AI_PROVIDER,TALEVO_AI_MODEL"
