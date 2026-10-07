@@ -21,10 +21,8 @@ for (const relPath of deletedFiles) {
   check(!fs.existsSync(fullPath), `Deleted file must not exist: ${relPath}`);
 }
 
-// 2. Verify route /statistics redirects to /today
-const statisticsPageRoute = fs.readFileSync(path.join(projectRoot, "src/app/statistics/page.tsx"), "utf8");
-check(statisticsPageRoute.includes('redirect("/today")'), "Route /statistics must redirect to /today");
-check(!statisticsPageRoute.includes("StatisticsPage"), "Route /statistics must not reference StatisticsPage");
+// 2. Verify the retired route no longer exists
+check(!fs.existsSync(path.join(projectRoot, "src/app/statistics/page.tsx")), "Route /statistics must not exist");
 
 // 3. Verify globals.css does not import statistics.css or contain dead statistics styles
 const globalsCss = fs.readFileSync(path.join(projectRoot, "src/app/globals.css"), "utf8");

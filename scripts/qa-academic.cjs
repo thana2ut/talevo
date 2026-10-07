@@ -93,9 +93,7 @@ check(getHorizontalEventPosition(manualWeekendSchedules[0], horizontalRange).wid
 const tasksSource = fs.readFileSync(path.join(projectRoot, "src/features/tasks/task-pages.tsx"), "utf8");
 check(!tasksSource.includes("GradesOverviewView") && !tasksSource.includes("view=grades"), "TasksPage must not expose retired Grade Planning");
 
-const gradesRouteSource = fs.readFileSync(path.join(projectRoot, "src/app/grades/page.tsx"), "utf8");
-const gradesDetailRouteSource = fs.readFileSync(path.join(projectRoot, "src/app/grades/[courseId]/page.tsx"), "utf8");
-check(gradesRouteSource.includes('redirect("/tasks")') && gradesDetailRouteSource.includes('redirect("/tasks")'), "Retired Grade Planning routes must redirect to /tasks");
+check(!fs.existsSync(path.join(projectRoot, "src/app/grades/page.tsx")) && !fs.existsSync(path.join(projectRoot, "src/app/grades/[courseId]/page.tsx")), "Retired Grade Planning routes must not exist");
 
 // 7-Day Study Encouragement QA Coverage
 // 1. 0 hours -> เบา
@@ -151,10 +149,8 @@ const emptyForecast = [
 ];
 check(getMostDemandingDay(emptyForecast) === null, "empty forecast returns null for positive empty message");
 check(EMPTY_STUDY_LOAD_COPY === "ช่วงนี้ตารางค่อนข้างสบาย ใช้เวลาพักหรือเตรียมตัวล่วงหน้าได้นะ", "empty schedule must use exact positive message");
-// 14. no warning-style 'วันที่ควรวางแผนล่วงหน้า' remains
-const semesterWeatherSrc = fs.readFileSync(path.join(projectRoot, "src/features/academic/semester-weather.tsx"), "utf8");
-check(!semesterWeatherSrc.includes("วันที่ควรวางแผนล่วงหน้า"), "warning-style 'วันที่ควรวางแผนล่วงหน้า' must be removed");
-check(!semesterWeatherSrc.includes("TriangleAlert"), "TriangleAlert warning icon must be removed");
+// 14. retired weather UI must be fully removed
+check(!fs.existsSync(path.join(projectRoot, "src/features/academic/semester-weather.tsx")), "retired semester weather component must not exist");
 // 15. mobile no overflow
 const todayCss = fs.readFileSync(path.join(projectRoot, "src/styles/today-composition.css"), "utf8");
 check(todayCss.includes("overflow-wrap: break-word"), "supportive text must specify overflow-wrap: break-word for mobile wrapping");

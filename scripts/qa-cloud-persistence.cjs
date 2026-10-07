@@ -101,9 +101,7 @@ check(
 const tasksPageRoute = fs.readFileSync(path.join(projectRoot, "src/features/tasks/task-pages.tsx"), "utf8");
 check(!tasksPageRoute.includes("GradesOverviewView") && !tasksPageRoute.includes("view=grades"), "TasksPage must not expose retired Grade Planning");
 
-const gradesPageRoute = fs.readFileSync(path.join(projectRoot, "src/app/grades/page.tsx"), "utf8");
-const gradesDetailRoute = fs.readFileSync(path.join(projectRoot, "src/app/grades/[courseId]/page.tsx"), "utf8");
-check(gradesPageRoute.includes('redirect("/tasks")') && gradesDetailRoute.includes('redirect("/tasks")'), "Retired Grade Planning routes must redirect to /tasks");
+check(!fs.existsSync(path.join(projectRoot, "src/app/grades/page.tsx")) && !fs.existsSync(path.join(projectRoot, "src/app/grades/[courseId]/page.tsx")), "Retired Grade Planning routes must not exist");
 
 // 5. App Shell Navigation Hierarchy
 const appShell = fs.readFileSync(path.join(projectRoot, "src/components/app-shell.tsx"), "utf8");
@@ -115,10 +113,7 @@ check(!appShell.includes('href: "/finance"'), "Desktop sidebar and More sheet mu
 check(!appShell.includes('label: "การเงิน"'), "Mobile More options must not have 'การเงิน'");
 check(!appShell.includes("addFinance"), "Quick Add must not have 'addFinance'");
 
-const financeRoute = fs.readFileSync(path.join(projectRoot, "src/app/finance/page.tsx"), "utf8");
-check(financeRoute.includes('redirect("/today")'), "/finance route must redirect to /today");
-const financeNewRoute = fs.readFileSync(path.join(projectRoot, "src/app/finance/new/page.tsx"), "utf8");
-check(financeNewRoute.includes('redirect("/today")'), "/finance/new route must redirect to /today");
+check(!fs.existsSync(path.join(projectRoot, "src/app/finance/page.tsx")) && !fs.existsSync(path.join(projectRoot, "src/app/finance/new/page.tsx")), "Retired Finance routes must not exist");
 
 const todayPageRoute = fs.readFileSync(path.join(projectRoot, "src/features/today/today-page.tsx"), "utf8");
 check(!todayPageRoute.includes('t("today.finance")') && !todayPageRoute.includes("openBudgetDialog"), "Today page must not expose retired Finance controls");
@@ -160,7 +155,8 @@ const hydrated = hydrateCloudAccountToAppState(mockCloudTables, {
 check(hydrated.schedules.length === 2, "Hydrated state must preserve cloud class_schedules across fresh login");
 check(hydrated.schedules[0].name === "Algorithms", "Hydrated schedule[0] name must match");
 check(hydrated.schedules[1].name === "Databases", "Hydrated schedule[1] name must match");
-check(hydrated.financeSettings.dailyBudget === 200, "Hydrated state must preserve cloud daily_budget across fresh login");
+check(hydrated.financeSettings.dailyBudget === 0 && hydrated.financeTransactions.length === 0 && hydrated.financeCategories.length === 0 && hydrated.savingGoals.length === 0, "Hydrated state must discard retired finance data");
+check(hydrated.exams.length === 0 && hydrated.gradePlans.length === 0, "Hydrated state must discard retired exam and grade-planning data");
 
 // 7. Normal Account Flow & Absence of Blocking Gates
 check(!appShell.includes("LocalOwnershipGate"), "app-shell.tsx must not block startup with LocalOwnershipGate");

@@ -123,10 +123,9 @@ check(/\.bottom-sheet\.syllabus-import-sheet\s*\{[^}]*overflow:\s*hidden/i.test(
 check(profilePages.includes("joinAcademicDetails") && profilePages.includes('academicTerm.level || "ยังไม่ได้ระบุ"'), "Empty profile academic details need readable fallbacks");
 check(taskCreatePage.includes('aria-label={t("tasks.subtasks")}'), "Task subtask input needs an accessible name");
 check(!exists("src/features/finance/finance-pages.tsx"), "Standalone finance page must be removed");
-check(read("src/app/finance/page.tsx").includes('redirect("/today")'), "/finance must redirect to /today");
-check(read("src/app/finance/new/page.tsx").includes('redirect("/today")'), "/finance/new must redirect to /today");
+check(!exists("src/app/finance/page.tsx") && !exists("src/app/finance/new/page.tsx"), "Retired finance routes must not exist");
 for (const route of ["src/app/exams/page.tsx", "src/app/exams/new/page.tsx", "src/app/exams/[id]/page.tsx"]) {
-  check(read(route).includes('redirect("/today")'), `${route} must redirect to /today`);
+  check(!exists(route), `${route} must not exist`);
 }
 check(!todayPage.includes("smart-finance") && !todayPage.includes('t("today.finance")'), "Today page must not render finance controls");
 check(!todayPage.includes("SemesterWeather") && !todayPage.includes("semester-weather"), "Today page must not render the weather panel");
@@ -177,10 +176,8 @@ check(read("src/features/schedule/schedule-pages.tsx").includes("getScheduleWeek
 
 // Retired Grade Planning Contract
 const taskPagesSrc = read("src/features/tasks/task-pages.tsx");
-const gradesIndexRoute = read("src/app/grades/page.tsx");
-const gradesDetailRoute = read("src/app/grades/[courseId]/page.tsx");
 check(!taskPagesSrc.includes("tasks-view-switcher") && !taskPagesSrc.includes("GradesOverviewView") && !taskPagesSrc.includes("view=grades"), "Tasks page must not expose Grade Planning");
-check(gradesIndexRoute.includes('redirect("/tasks")') && gradesDetailRoute.includes('redirect("/tasks")'), "Retired Grade Planning URLs must redirect to Tasks");
+check(!exists("src/app/grades/page.tsx") && !exists("src/app/grades/[courseId]/page.tsx"), "Retired Grade Planning routes must not exist");
 check(!aiUi.includes('{ key: "grades"') && !aiUi.includes("BarChart3"), "AI context picker must not expose Grade Planning");
 
 check(globals.includes(".primary-button") && globals.includes(".secondary-button") && globals.includes(".icon-button") && source.includes(".danger-button"), "Canonical button variants are incomplete");

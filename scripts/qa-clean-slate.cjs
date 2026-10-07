@@ -77,9 +77,9 @@ check(!appShell.includes("LOCAL → CLOUD"), "app-shell.tsx must not present Loc
 check(appStateProvider.includes('recordLocalOwnershipDecision(window.localStorage, userId, "fresh")'), "fresh choice must be remembered without deleting legacy state");
 check(todayPage.includes("เพิ่มตารางเรียนแรก") && todayPage.includes("เพิ่มงานแรก"), "Today must expose real empty-state actions");
 check(!fs.existsSync(path.join(projectRoot, "src/features/statistics-page.tsx")), "Statistics page component must be removed");
-check(read("src/app/statistics/page.tsx").includes('redirect("/today")'), "Statistics route must redirect to /today");
+check(!fs.existsSync(path.join(projectRoot, "src/app/statistics/page.tsx")), "Statistics route must not exist");
 check(!fs.existsSync(path.join(projectRoot, "src/features/finance/finance-pages.tsx")), "Finance page component must be removed");
-check(read("src/app/finance/page.tsx").includes('redirect("/today")'), "Finance route must redirect to /today");
+check(!fs.existsSync(path.join(projectRoot, "src/app/finance/page.tsx")), "Finance route must not exist");
 check(!todayPage.includes('t("today.finance")') && !todayPage.includes("วันนี้ใช้ไป") && !todayPage.includes("งบรายวัน"), "Today must keep the removed finance card out of the active UI");
 check(aiPage.includes("ประวัติการสนทนายังว่างอยู่") && aiPage.includes("chat.length === 0"), "AI must show a non-persisted welcome state while chat history remains empty");
 check(!/readyForUpload:\s*true/.test(migrationPlanner), "Local to Cloud upload must remain disabled");

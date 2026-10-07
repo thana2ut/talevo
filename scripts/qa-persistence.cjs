@@ -121,9 +121,8 @@ const refreshedDeletedNotifications = readAppStateSnapshot(deletedNotificationSt
 check(refreshedDeletedNotifications.state.notifications.length === 0 && refreshedDeletedNotifications.state.dismissedNotificationEventKeys.includes(notification.eventKey), "deleted notifications and their tombstones must survive a refresh snapshot");
 const synchronizedDeletedNotifications = parseAppStateSnapshot(deletedNotificationStorage.getItem(APP_STATE_STORAGE_KEY), defaults);
 check(synchronizedDeletedNotifications?.notifications.length === 0 && synchronizedDeletedNotifications.dismissedNotificationEventKeys.includes(notification.eventKey), "cross-tab snapshot parsing must retain deleted notification state");
-check(persistedRead.state.exams[0].id === exam.id, "exam id should survive serialization");
-check(persistedRead.state.exams[0].endAt === exam.endAt && persistedRead.state.exams[0].room === exam.room && persistedRead.state.exams[0].note === exam.note, "optional exam fields should survive serialization");
-check(persistedRead.state.exams[0].topics[0].id === "topic-normalization", "exam topics should survive serialization");
+check(persistedRead.state.exams.length === 0, "retired exam data must be discarded during local-state normalization");
+check(persistedRead.state.gradePlans.length === 0 && persistedRead.state.financeTransactions.length === 0 && persistedRead.state.savingGoals.length === 0 && persistedRead.state.financeCategories.length === 0, "retired grade and finance data must be discarded during local-state normalization");
 check(persistedRead.state.tasks[0].attachments[0].name === "schema.pdf", "attachment metadata should survive without storing a Blob");
 check(!storage.getItem(APP_STATE_STORAGE_KEY).includes("avatarUrl"), "session-only object URLs should not be persisted");
 
@@ -145,7 +144,7 @@ const corruptStorage = new MemoryStorage({
   [APP_STATE_BACKUP_KEY]: JSON.stringify(snapshot),
 });
 const recovered = readAppStateSnapshot(corruptStorage, defaults);
-check(recovered.source === "backup" && recovered.state.exams[0].id === exam.id, "corrupt primary should recover from backup");
+check(recovered.source === "backup" && recovered.state.exams.length === 0, "corrupt primary should recover from backup while discarding retired exam data");
 check(recovered.warnings.includes("primary_snapshot_invalid"), "backup recovery should expose a developer warning");
 check(parseAppStateSnapshot("not-json", defaults) === null, "malformed storage should parse safely");
 
@@ -157,7 +156,7 @@ const legacyStorage = new MemoryStorage({
 });
 const legacyRead = readAppStateSnapshot(legacyStorage, defaults);
 check(legacyRead.source === "legacy-fragments" && legacyRead.state.tasks[0].id === "legacy-task", "fragmented legacy task keys should migrate without data loss");
-check(legacyRead.state.schedules[0].id === schedule.id && legacyRead.state.exams[0].id === exam.id, "legacy import should preserve safe defaults for previously unpersisted sections");
+check(legacyRead.state.schedules[0].id === schedule.id && legacyRead.state.exams.length === 0, "legacy import should preserve active schedules and discard retired exam data");
 check(Boolean(legacyStorage.getItem(TALEVO_APP_STATE_KEY)) && Boolean(legacyStorage.getItem(TALEVO_APP_STATE_BACKUP_KEY)), "fragmented legacy import should establish both Talevo snapshots");
 
 const migrationState = createAppStateSnapshot({
@@ -170,13 +169,13 @@ const migrationState = createAppStateSnapshot({
 const legacyPrimaryStorage = new MemoryStorage({ [LEGACY_KERNOVA_APP_STATE_KEY]: JSON.stringify(migrationState) });
 const legacyPrimaryRead = readAppStateSnapshot(legacyPrimaryStorage, defaults);
 check(legacyPrimaryRead.source === "legacy-primary", "legacy Kernova primary should be identified as the migration source");
-check(legacyPrimaryRead.state.profile.displayName === "Legacy QA" && legacyPrimaryRead.state.tasks.length === 1 && legacyPrimaryRead.state.schedules.length === 1 && legacyPrimaryRead.state.exams.length === 1, "legacy primary migration must retain profile, tasks, schedule and exams");
-check(legacyPrimaryRead.state.gradePlans[0].id === "grade-plan-legacy" && legacyPrimaryRead.state.financeTransactions[0].id === "finance-legacy" && legacyPrimaryRead.state.notifications[0].id === notification.id, "legacy primary migration must retain grades, finance and notifications");
+check(legacyPrimaryRead.state.profile.displayName === "Legacy QA" && legacyPrimaryRead.state.tasks.length === 1 && legacyPrimaryRead.state.schedules.length === 1 && legacyPrimaryRead.state.exams.length === 0, "legacy primary migration must retain active profile, tasks and schedule while discarding exams");
+check(legacyPrimaryRead.state.gradePlans.length === 0 && legacyPrimaryRead.state.financeTransactions.length === 0 && legacyPrimaryRead.state.notifications[0].id === notification.id, "legacy primary migration must discard retired grades and finance while retaining notifications");
 check(legacyPrimaryRead.state.settings.dateFormat === "เดือน/วัน/ปี", "legacy primary migration must retain settings");
 check(legacyPrimaryStorage.getItem(TALEVO_APP_STATE_KEY) === legacyPrimaryStorage.getItem(TALEVO_APP_STATE_BACKUP_KEY), "legacy primary migration should write matching Talevo primary and backup snapshots");
 check(legacyPrimaryStorage.getItem(LEGACY_KERNOVA_APP_STATE_KEY) !== null, "legacy primary should remain during the compatibility period");
 const refreshes = [1, 2, 3].map(() => readAppStateSnapshot(legacyPrimaryStorage, defaults));
-check(refreshes.every((result) => result.source === "primary" && result.state.tasks.length === 1 && result.state.financeTransactions.length === 1), "three refreshes must use Talevo primary without duplicates or resets");
+check(refreshes.every((result) => result.source === "primary" && result.state.tasks.length === 1 && result.state.financeTransactions.length === 0), "three refreshes must retain active data without restoring retired finance data");
 
 const legacyBackupStorage = new MemoryStorage({
   [LEGACY_KERNOVA_APP_STATE_KEY]: "{broken",
@@ -210,7 +209,7 @@ const v4FeatureState = {
 };
 const v4Read = readAppStateSnapshot(new MemoryStorage({ [APP_STATE_STORAGE_KEY]: JSON.stringify(v4FeatureState) }), defaults);
 check(v4Read.state.version === APP_STATE_CURRENT_VERSION && !("studyBlocks" in v4Read.state) && !("academicRoute" in v4Read.state), "v4 migration must strip only removed GPS and Life Rescue fields");
-check(v4Read.state.tasks[0].id === task.id && v4Read.state.schedules[0].id === schedule.id && v4Read.state.exams[0].id === exam.id && v4Read.state.notifications[0].id === notification.id, "v4 migration must preserve unrelated user data");
+check(v4Read.state.tasks[0].id === task.id && v4Read.state.schedules[0].id === schedule.id && v4Read.state.exams.length === 0 && v4Read.state.notifications[0].id === notification.id, "v4 migration must preserve active user data and discard retired exam data");
 check(v4Read.state.dismissedNotificationEventKeys.length === 0, "older snapshots must safely default dismissed event history during v7 migration");
 const backupV4Read = readAppStateSnapshot(new MemoryStorage({ [APP_STATE_STORAGE_KEY]: "{broken", [APP_STATE_BACKUP_KEY]: JSON.stringify(v4FeatureState) }), defaults);
 check(backupV4Read.source === "backup" && !("studyBlocks" in backupV4Read.state) && !("academicRoute" in backupV4Read.state), "backup normalization must not resurrect removed feature data");
