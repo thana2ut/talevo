@@ -322,16 +322,27 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (process.env.NODE_ENV === "development") {
         console.log("[TALEVO Auth Diagnostic: signIn]", {
           stage: "signin_response",
           errorCode: error?.code,
           errorMessage: error?.message,
           errorStatus: error?.status,
+          hasUser: Boolean(data?.user),
+          hasSession: Boolean(data?.session),
         });
       }
-      return { error: error ? normalizeAuthError(error, "signin") : null };
+      if (error) return { error: normalizeAuthError(error, "signin") };
+
+      // A redirect is permitted only after Supabase returns a verified browser session.
+      // Treat an incomplete response as a failed sign-in rather than trusting stale client state.
+      if (!data.session || !data.user) {
+        return { error: "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" };
+      }
+
+      setSession(data.session);
+      return { error: null };
     } catch {
       return { error: networkErrorMessage };
     }

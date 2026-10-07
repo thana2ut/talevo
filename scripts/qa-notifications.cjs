@@ -18,6 +18,7 @@ require.extensions[".ts"] = function compileTypeScript(module, filename) {
 };
 
 const { removeAllReadNotifications, removeReadNotification } = require("../src/lib/alerts/notification-deletion.ts");
+const { deliverBrowserNotificationTest, deliverNewBrowserNotifications } = require("../src/lib/alerts/notification-delivery.ts");
 const notifications = [
   { id: "unread", eventKey: "task-12h:task", createdAt: "2026-08-31T08:00:00.000Z", title: "Unread", message: "Keep", type: "task_deadline", priority: "high" },
   { id: "read-a", eventKey: "task-24h:task", createdAt: "2026-08-31T07:00:00.000Z", readAt: "2026-08-31T07:05:00.000Z", title: "Read A", message: "Delete", type: "task_deadline", priority: "medium" },
@@ -33,4 +34,24 @@ check(!unreadAttempt.removed && unreadAttempt.notifications.length === 3, "unrea
 const bulk = removeAllReadNotifications(notifications, ["task-24h:task"]);
 check(bulk.removed === 2 && bulk.notifications.length === 1 && bulk.notifications[0].id === "unread", "bulk deletion keeps unread notifications only");
 check(bulk.dismissedEventKeys.length === 2 && bulk.dismissedEventKeys.includes("weekly-radar:2026-W35"), "bulk deletion preserves unique tombstones for every removed event");
-console.log(`Notification deletion QA passed: ${checks} checks`);
+
+async function verifyDeviceDelivery() {
+  const delivered = [];
+  const channel = { isSupported: () => true, deliver: (notification) => { delivered.push(notification); } };
+  await deliverNewBrowserNotifications([notifications[0], { ...notifications[0], id: "system", type: "system", eventKey: "system" }], channel);
+  check(delivered.length === 1 && delivered[0].id === "unread", "device delivery must include actionable alerts and skip internal system records");
+
+  const tests = [];
+  const testChannel = { isSupported: () => true, deliver: (notification) => { tests.push(notification); } };
+  check(await deliverBrowserNotificationTest("th", testChannel), "enabling device notifications must send a real test notification");
+  check(tests[0]?.href === "/notifications" && tests[0]?.title.includes("TALEVO"), "test notification must open the notification center and use safe copy");
+
+  const worker = fs.readFileSync(path.join(projectRoot, "public/talevo-notification-worker.js"), "utf8");
+  check(worker.includes('notificationclick') && worker.includes('candidate.origin === self.location.origin'), "notification worker must handle clicks and reject external destinations");
+  console.log(`Notification QA passed: ${checks} checks`);
+}
+
+verifyDeviceDelivery().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

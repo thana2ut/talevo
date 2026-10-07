@@ -2,11 +2,10 @@
 /* eslint-disable @next/next/no-img-element -- local object URLs are not compatible with Next image optimization. */
 
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { BookOpen, CheckCircle2, ChevronDown, Clock3, Download, Eye, FileText, ImageIcon, MoreHorizontal, Paperclip, Pencil, Play, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { BottomSheet, Card, EmptyState, Field, Input, PageHeader, ProgressBar, StatusPill, Textarea } from "@/components/ui";
-import { GradesOverviewView } from "@/features/academic/academic-pages";
 import { TalevoColorPicker } from "@/components/talevo-color-picker";
 import { SubjectIcon, TaskCard } from "@/components/domain";
 import { getCourseById, getCourseScheduleSummary, getCurrentTermCourses, getTaskCourseLabel, type ScheduleCourse } from "@/lib/course-utils";
@@ -52,15 +51,8 @@ function readTaskActionNotice() {
 }
 
 export function TasksPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeView = searchParams.get("view") === "grades" ? "grades" : "tasks";
   const { tasks, schedules, now } = useAppState();
   const { t } = useLanguage();
-
-  const switchView = (nextView: "tasks" | "grades") => {
-    router.replace(nextView === "grades" ? "/tasks?view=grades" : "/tasks", { scroll: false });
-  };
   const [tab, setTab] = useState<TaskFilter>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -99,29 +91,7 @@ export function TasksPage() {
   };
   return (
     <div className="page tasks-page">
-      <div className="segmented-control tasks-view-switcher" role="tablist" aria-label="เลือกมุมมองงานและคะแนน">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeView === "tasks"}
-          className={`tasks-view-tab tasks-view-tab-tasks ${activeView === "tasks" ? "active" : ""}`}
-          onClick={() => switchView("tasks")}
-        >
-          {t("nav.tasks")}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeView === "grades"}
-          className={`tasks-view-tab tasks-view-tab-grades ${activeView === "grades" ? "active" : ""}`}
-          onClick={() => switchView("grades")}
-        >
-          {t("grades.title")}
-        </button>
-      </div>
-
-      {activeView === "tasks" ? (
-        <>
+      <>
           <header className="tasks-heading">
             <div className="page-intro">
               <h1>{t("tasks.title")}</h1>
@@ -168,10 +138,7 @@ export function TasksPage() {
           <Link href="/tasks/new" className="floating-add" aria-label={t("tasks.addTask")}>
             <Plus />
           </Link>
-        </>
-      ) : (
-        <GradesOverviewView />
-      )}
+      </>
     </div>
   );
 }

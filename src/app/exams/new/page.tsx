@@ -1,2 +1,5 @@
-import { ExamFormPage } from "@/features/academic/academic-pages";
-export default function Page() { return <ExamFormPage />; }
+import { redirect } from "next/navigation";
+
+export default function Page() {
+  redirect("/today");
+}

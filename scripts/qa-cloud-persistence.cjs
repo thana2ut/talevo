@@ -97,25 +97,20 @@ check(
   "endSession must flush pending cloud mutations with a 3-second safety timeout before signOut"
 );
 
-// 4. Tasks & Grades Information Architecture Contract
+// 4. Retired Grade Planning Information Architecture Contract
 const tasksPageRoute = fs.readFileSync(path.join(projectRoot, "src/features/tasks/task-pages.tsx"), "utf8");
-check(tasksPageRoute.includes('searchParams.get("view") === "grades"'), "TasksPage must inspect search parameter ?view=grades");
-check(tasksPageRoute.includes('switchView("tasks")') && tasksPageRoute.includes('switchView("grades")'), "TasksPage must allow switching between tasks and grades");
-check(tasksPageRoute.includes("/tasks?view=grades"), "TasksPage must support /tasks?view=grades deep link");
-
-const academicPageRoute = fs.readFileSync(path.join(projectRoot, "src/features/academic/academic-pages.tsx"), "utf8");
-check(!academicPageRoute.includes('switchView("exams")'), "ExamsPage must be exam-only with no grade switcher");
-check(academicPageRoute.includes('backHref="/tasks?view=grades"'), "GradeDetailPage back link must return to /tasks?view=grades");
+check(!tasksPageRoute.includes("GradesOverviewView") && !tasksPageRoute.includes("view=grades"), "TasksPage must not expose retired Grade Planning");
 
 const gradesPageRoute = fs.readFileSync(path.join(projectRoot, "src/app/grades/page.tsx"), "utf8");
-check(gradesPageRoute.includes('redirect("/tasks?view=grades")'), "/grades route must redirect to /tasks?view=grades");
+const gradesDetailRoute = fs.readFileSync(path.join(projectRoot, "src/app/grades/[courseId]/page.tsx"), "utf8");
+check(gradesPageRoute.includes('redirect("/tasks")') && gradesDetailRoute.includes('redirect("/tasks")'), "Retired Grade Planning routes must redirect to /tasks");
 
 // 5. App Shell Navigation Hierarchy
 const appShell = fs.readFileSync(path.join(projectRoot, "src/components/app-shell.tsx"), "utf8");
 check(!appShell.includes('key: "nav.grades"'), "Desktop sidebar must not have standalone Grades item");
 check(!appShell.includes('label: "วางแผนคะแนน"'), "Mobile More options must not have standalone 'วางแผนคะแนน'");
-check(appShell.includes('label: "การสอบ", description: "วันสอบและแผนอ่านหนังสือ"'), "Mobile More must feature clean Exams entry without grades");
-check(appShell.includes('pathname.startsWith("/grades")'), "App shell must keep งาน active on /grades routes");
+check(!appShell.includes('href: "/exams"'), "Retired Exams must not appear in Mobile More");
+check(!appShell.includes('pathname.startsWith("/grades")'), "App shell must not retain Grade Planning route behavior");
 check(!appShell.includes('href: "/finance"'), "Desktop sidebar and More sheet must not have standalone Finance");
 check(!appShell.includes('label: "การเงิน"'), "Mobile More options must not have 'การเงิน'");
 check(!appShell.includes("addFinance"), "Quick Add must not have 'addFinance'");
@@ -126,9 +121,7 @@ const financeNewRoute = fs.readFileSync(path.join(projectRoot, "src/app/finance/
 check(financeNewRoute.includes('redirect("/today")'), "/finance/new route must redirect to /today");
 
 const todayPageRoute = fs.readFileSync(path.join(projectRoot, "src/features/today/today-page.tsx"), "utf8");
-check(todayPageRoute.includes('t("today.finance")'), "Today page must display 'การเงินวันนี้'");
-check(todayPageRoute.includes("วันนี้ใช้ไป") && todayPageRoute.includes("งบรายวัน"), "Today page must display 'วันนี้ใช้ไป' and 'งบรายวัน'");
-check(todayPageRoute.includes("openBudgetDialog"), "Today page must support editing daily budget via modal");
+check(!todayPageRoute.includes('t("today.finance")') && !todayPageRoute.includes("openBudgetDialog"), "Today page must not expose retired Finance controls");
 
 
 
@@ -179,7 +172,7 @@ check(!appShell.includes("IndexedDB"), "app-shell.tsx must not display IndexedDB
 const settingsPanel = fs.readFileSync(path.join(projectRoot, "src/components/local-cloud-migration-panel.tsx"), "utf8");
 check(settingsPanel.includes("ข้อมูลของบัญชี"), "Settings panel must feature 'ข้อมูลของบัญชี'");
 check(settingsPanel.includes("บันทึกข้อมูลอัตโนมัติ"), "Settings panel must feature 'บันทึกข้อมูลอัตโนมัติ'");
-check(settingsPanel.includes("ตารางเรียน งาน การสอบ คะแนน และข้อมูลอื่นของคุณจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ"), "Settings panel must explain automatic cloud persistence");
+check(settingsPanel.includes("ตารางเรียน งาน และข้อมูลอื่นของคุณจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ"), "Settings panel must explain automatic cloud persistence without retired features");
 check(settingsPanel.includes("ข้อมูลเก่าในอุปกรณ์"), "Settings panel must feature 'ข้อมูลเก่าในอุปกรณ์' for legacy data");
 check(settingsPanel.includes("ตรวจสอบข้อมูล"), "Settings panel must offer 'ตรวจสอบข้อมูล' action");
 check(settingsPanel.includes("ย้ายข้อมูลเข้าบัญชี"), "Settings panel must offer 'ย้ายข้อมูลเข้าบัญชี' action");
@@ -189,4 +182,3 @@ check(!settingsPanel.includes("IndexedDB"), "Settings panel must not expose 'Ind
 check(!settingsPanel.includes("LOCAL → CLOUD"), "Settings panel must not expose 'LOCAL → CLOUD'");
 
 console.log(`Cloud Persistence QA passed: ${checks} checks`);
-

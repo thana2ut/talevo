@@ -207,7 +207,7 @@ export function AccountManagement() {
           </span>
           <span>
             <strong>บันทึกข้อมูลอัตโนมัติ</strong>
-            <small>ตารางเรียน งาน การสอบ คะแนน และข้อมูลอื่นจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ</small>
+            <small>ตารางเรียน งาน และข้อมูลอื่นจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ</small>
           </span>
           <span className="account-data-badge">พร้อมใช้งาน</span>
         </div>

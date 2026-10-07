@@ -7,9 +7,6 @@ const protectedRoutePrefixes = [
   "/academic",
   "/ai",
   "/calendar",
-  "/exams",
-  "/finance",
-  "/grades",
   "/help",
   "/notes",
   "/notifications",
@@ -21,16 +18,46 @@ const protectedRoutePrefixes = [
   "/today",
 ];
 
-const authRoutes = ["/login", "/register", "/resend-confirmation"];
+const authCheckTimeoutMs = 1500;
 
 function matchesRoute(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+function fetchWithAuthTimeout(input: RequestInfo | URL, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), authCheckTimeoutMs);
+  const signal = init?.signal
+    ? AbortSignal.any([init.signal, controller.signal])
+    : controller.signal;
+
+  return fetch(input, { ...init, signal }).finally(() => clearTimeout(timeout));
+}
+
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // Keep old bookmarks safe: retired features return to the active home screen.
+  if (matchesRoute(pathname, "/finance") || matchesRoute(pathname, "/exams")) {
+    return NextResponse.redirect(new URL("/today", request.url));
+  }
+  if (matchesRoute(pathname, "/grades")) {
+    return NextResponse.redirect(new URL("/tasks", request.url));
+  }
+
+  const isProtectedRoute = protectedRoutePrefixes.some((prefix) => matchesRoute(pathname, prefix));
+
+  // Public routes must stay responsive even when the external Auth service is unavailable.
+  // Their forms and links do not require a server-side session check.
+  // This also avoids a stale browser session blocking navigation to Login or Register.
+  if (!isProtectedRoute) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
   const { url, publishableKey } = getSupabaseConfiguration();
   const supabase = createServerClient(url, publishableKey, {
+    global: { fetch: fetchWithAuthTimeout },
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -43,25 +70,20 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { data, error } = await supabase.auth.getClaims();
-  const isAuthenticated = !error && Boolean(data?.claims?.sub);
-  const pathname = request.nextUrl.pathname;
-
-  if (matchesRoute(pathname, "/finance")) {
-    return NextResponse.redirect(new URL("/today", request.url));
+  let isAuthenticated = false;
+  try {
+    const { data, error } = await supabase.auth.getClaims();
+    isAuthenticated = !error && Boolean(data?.claims?.sub);
+  } catch {
+    // Fail closed for protected routes without leaving the navigation blocked by a network retry.
+    isAuthenticated = false;
   }
-
-  const isProtectedRoute = protectedRoutePrefixes.some((prefix) => matchesRoute(pathname, prefix));
 
   if (isProtectedRoute && !isAuthenticated) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     loginUrl.searchParams.set("auth-error", "authentication-required");
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (isAuthenticated && authRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/today", request.url));
   }
 
   return response;

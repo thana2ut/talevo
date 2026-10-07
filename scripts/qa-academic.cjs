@@ -91,16 +91,11 @@ check(manualWeekendSchedules.map((item) => item.day).join(",") === "5,6" && manu
 check(getHorizontalEventPosition(manualWeekendSchedules[0], horizontalRange).widthPercent === 6.25 && getHorizontalEventPosition(manualWeekendSchedules[1], horizontalRange).leftPercent === 3.125, "Manual schedule times must use the same horizontal time geometry as imported schedules");
 
 const tasksSource = fs.readFileSync(path.join(projectRoot, "src/features/tasks/task-pages.tsx"), "utf8");
-check(tasksSource.includes('searchParams.get("view") === "grades"'), "TasksPage must parse searchParams for grades view");
-check(tasksSource.includes('switchView("tasks")') && tasksSource.includes('switchView("grades")'), "TasksPage must provide tab switching between tasks and grades");
-check(tasksSource.includes("<GradesOverviewView />"), "TasksPage must render GradesOverviewView when in grades view");
-
-const academicSource = fs.readFileSync(path.join(projectRoot, "src/features/academic/academic-pages.tsx"), "utf8");
-check(!academicSource.includes('switchView("grades")'), "ExamsPage must not contain grade planning switcher");
-check(academicSource.includes('backHref="/tasks?view=grades"'), "GradeDetailPage back link must lead to /tasks?view=grades");
+check(!tasksSource.includes("GradesOverviewView") && !tasksSource.includes("view=grades"), "TasksPage must not expose retired Grade Planning");
 
 const gradesRouteSource = fs.readFileSync(path.join(projectRoot, "src/app/grades/page.tsx"), "utf8");
-check(gradesRouteSource.includes('redirect("/tasks?view=grades")'), "/grades must redirect to /tasks?view=grades");
+const gradesDetailRouteSource = fs.readFileSync(path.join(projectRoot, "src/app/grades/[courseId]/page.tsx"), "utf8");
+check(gradesRouteSource.includes('redirect("/tasks")') && gradesDetailRouteSource.includes('redirect("/tasks")'), "Retired Grade Planning routes must redirect to /tasks");
 
 // 7-Day Study Encouragement QA Coverage
 // 1. 0 hours -> เบา
@@ -186,20 +181,7 @@ check(getStudyLoadSupportiveCopy("moderate", true) === "วันนี้กำ
 check(getStudyLoadSupportiveCopy("moderate", false) === "วันนั้นตารางกำลังพอดี ค่อย ๆ จัดการไปทีละอย่างนะ", "non-today copy must use วันนั้น");
 check(getStudyLoadSupportiveCopy("heavy", false) === "วันนั้นตารางค่อนข้างแน่น อย่าลืมเผื่อเวลาพักด้วยนะ", "non-today heavy copy must use วันนั้น");
 
-// 19. Grade Planning detail checks
-const gradePlannerSrc = fs.readFileSync(path.join(projectRoot, "src/features/academic/grade-planner.tsx"), "utf8");
-check(gradePlannerSrc.includes('router.push("/tasks?view=grades")'), "Grade planner back navigation must return to /tasks?view=grades");
-check(gradePlannerSrc.includes("วางแผนคะแนน"), "Grade planner must render proper title วางแผนคะแนน");
-check(gradePlannerSrc.includes("grade-kpi-grid"), "Grade planner must render clean KPI cards");
-check(gradePlannerSrc.includes("เป้าหมายของฉัน"), "Grade planner must render Step 1: เป้าหมายของฉัน");
-check(gradePlannerSrc.includes("คะแนนของวิชา"), "Grade planner must render Step 2: คะแนนของวิชา");
-check(gradePlannerSrc.includes("สรุปให้ฉัน"), "Grade planner must render Step 3: สรุปให้ฉัน");
-check(gradePlannerSrc.includes("+ เพิ่มคะแนน"), "Grade planner must offer + เพิ่มคะแนน action");
-check(gradePlannerSrc.includes("เพิ่มคะแนนของวิชาเพื่อเริ่มคำนวณ"), "Grade planner must show calm empty state text");
-check(gradePlannerSrc.includes("เกณฑ์การตัดเกรด"), "Grade planner must render เกณฑ์การตัดเกรด accordion");
-check(gradePlannerSrc.includes("upsertGradePlan(courseId, plan)"), "Grade planner must preserve Supabase cloud persistence");
-
-// 20. Grade Calculation logic regression checks
+// 19. Preserved Grade Calculation data-compatibility regression checks
 const { calculateGradePlan: calcGrade, hasEarnedScore: hasEarned } = require(path.join(projectRoot, "src/lib/academic-utils.ts"));
 const sampleThresholds = [
   { label: "A", minimumPercent: 80 },

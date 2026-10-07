@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bot, CalendarClock, CalendarDays, ClipboardList, GraduationCap, Home, Menu, MoreHorizontal, Plus, Settings, UserRound, X } from "lucide-react";
+import { Bot, CalendarDays, ClipboardList, Home, Menu, MoreHorizontal, Plus, Settings, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BottomSheet, TalevoBrand, NotificationBell } from "@/components/ui";
 import { useAppState } from "@/providers/app-state-provider";
@@ -12,7 +12,6 @@ const primaryNavigationItems = [
   { href: "/today", key: "nav.home", icon: Home },
   { href: "/schedule", key: "nav.schedule", icon: CalendarDays },
   { href: "/tasks", key: "nav.tasks", icon: ClipboardList },
-  { href: "/exams", key: "nav.exams", icon: CalendarClock },
   { href: "/ai", key: "nav.ai", icon: Bot },
 ];
 
@@ -74,8 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const isActive = (href: string) =>
     pathname === href ||
-    pathname.startsWith(`${href}/`) ||
-    (href === "/tasks" && pathname.startsWith("/grades"));
+    pathname.startsWith(`${href}/`);
 
   const closeDrawer = () => {
     setDesktopDrawerOpen(false);
@@ -85,11 +83,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const quickOptions = [
     { label: t("shell.addTask"), description: t("shell.addTaskDescription"), icon: ClipboardList, href: "/tasks/new" },
     { label: t("shell.addClass"), description: t("shell.addClassDescription"), icon: CalendarDays, href: "/schedule/new" },
-    { label: t("shell.addExam"), description: t("shell.addExamDescription"), icon: GraduationCap, href: "/exams/new" },
   ];
 
   const moreNavigationOptions = [
-    { label: "การสอบ", description: "วันสอบและแผนอ่านหนังสือ", icon: CalendarClock, href: "/exams" },
     { label: "TALEVO AI", description: "ผู้ช่วยวางแผนและตอบคำถามการเรียน", icon: Bot, href: "/ai" },
     { label: "โปรไฟล์", description: "ข้อมูลส่วนตัวและการศึกษา", icon: UserRound, href: "/profile" },
     { label: "การตั้งค่า", description: "การแจ้งเตือนและระบบการใช้งาน", icon: Settings, href: "/settings" },

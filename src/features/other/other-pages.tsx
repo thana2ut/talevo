@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, GraduationCap, Languages, Smartphone, Sparkles, Trash2 } from "lucide-react";
+import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, Languages, Smartphone, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BottomSheet, Card, PageHeader, Select } from "@/components/ui";
 import { NotificationCard } from "@/components/domain";
@@ -91,7 +91,7 @@ export function NotificationsPage() {
             <CheckCircle2 size={36} />
           </span>
           <h2>{t("notifications.emptyTitle")}</h2>
-          <p>{language === "th" ? "TALEVO จะแจ้งเตือนจากงาน ตารางเรียน และการสอบของคุณเมื่อมีสิ่งที่ต้องรู้" : "TALEVO will alert you from your tasks, class schedule, and exams when there is something to know."}</p>
+          <p>{language === "th" ? "TALEVO จะแจ้งเตือนจากงานและตารางเรียนของคุณเมื่อมีสิ่งที่ต้องรู้" : "TALEVO will alert you from your tasks and class schedule when there is something to know."}</p>
           <div className="notification-device-strip">
             <Smartphone size={14} aria-hidden="true" />
             <span>{language === "th" ? "สถานะอ่านจะบันทึกไว้บนอุปกรณ์นี้" : "Read status is stored on this device."}</span>
@@ -123,7 +123,6 @@ export function SettingsPage() {
     { title: t("settings.alertTasks"), icon: <CheckCircle2 />, rows: [["task24h", "settings.task24h"], ["task12h", "settings.task12h"], ["deadlineRisk", "settings.deadlineRisk"]] as const },
     { title: t("settings.alertDaily"), icon: <Clock3 />, rows: [["morning0600", "settings.morning0600"], ["daily0700", "settings.daily0700"]] as const },
     { title: t("settings.alertClasses"), icon: <CalendarDays />, rows: [["class30m", "settings.class30m"], ["classEnd10m", "settings.classEnd10m"]] as const },
-    { title: t("settings.alertExams"), icon: <GraduationCap />, rows: [["exam7d", "settings.exam7d"], ["exam3d", "settings.exam3d"], ["exam1d", "settings.exam1d"], ["examMorning", "settings.examMorning"]] as const },
     { title: t("settings.alertWeekly"), icon: <Sparkles />, rows: [["weeklyRadar", "settings.weeklyRadar"]] as const },
   ];
   return <div className="page settings-page"><PageHeader title={t("settings.title")} backHref="/profile" />

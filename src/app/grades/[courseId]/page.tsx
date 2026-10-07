@@ -1,3 +1,5 @@
-import { GradePlannerPage } from "@/features/academic/grade-planner";
+import { redirect } from "next/navigation";
 
-export default function Page() { return <GradePlannerPage />; }
+export default function Page() {
+  redirect("/tasks");
+}

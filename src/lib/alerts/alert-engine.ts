@@ -1,10 +1,7 @@
 import type { AppLanguage } from "@/lib/i18n";
 import type { AcademicTerm, AppNotification, ClassSchedule, Exam, NotificationPreferences, Task, UserProfile } from "@/types";
-import { getAcademicWeather } from "@/lib/academic-planning";
-import { getExamDate, getExamReadiness } from "@/lib/academic-utils";
 import { calculateDeadlineRisk } from "@/lib/alerts/deadline-risk";
 import {
-  calendarDayDifference,
   getClassesForDate,
   getClassOccurrences,
   getIsoWeekKey,
@@ -41,14 +38,6 @@ function formatDuration(minutes: number, language: AppLanguage) {
   const remaining = minutes % 60;
   if (language === "en") return [hours ? `${hours} hr` : "", remaining ? `${remaining} min` : ""].filter(Boolean).join(" ") || "0 min";
   return [hours ? `${hours} ชม.` : "", remaining ? `${remaining} นาที` : ""].filter(Boolean).join(" ") || "0 นาที";
-}
-
-function formatExamDate(date: Date, language: AppLanguage) {
-  return new Intl.DateTimeFormat(language === "th" ? "th-TH" : "en-GB", { day: "numeric", month: "short" }).format(date);
-}
-
-function getCourseName(courseId: string, schedules: ClassSchedule[]) {
-  return schedules.find((item) => item.courseId === courseId)?.name;
 }
 
 function createAlert(now: Date, alert: NewAlert): AppNotification {
@@ -131,26 +120,24 @@ export function evaluateDeadlineRiskAlerts(context: AlertContext) {
 function getTodayState(context: AlertContext) {
   const classes = getClassesForDate(context.schedules, context.now);
   const dueTasks = context.tasks.filter((task) => { const due = parseLocalTaskDate(task.dueDate); return task.status !== "completed" && due !== null && isSameLocalDate(due, context.now); });
-  const exams = context.exams.filter((exam) => { const date = getExamDate(exam); return !exam.completedAt && date !== null && isSameLocalDate(date, context.now); });
-  return { classes, dueTasks, exams };
+  return { classes, dueTasks };
 }
 
 export function buildMorningSummary(context: AlertContext): AppNotification | null {
   if (!context.preferences.morning0600 || !isWithinScheduledWindow(context.now, 6, 0, 60)) return null;
   const eventKey = `daily-0600:${localDateKey(context.now)}`;
   if (hasHandledEventKey(context, eventKey)) return null;
-  const { classes, dueTasks, exams } = getTodayState(context);
+  const { classes, dueTasks } = getTodayState(context);
   const classPart = context.language === "th" ? `วันนี้มีเรียน ${classes.length} คาบ${classes[0] ? ` เริ่ม ${classes[0].startTime}` : ""}` : `${classes.length} classes today${classes[0] ? `, starting at ${classes[0].startTime}` : ""}`;
   const taskPart = context.language === "th" ? `มีงานส่งวันนี้ ${dueTasks.length} งาน` : `${dueTasks.length} tasks due today`;
-  const examPart = exams.length ? (context.language === "th" ? `วันนี้มีสอบ ${exams.length} วิชา${exams[0] ? ` · ${getCourseName(exams[0].courseId, context.schedules) ?? exams[0].title} ${formatTime(getExamDate(exams[0])!)}` : ""}` : `${exams.length} exams today${exams[0] ? ` · ${getCourseName(exams[0].courseId, context.schedules) ?? exams[0].title} ${formatTime(getExamDate(exams[0])!)}` : ""}`) : "";
   return createAlert(context.now, {
     type: "morning_summary",
-    priority: exams.length ? "high" : "normal",
+    priority: "normal",
     title: context.language === "th" ? `อรุณสวัสดิ์ ${context.profile.displayName}` : `Good morning, ${context.profile.displayName}`,
-    message: [examPart, classPart, taskPart].filter(Boolean).join(" · "),
+    message: [classPart, taskPart].filter(Boolean).join(" · "),
     href: "/today",
     eventKey,
-    metadata: { includesExamToday: exams.length > 0, academicTerm: `${context.academicTerm.term} ${context.academicTerm.academicYear}` },
+    metadata: { academicTerm: `${context.academicTerm.term} ${context.academicTerm.academicYear}` },
   });
 }
 
@@ -158,11 +145,11 @@ export function buildDailyBrief(context: AlertContext): AppNotification | null {
   if (!context.preferences.daily0700 || !isWithinScheduledWindow(context.now, 7, 0, 60)) return null;
   const eventKey = `daily-0700:${localDateKey(context.now)}`;
   if (hasHandledEventKey(context, eventKey)) return null;
-  const { classes, dueTasks, exams } = getTodayState(context);
+  const { classes, dueTasks } = getTodayState(context);
   const risk = context.tasks.map((task) => ({ task, risk: calculateDeadlineRisk(task, context.schedules, context.now) })).find((item) => item.risk?.level === "at_risk");
   const parts = context.language === "th"
-    ? [`วันนี้มี ${classes.length} คาบ`, classes[0] ? `คาบแรก ${classes[0].startTime} ${classes[0].name}` : "", dueTasks.length ? `มีงานส่ง ${dueTasks.length} งาน` : "", exams.length ? `มีสอบ ${exams.length} วิชา` : "", risk ? `${risk.task.title} เสี่ยงส่งไม่ทัน` : ""]
-    : [`${classes.length} classes today`, classes[0] ? `First: ${classes[0].startTime} ${classes[0].name}` : "", dueTasks.length ? `${dueTasks.length} tasks due` : "", exams.length ? `${exams.length} exams today` : "", risk ? `${risk.task.title} is at risk` : ""];
+    ? [`วันนี้มี ${classes.length} คาบ`, classes[0] ? `คาบแรก ${classes[0].startTime} ${classes[0].name}` : "", dueTasks.length ? `มีงานส่ง ${dueTasks.length} งาน` : "", risk ? `${risk.task.title} เสี่ยงส่งไม่ทัน` : ""]
+    : [`${classes.length} classes today`, classes[0] ? `First: ${classes[0].startTime} ${classes[0].name}` : "", dueTasks.length ? `${dueTasks.length} tasks due` : "", risk ? `${risk.task.title} is at risk` : ""];
   return createAlert(context.now, { type: "daily_brief", priority: "normal", title: context.language === "th" ? "วันนี้ของคุณ" : "Your day", message: parts.filter(Boolean).join(" · "), href: "/today", eventKey });
 }
 
@@ -171,11 +158,11 @@ export function evaluateClassAlerts(context: AlertContext) {
   const occurrences = getClassOccurrences(context.schedules, context.now, addLocalDays(context.now, 1));
   occurrences.forEach((occurrence) => {
     const minutesUntilStart = (occurrence.start.getTime() - context.now.getTime()) / MINUTE_MS;
-    if (context.preferences.class30m && isWithinMinuteWindow(minutesUntilStart, 30, 3)) {
+    if (context.preferences.class30m && isWithinMinuteWindow(minutesUntilStart, 30, 10)) {
       appendIfNew(alerts, context, {
         type: "class_upcoming",
         priority: "medium",
-        title: context.language === "th" ? "อีก 30 นาทีมีเรียน" : "Class in 30 minutes",
+        title: context.language === "th" ? "ใกล้ถึงเวลาเรียน" : "Class starts soon",
         message: `${occurrence.schedule.name} · ${formatRange(occurrence.start, occurrence.end)}${occurrence.schedule.room ? ` · ${occurrence.schedule.room}` : ""}`,
         href: `/schedule?date=${occurrence.dateKey}`,
         eventKey: `class-30m:${occurrence.occurrenceId}`,
@@ -183,11 +170,11 @@ export function evaluateClassAlerts(context: AlertContext) {
       });
     }
     const minutesUntilEnd = (occurrence.end.getTime() - context.now.getTime()) / MINUTE_MS;
-    if (context.preferences.classEnd10m && occurrence.start <= context.now && isWithinMinuteWindow(minutesUntilEnd, 10, 3)) {
+    if (context.preferences.classEnd10m && occurrence.start <= context.now && isWithinMinuteWindow(minutesUntilEnd, 10, 5)) {
       const sameDay = occurrences.filter((item) => item.dateKey === occurrence.dateKey && item.start >= occurrence.end);
       const next = sameDay[0];
       const gap = next ? Math.round((next.start.getTime() - occurrence.end.getTime()) / MINUTE_MS) : null;
-      const title = gap === 0 ? (context.language === "th" ? "อีก 10 นาทีเปลี่ยนคาบ" : "Switch classes in 10 minutes") : (context.language === "th" ? "อีก 10 นาทีจะหมดคาบ" : "Class ends in 10 minutes");
+      const title = gap === 0 ? (context.language === "th" ? "ใกล้เปลี่ยนคาบ" : "Time to switch classes soon") : (context.language === "th" ? "ใกล้หมดคาบ" : "Class ends soon");
       const message = next
         ? (context.language === "th" ? `${occurrence.schedule.name} จบ ${formatTime(occurrence.end)} · คาบถัดไป ${next.schedule.name} ${formatTime(next.start)}${next.schedule.room ? ` · ${next.schedule.room}` : ""}${gap && gap > 0 ? ` · พัก ${gap} นาที` : ""}` : `${occurrence.schedule.name} ends ${formatTime(occurrence.end)} · Next: ${next.schedule.name} ${formatTime(next.start)}${next.schedule.room ? ` · ${next.schedule.room}` : ""}${gap && gap > 0 ? ` · ${gap}-minute break` : ""}`)
         : (context.language === "th" ? `คาบนี้จะจบเวลา ${formatTime(occurrence.end)} · หลังจากนี้วันนี้ไม่มีเรียนต่อแล้ว` : `This class ends at ${formatTime(occurrence.end)} · No more classes today.`);
@@ -197,56 +184,22 @@ export function evaluateClassAlerts(context: AlertContext) {
   return alerts;
 }
 
-export function evaluateExamAlerts(context: AlertContext, morningSummaryExists: boolean) {
-  const alerts: AppNotification[] = [];
-  const todayExams: Exam[] = [];
-  context.exams.filter((exam) => !exam.completedAt).forEach((exam) => {
-    const date = getExamDate(exam);
-    if (!date) return;
-    const days = calendarDayDifference(date, context.now);
-    if (days === 0) { todayExams.push(exam); return; }
-    const config = days === 7 && context.preferences.exam7d ? { labelTh: "อีก 7 วันมีสอบ", labelEn: "Exam in 7 days", priority: "normal" as const, key: "7d" } : days === 3 && context.preferences.exam3d ? { labelTh: "อีก 3 วันมีสอบ", labelEn: "Exam in 3 days", priority: "medium" as const, key: "3d" } : days === 1 && context.preferences.exam1d ? { labelTh: "พรุ่งนี้มีสอบ", labelEn: "Exam tomorrow", priority: "high" as const, key: "1d" } : null;
-    if (!config) return;
-    const readiness = getExamReadiness(exam);
-    const course = getCourseName(exam.courseId, context.schedules) ?? exam.title;
-    const message = `${course} · ${exam.title} · ${formatExamDate(date, context.language)} · ${formatRange(date, exam.endAt ? parseLocalTaskDate(exam.endAt) : null)}${exam.room ? ` · ${exam.room}` : ""}${readiness ? (context.language === "th" ? ` · เตรียมแล้ว ${readiness.completed}/${readiness.total} หัวข้อ` : ` · ${readiness.completed}/${readiness.total} topics ready`) : ""}`;
-    appendIfNew(alerts, context, { type: "exam_upcoming", priority: config.priority, title: context.language === "th" ? config.labelTh : config.labelEn, message, href: `/exams/${exam.id}`, eventKey: `exam-${config.key}:${exam.id}:${localDateKey(date)}`, sourceId: exam.id });
-  });
-  if (context.preferences.examMorning && todayExams.length && !morningSummaryExists && context.now.getHours() < 12) {
-    const eventKey = `exam-morning:${localDateKey(context.now)}`;
-    const details = todayExams.slice(0, 3).map((exam) => { const date = getExamDate(exam)!; return `${getCourseName(exam.courseId, context.schedules) ?? exam.title} ${formatTime(date)}${exam.room ? ` · ${exam.room}` : ""}`; }).join(" · ");
-    appendIfNew(alerts, context, { type: "exam_today", priority: "high", title: context.language === "th" ? (todayExams.length > 1 ? `วันนี้มีสอบ ${todayExams.length} วิชา` : "วันนี้มีสอบ") : (todayExams.length > 1 ? `${todayExams.length} exams today` : "Exam today"), message: details, href: todayExams.length === 1 ? `/exams/${todayExams[0].id}` : "/exams", eventKey, metadata: { examCount: todayExams.length } });
-  }
-  return alerts;
-}
-
 export function buildWeeklyRadarAlert(context: AlertContext): AppNotification | null {
   if (!context.preferences.weeklyRadar || context.now.getDay() !== 1 || !isWithinScheduledWindow(context.now, 7, 5, 60)) return null;
   const eventKey = `weekly-radar:${getIsoWeekKey(context.now)}`;
   if (hasHandledEventKey(context, eventKey)) return null;
-  const radar = buildWeeklyRadar({ now: context.now, schedules: context.schedules, tasks: context.tasks, exams: context.exams, language: context.language });
+  const radar = buildWeeklyRadar({ now: context.now, schedules: context.schedules, tasks: context.tasks, exams: [], language: context.language });
   const busiest = new Intl.DateTimeFormat(context.language === "th" ? "th-TH" : "en-GB", { weekday: "long" }).format(radar.busiestDay.date);
-  const message = context.language === "th" ? `${context.academicTerm.term} · เรียน ${radar.classCount} คาบ · งานส่ง ${radar.taskCount} งาน · สอบ ${radar.examCount} วิชา · ${busiest}ภาระมากที่สุด${radar.recommendation ? ` · ${radar.recommendation}` : ""}` : `${context.academicTerm.term} · ${radar.classCount} classes · ${radar.taskCount} deadlines · ${radar.examCount} exams · ${busiest} is busiest${radar.recommendation ? ` · ${radar.recommendation}` : ""}`;
-  return createAlert(context.now, { type: "weekly_radar", priority: "normal", title: context.language === "th" ? "สัปดาห์นี้ของคุณ" : "Your week", message, href: "/today#weekly-radar", eventKey, metadata: { academicYear: context.academicTerm.academicYear } });
-}
-
-export function evaluateAcademicWeatherAlerts(context: AlertContext) {
-  const date = addLocalDays(context.now, 2);
-  const forecast = getAcademicWeather(context.schedules, context.tasks, context.exams, date);
-  if (forecast.state !== "storm") return [];
-  const eventKey = `weather-storm:${localDateKey(date)}:${Math.round(forecast.score)}`;
-  if (hasHandledEventKey(context, eventKey)) return [];
-  return [createAlert(context.now, { type: "academic_weather", priority: "medium", title: context.language === "th" ? "ภาระหนักกำลังมา" : "Heavy workload ahead", message: context.language === "th" ? `${new Intl.DateTimeFormat("th-TH", { weekday: "long" }).format(date)}: ${forecast.reasons.slice(0, 3).map((reason) => reason.label).join(" · ")}` : `${new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(date)}: ${forecast.reasons.slice(0, 3).map((reason) => reason.label).join(" · ")}`, href: "/today#semester-weather", eventKey })];
+  const message = context.language === "th" ? `${context.academicTerm.term} · เรียน ${radar.classCount} คาบ · งานส่ง ${radar.taskCount} งาน · ${busiest}ภาระมากที่สุด${radar.recommendation ? ` · ${radar.recommendation}` : ""}` : `${context.academicTerm.term} · ${radar.classCount} classes · ${radar.taskCount} deadlines · ${busiest} is busiest${radar.recommendation ? ` · ${radar.recommendation}` : ""}`;
+  return createAlert(context.now, { type: "weekly_radar", priority: "normal", title: context.language === "th" ? "สัปดาห์นี้ของคุณ" : "Your week", message, href: "/today", eventKey, metadata: { academicYear: context.academicTerm.academicYear } });
 }
 
 export function evaluateSmartAlerts(context: AlertContext) {
   if (!context.preferences.enabled) return [];
-  if (context.schedules.length === 0 && context.tasks.length === 0 && context.exams.length === 0) return [];
+  if (context.schedules.length === 0 && context.tasks.length === 0) return [];
   const alerts: AppNotification[] = [];
   const morning = buildMorningSummary(context);
   if (morning) alerts.push(morning);
-  const morningEventKey = `daily-0600:${localDateKey(context.now)}`;
-  const morningExists = Boolean(morning) || hasHandledEventKey(context, morningEventKey);
   const daily = buildDailyBrief(context);
   if (daily) alerts.push(daily);
   const weekly = buildWeeklyRadarAlert(context);
@@ -254,7 +207,5 @@ export function evaluateSmartAlerts(context: AlertContext) {
   alerts.push(...evaluateDeadlineRiskAlerts(context));
   alerts.push(...evaluateTaskDeadlineAlerts(context));
   alerts.push(...evaluateClassAlerts(context));
-  alerts.push(...evaluateExamAlerts(context, morningExists));
-  alerts.push(...evaluateAcademicWeatherAlerts(context));
   return alerts.sort((first, second) => ({ high: 0, medium: 1, normal: 2 })[first.priority] - ({ high: 0, medium: 1, normal: 2 })[second.priority]);
 }

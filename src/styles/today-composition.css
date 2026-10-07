@@ -266,6 +266,9 @@ html[data-theme="dark"] .academic-weather-empty {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
   }
+  .smart-today-primary-grid > .smart-free-time {
+    grid-column: 1 / -1;
+  }
   .smart-today-bottom-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

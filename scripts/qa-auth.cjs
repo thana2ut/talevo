@@ -124,6 +124,7 @@ function initializeSyntheticAdminClient(environment) {
 check(publicPages.includes('registrationStep === 1') && publicPages.includes('registrationStep === 2'), "Register must preserve both existing steps");
 check(nextConfig.includes('allowedDevOrigins: ["127.0.0.1"]'), "Next dev must allow the local 127.0.0.1 origin so Auth forms can hydrate");
 check(authProvider.includes("signInWithPassword") && authProvider.includes("email_not_confirmed"), "Login must use Supabase Auth and handle unconfirmed accounts");
+check(authProvider.includes("const { data, error } = await supabase.auth.signInWithPassword") && authProvider.includes("if (!data.session || !data.user)") && authProvider.includes("setSession(data.session)"), "Login must fail closed unless Supabase returns both an authenticated user and session");
 check(authProvider.includes("user_already_exists") && authProvider.includes("อีเมลนี้ถูกใช้สมัครบัญชีแล้ว"), "Registration must show a clear duplicate-email message when Supabase returns that error");
 check(authProvider.includes("requiresEmailConfirmation: !data.session") || authProvider.includes("requiresEmailConfirmation: !error && !data.session"), "Sign-up without a Supabase session must require email confirmation");
 check(publicPages.includes("isRegisterSuccess") && publicPages.includes("สร้างบัญชีสำเร็จ"), "Register must render success transition when account is created");
@@ -175,11 +176,13 @@ check(localDeletionFlow.indexOf("await deleteAccount()") < localDeletionFlow.ind
 check(!appShell.includes("LocalOwnershipGate"), "Normal authenticated startup must not be blocked by LocalOwnershipGate");
 check(appStateProvider.includes("adoptExistingLocalData"), "Explicit adoption mechanism must remain available for legacy data");
 check(appShell.includes('"/resend-confirmation"'), "The resend confirmation page must remain public before authentication");
-check(proxy.includes('const authRoutes = ["/login", "/register", "/resend-confirmation"]'), "Authenticated users must not remain on public Auth routes");
 check(proxy.includes("getClaims()") && proxy.includes("isProtectedRoute && !isAuthenticated"), "Protected routes must reject users without a valid Supabase claim");
-for (const route of ["/today", "/schedule", "/tasks", "/exams", "/grades", "/statistics", "/finance", "/ai", "/notifications", "/profile", "/settings"]) {
+check(proxy.includes("authCheckTimeoutMs = 1500") && proxy.includes("fetchWithAuthTimeout") && proxy.includes("if (!isProtectedRoute)"), "Public routes must not wait for Auth and protected-route checks must have a bounded timeout");
+for (const route of ["/today", "/schedule", "/tasks", "/statistics", "/ai", "/notifications", "/profile", "/settings"]) {
   check(proxy.includes(`"${route}"`), `Protected route missing from Proxy: ${route}`);
 }
+check(proxy.includes('matchesRoute(pathname, "/finance") || matchesRoute(pathname, "/exams")'), "Retired finance and exam routes must redirect safely");
+check(proxy.includes('matchesRoute(pathname, "/grades")') && proxy.includes('new URL("/tasks", request.url)'), "Retired grade-planning routes must redirect safely to Tasks");
 check((migrationPlanner.match(/readyForUpload:\s*false/g) ?? []).length >= 2, "Local to Cloud upload must remain disabled in types and plans");
 check(!/readyForUpload:\s*true/.test(migrationPlanner), "Auth completion must not enable Local to Cloud upload");
 

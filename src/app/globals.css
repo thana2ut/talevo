@@ -99,6 +99,13 @@
   --focus-ring: 0 0 0 4px rgba(118, 86, 246, .18);
 }
 
+html[data-display-mode="standalone"],
+html[data-display-mode="standalone"] body {
+  min-height: 100%;
+  overscroll-behavior-y: none;
+  background: var(--bg);
+}
+
 .local-cloud-migration-section { display: grid; gap: 18px; }
 .local-cloud-section-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 0 4px; }
 .local-cloud-section-header > div { display: grid; gap: 4px; }

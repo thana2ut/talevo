@@ -37,7 +37,7 @@ import type { SyllabusImportPayload } from "@/lib/syllabus-import";
 import { createTaskCompletionHistory, getExpiredCompletedTasks } from "@/lib/task-retention";
 import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
 import { removeAllReadNotifications, removeReadNotification } from "@/lib/alerts/notification-deletion";
-import { claimAlertDeliveryLeadership, deliverNewBrowserNotifications } from "@/lib/alerts/notification-delivery";
+import { claimAlertDeliveryLeadership, deliverBrowserNotificationTest, deliverNewBrowserNotifications } from "@/lib/alerts/notification-delivery";
 import {
   createAppStateSnapshot,
   parseAppStateSnapshot,
@@ -447,9 +447,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setTasks((current) => current.filter((task) => !expiredIds.has(task.id)));
     };
     const tick = () => { const currentTime = new Date(); setNow(currentTime); cleanupExpired(currentTime); };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") tick();
+    };
     tick();
-    const interval = window.setInterval(tick, 60_000);
-    return () => window.clearInterval(interval);
+    const interval = window.setInterval(tick, 30_000);
+    window.addEventListener("focus", tick);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", tick);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [isCurrentScopeHydrated]);
 
   useEffect(() => {
@@ -472,7 +481,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     notificationsRef.current = nextNotifications;
     setNotifications(nextNotifications);
     if (settings.notificationPreferences.browserNotifications && browserNotificationPermission === "granted" && claimAlertDeliveryLeadership(window.localStorage, tabIdRef.current)) {
-      deliverNewBrowserNotifications(generated);
+      void deliverNewBrowserNotifications(generated);
     }
   }, [academicTerm, browserNotificationPermission, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks]);
 
@@ -581,9 +590,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setBrowserNotificationPermission("unsupported");
         return;
       }
-      const permission = window.Notification.permission === "default" ? await window.Notification.requestPermission() : window.Notification.permission;
+      let permission: NotificationPermission;
+      try {
+        permission = window.Notification.permission === "default" ? await window.Notification.requestPermission() : window.Notification.permission;
+      } catch {
+        permission = window.Notification.permission;
+      }
       setBrowserNotificationPermission(permission);
       setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: permission === "granted" } }));
+      if (permission === "granted") await deliverBrowserNotificationTest(language);
     },
     updateGoals: (next) => setGoals((current) => ({ ...current, ...next })),
     updateAcademicTerm: (next) => {

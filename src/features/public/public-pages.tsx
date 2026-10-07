@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, Sparkles, TriangleAlert, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Eye, EyeOff, LockKeyhole, Mail, Sparkles, TriangleAlert, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Field, Input, Select, TalevoBrand, TalevoMascot } from "@/components/ui";
 import { APP_BRAND } from "@/lib/brand";
@@ -59,7 +59,6 @@ export function WelcomePage() {
       <section className="welcome-benefits" aria-label="ความสามารถของ TALEVO">
         <article className="welcome-benefit"><CalendarDays aria-hidden="true" /><span><strong>จัดการตารางเรียน</strong><small>เห็นภาพเรียนชัดเจน</small></span></article>
         <article className="welcome-benefit"><ClipboardCheck aria-hidden="true" /><span><strong>ติดตามงาน</strong><small>ไม่พลาดกำหนดส่ง</small></span></article>
-        <article className="welcome-benefit"><GraduationCap aria-hidden="true" /><span><strong>การสอบและคะแนน</strong><small>วางแผนการเตรียมตัว</small></span></article>
         <article className="welcome-benefit"><Bot aria-hidden="true" /><span><strong>AI ช่วยวางแผน</strong><small>เริ่มวันได้ง่ายขึ้น</small></span></article>
       </section>
     </main>

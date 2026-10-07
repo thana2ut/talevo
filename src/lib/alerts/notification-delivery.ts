@@ -8,6 +8,8 @@ export type NotificationDeliveryChannel = {
 };
 
 const ALERT_LEADER_TTL_MS = 90_000;
+const NOTIFICATION_WORKER_PATH = "/talevo-notification-worker.js";
+const NOTIFICATION_WORKER_SCOPE = "/";
 
 type AlertLeaderLease = {
   tabId: string;
@@ -56,11 +58,25 @@ export function qualifiesForBrowserDelivery(notification: AppNotification) {
 export function createBrowserNotificationChannel(): NotificationDeliveryChannel {
   return {
     isSupported: () => typeof window !== "undefined" && "Notification" in window && window.Notification.permission === "granted",
-    deliver: (notification) => {
+    deliver: async (notification) => {
       if (typeof window === "undefined" || !("Notification" in window) || window.Notification.permission !== "granted") return;
-      const browserNotification = new window.Notification(notification.title, {
+
+      const options: NotificationOptions = {
         body: notification.message,
         tag: notification.eventKey,
+        icon: "/brand/talevo-mascot-head.png",
+        badge: "/brand/talevo-mascot-head.png",
+        data: { href: notification.href ?? "/notifications" },
+      };
+
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.register(NOTIFICATION_WORKER_PATH, { scope: NOTIFICATION_WORKER_SCOPE });
+        await registration.showNotification(notification.title, options);
+        return;
+      }
+
+      const browserNotification = new window.Notification(notification.title, {
+        ...options,
       });
       browserNotification.onclick = () => {
         window.focus();
@@ -71,9 +87,40 @@ export function createBrowserNotificationChannel(): NotificationDeliveryChannel 
   };
 }
 
-export function deliverNewBrowserNotifications(notifications: AppNotification[], channel = createBrowserNotificationChannel()) {
+export async function deliverNewBrowserNotifications(notifications: AppNotification[], channel = createBrowserNotificationChannel()) {
   if (!channel.isSupported()) return;
-  notifications.filter(qualifiesForBrowserDelivery).forEach((notification) => channel.deliver(notification));
+  await Promise.all(
+    notifications
+      .filter(qualifiesForBrowserDelivery)
+      .map(async (notification) => {
+        try {
+          await channel.deliver(notification);
+        } catch {
+          // In-app notifications remain available if the operating system rejects a popup.
+        }
+      }),
+  );
+}
+
+export async function deliverBrowserNotificationTest(language: "th" | "en", channel = createBrowserNotificationChannel()) {
+  if (!channel.isSupported()) return false;
+  const now = new Date();
+  const notification: AppNotification = {
+    id: `notification-test:${now.getTime()}`,
+    type: "system",
+    priority: "normal",
+    title: language === "th" ? "เปิดการแจ้งเตือน TALEVO แล้ว" : "TALEVO notifications are enabled",
+    message: language === "th" ? "ระบบจะแจ้งงานและคาบเรียนตามเวลาที่ตั้งไว้" : "Task and class reminders will appear at their scheduled times.",
+    createdAt: now.toISOString(),
+    eventKey: "notification-permission-test",
+    href: "/notifications",
+  };
+  try {
+    await channel.deliver(notification);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /*

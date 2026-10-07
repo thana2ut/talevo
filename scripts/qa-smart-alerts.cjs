@@ -49,7 +49,6 @@ const baseSchedule = [
 
 const dateTime = (day, time) => new Date(`${day}T${time}:00`);
 const task = (id, dueDate, estimate = "2 ชั่วโมง", status = "todo") => ({ id, title: id, description: "QA", dueLabel: "QA", dueDate, estimate, status, color: "purple", subtasks: [] });
-const exam = (id, startAt) => ({ id, courseId: "course-a", title: "Midterm", type: "midterm", startAt, room: "A1", topics: [{ id: "topic", title: "Topic", completed: false }], createdAt: startAt, updatedAt: startAt });
 const context = (now, overrides = {}) => ({ now, tasks: [], schedules: baseSchedule, exams: [], profile, academicTerm, preferences: defaultPreferences, language: "th", existingEventKeys: new Set(), ...overrides });
 const types = (alerts) => alerts.map((alert) => alert.type);
 
@@ -102,16 +101,9 @@ const weekendSchedules = [
 check(types(evaluateSmartAlerts(context(dateTime("2026-09-12", "23:50"), { schedules: weekendSchedules }))).includes("class_ending"), "Saturday 23:00–24:00 must produce its end-of-class alert");
 check(types(evaluateSmartAlerts(context(dateTime("2026-09-13", "00:30"), { schedules: weekendSchedules }))).includes("class_ending") === false, "Sunday midnight class must be active without an early end alert");
 
-for (const [days, key] of [[7, "7d"], [3, "3d"], [1, "1d"]]) {
-  const examDate = new Date(2026, 8, 7 + days, 9, 0);
-  const alerts = evaluateSmartAlerts(context(now24, { exams: [exam(`exam-${key}`, `${examDate.getFullYear()}-${String(examDate.getMonth() + 1).padStart(2, "0")}-${String(examDate.getDate()).padStart(2, "0")}T09:00`)] }));
-  check(alerts.some((alert) => alert.eventKey.startsWith(`exam-${key}:`)), `${days}-day exam alert should be created`);
-}
-
-const examToday = exam("exam-today", "2026-09-07T09:00");
-const examMorning = evaluateSmartAlerts(context(dateTime("2026-09-07", "06:00"), { exams: [examToday] }));
-check(examMorning.some((alert) => alert.type === "morning_summary" && alert.metadata?.includesExamToday), "morning summary should promote today's exam");
-check(!examMorning.some((alert) => alert.type === "exam_today"), "exam morning should not duplicate an exam included in morning summary");
+const retiredFeatureAlerts = evaluateSmartAlerts(context(dateTime("2026-09-07", "06:00"), { exams: [{ id: "legacy-exam", courseId: "course-a", title: "Legacy", type: "midterm", startAt: "2026-09-07T09:00", room: "A1", topics: [], createdAt: "2026-09-01T00:00:00", updatedAt: "2026-09-01T00:00:00" }] }));
+check(!retiredFeatureAlerts.some((alert) => alert.type === "exam_today" || alert.type === "exam_upcoming"), "retired exam data must not create notifications");
+check(!retiredFeatureAlerts.some((alert) => alert.type === "academic_weather"), "retired academic weather must not create notifications");
 
 const weekly = evaluateSmartAlerts(context(dateTime("2026-09-07", "07:05")));
 check(types(weekly).includes("weekly_radar"), "Monday 07:05 weekly radar should be created");

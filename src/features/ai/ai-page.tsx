@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, BarChart3, CalendarDays, Check, ChevronLeft, GraduationCap, Info, ListTodo, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, WifiOff, X, type LucideIcon } from "lucide-react";
+import { AlertCircle, CalendarDays, Check, ChevronLeft, Info, ListTodo, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, WifiOff, X, type LucideIcon } from "lucide-react";
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { BottomSheet, TalevoMascotAvatar } from "@/components/ui";
 import { getPendingTasks } from "@/lib/local-ai";
@@ -17,17 +17,13 @@ const LOCAL_MODE_AVAILABLE = true;
 const CONTEXT_OPTIONS: Array<{ key: AIContextKey; label: string; description: string; icon: LucideIcon }> = [
   { key: "schedule", label: "ตารางเรียน", description: "ชื่อวิชา วัน และเวลา", icon: CalendarDays },
   { key: "tasks", label: "งาน", description: "ชื่อ กำหนดส่ง และสถานะ", icon: ListTodo },
-  { key: "exams", label: "การสอบ", description: "ชื่อ ประเภท และวันสอบ", icon: GraduationCap },
-  { key: "grades", label: "คะแนน", description: "เป้าหมายและองค์ประกอบคะแนน", icon: BarChart3 },
 ];
 
 const SUGGESTIONS = [
   "วันนี้ต้องทำอะไรบ้าง?",
   "วันนี้มีเรียนอะไร?",
   "งานอะไรใกล้ส่ง?",
-  "ช่วยวางแผนอ่านหนังสือสอบ",
   "ช่วยจัดลำดับงานสำคัญ",
-  "ฉันมีสอบเมื่อไหร่?",
 ];
 
 type OnlineAvailability = "unconfigured" | "checking" | "ready" | "unavailable";
@@ -221,7 +217,7 @@ function PrivacyDialog() {
       <p>คุณควบคุมได้ว่าจะให้ AI ใช้ข้อมูลส่วนใดในคำถามนี้</p>
       <section>
         <h3>เลือกก่อนใช้เสมอ</h3>
-        <p>ค่าเริ่มต้นจะไม่แนบข้อมูล TALEVO เพิ่มเติม คุณเลือกตารางเรียน งาน การสอบ หรือคะแนนได้ก่อนส่งคำถามทุกครั้ง</p>
+        <p>ค่าเริ่มต้นจะไม่แนบข้อมูล TALEVO เพิ่มเติม คุณเลือกตารางเรียนหรืองานได้ก่อนส่งคำถามทุกครั้ง</p>
       </section>
       <section>
         <h3>เมื่อใช้ AI ออนไลน์</h3>
@@ -639,7 +635,7 @@ export function AIPage() {
   const canSend = !isLoading && !isRechecking && (mode === "on-device" ? LOCAL_MODE_AVAILABLE : onlineCanSend);
   const selectedOptions = CONTEXT_OPTIONS.filter((item) => selectedContext[item.key]);
   const placeholder = mode === "on-device"
-    ? "ถามเรื่องงาน ตารางเรียน หรือการสอบจากข้อมูลที่เลือก..."
+    ? "ถามเรื่องงานหรือตารางเรียนจากข้อมูลที่เลือก..."
     : isRechecking || onlineAvailability === "checking"
       ? "กำลังตรวจสอบ AI ออนไลน์..."
       : onlineAvailability === "unconfigured"
@@ -648,7 +644,7 @@ export function AIPage() {
           ? "AI ออนไลน์ครบโควตาชั่วคราว เลือกโหมดในอุปกรณ์เพื่อถามต่อ"
           : onlineAvailability === "unavailable"
             ? "AI ออนไลน์ไม่พร้อมใช้งานชั่วคราว เลือกโหมดในอุปกรณ์เพื่อถามต่อ"
-            : "พิมพ์คำถามเกี่ยวกับการเรียน งาน หรือการสอบ...";
+            : "พิมพ์คำถามเกี่ยวกับการเรียนหรืองาน...";
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();

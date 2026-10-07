@@ -97,7 +97,7 @@ export function AccountDataSettingsPanel() {
               <strong>บันทึกข้อมูลอัตโนมัติ</strong>
               <span className="account-data-badge">พร้อมใช้งาน</span>
             </div>
-            <p>ตารางเรียน งาน การสอบ คะแนน และข้อมูลอื่นของคุณจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ</p>
+            <p>ตารางเรียน งาน และข้อมูลอื่นของคุณจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ</p>
           </div>
         </div>
 
