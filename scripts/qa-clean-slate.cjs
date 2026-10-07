@@ -80,7 +80,7 @@ check(!fs.existsSync(path.join(projectRoot, "src/features/statistics-page.tsx"))
 check(read("src/app/statistics/page.tsx").includes('redirect("/today")'), "Statistics route must redirect to /today");
 check(!fs.existsSync(path.join(projectRoot, "src/features/finance/finance-pages.tsx")), "Finance page component must be removed");
 check(read("src/app/finance/page.tsx").includes('redirect("/today")'), "Finance route must redirect to /today");
-check(todayPage.includes('t("today.finance")') && todayPage.includes("วันนี้ใช้ไป") && todayPage.includes("งบรายวัน"), "Today must display compact 'การเงินวันนี้' card");
+check(!todayPage.includes('t("today.finance")') && !todayPage.includes("วันนี้ใช้ไป") && !todayPage.includes("งบรายวัน"), "Today must keep the removed finance card out of the active UI");
 check(aiPage.includes("ประวัติการสนทนายังว่างอยู่") && aiPage.includes("chat.length === 0"), "AI must show a non-persisted welcome state while chat history remains empty");
 check(!/readyForUpload:\s*true/.test(migrationPlanner), "Local to Cloud upload must remain disabled");
 check(!fs.existsSync(path.join(projectRoot, "src/lib/mock-data.ts")), "production mock data module must be removed");

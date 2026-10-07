@@ -96,6 +96,7 @@ interface AppStateValue {
   chat: ChatMessage[];
   settings: AppSettings;
   browserNotificationPermission: NotificationPermission | "unsupported";
+  browserNotificationTestStatus: "idle" | "sending" | "sent" | "failed";
   goals: LearningGoals;
   academicTerm: AcademicTerm;
   financeTransactions: FinanceTransaction[];
@@ -231,6 +232,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState(defaultAppState.projects);
   const [settings, setSettings] = useState(defaultAppState.settings);
   const [browserNotificationPermission, setBrowserNotificationPermission] = useState<NotificationPermission | "unsupported">("unsupported");
+  const [browserNotificationTestStatus, setBrowserNotificationTestStatus] = useState<"idle" | "sending" | "sent" | "failed">("idle");
   const [goals, setGoals] = useState<LearningGoals>(defaultAppState.goals);
   const [academicTerm, setAcademicTerm] = useState<AcademicTerm>(defaultAppState.academicTerm);
   const [financeTransactions, setFinanceTransactions] = useState<FinanceTransaction[]>(defaultAppState.financeTransactions);
@@ -382,6 +384,44 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [accountDefaults, applySnapshot, isAuthLoading, userEmail, userId]);
+
+  useEffect(() => {
+    const syncPermission = () => {
+      const permission: NotificationPermission | "unsupported" = "Notification" in window
+        ? window.Notification.permission
+        : "unsupported";
+      setBrowserNotificationPermission(permission);
+      if (permission !== "granted") {
+        setBrowserNotificationTestStatus("idle");
+        setSettings((current) => current.notificationPreferences.browserNotifications
+          ? { ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: false } }
+          : current);
+      }
+    };
+
+    syncPermission();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") syncPermission();
+    };
+    window.addEventListener("focus", syncPermission);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    let permissionStatus: PermissionStatus | null = null;
+    if ("permissions" in navigator) {
+      void navigator.permissions.query({ name: "notifications" as PermissionName }).then((status) => {
+        permissionStatus = status;
+        status.addEventListener("change", syncPermission);
+      }).catch(() => {
+        // Safari บางรุ่นมี Permissions API แต่ไม่รองรับการ query สิทธิ์แจ้งเตือน
+      });
+    }
+
+    return () => {
+      window.removeEventListener("focus", syncPermission);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      permissionStatus?.removeEventListener("change", syncPermission);
+    };
+  }, []);
 
   const persistableState = useMemo<AppStateDefaults>(() => ({
     profile,
@@ -545,6 +585,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     chat,
     settings,
     browserNotificationPermission,
+    browserNotificationTestStatus,
     goals,
     academicTerm,
     financeTransactions,
@@ -583,22 +624,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     updateNotificationPreferences: (next) => setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, ...next } })),
     setBrowserNotificationsEnabled: async (enabled) => {
       if (!enabled) {
+        setBrowserNotificationTestStatus("idle");
         setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: false } }));
         return;
       }
       if (!("Notification" in window)) {
         setBrowserNotificationPermission("unsupported");
+        setBrowserNotificationTestStatus("failed");
         return;
       }
+      setBrowserNotificationTestStatus("sending");
       let permission: NotificationPermission;
       try {
-        permission = window.Notification.permission === "default" ? await window.Notification.requestPermission() : window.Notification.permission;
+        permission = window.Notification.permission === "default"
+          ? await Promise.race<NotificationPermission>([
+              window.Notification.requestPermission(),
+              new Promise((resolve) => window.setTimeout(() => resolve(window.Notification.permission), 15_000)),
+            ])
+          : window.Notification.permission;
       } catch {
         permission = window.Notification.permission;
       }
       setBrowserNotificationPermission(permission);
-      setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: permission === "granted" } }));
-      if (permission === "granted") await deliverBrowserNotificationTest(language);
+      const delivered = permission === "granted" && await Promise.race([
+        deliverBrowserNotificationTest(language),
+        new Promise<false>((resolve) => window.setTimeout(() => resolve(false), 10_000)),
+      ]);
+      setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: delivered } }));
+      setBrowserNotificationTestStatus(delivered ? "sent" : permission === "granted" ? "failed" : "idle");
     },
     updateGoals: (next) => setGoals((current) => ({ ...current, ...next })),
     updateAcademicTerm: (next) => {
@@ -1026,7 +1079,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         runCloudMutation((client, uid) => persistGradePlan(client, uid, gp));
       }
     },
-  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, chat, courseNotes, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
+  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, courseNotes, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

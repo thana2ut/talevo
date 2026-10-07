@@ -455,12 +455,28 @@ export function AIPage() {
     setUsageError("");
     setUsageLoading(true);
     try {
-      const response = await fetch("/api/ai/status", {
-        cache: "no-store",
-        credentials: "same-origin",
-      });
-      const payload = await response.json().catch(() => null) as AIUsageStatusResponse | AIErrorResponse | null;
-      if (!response.ok || !payload || !("remaining" in payload)) throw new Error("usage unavailable");
+      let payload: AIUsageStatusResponse | AIErrorResponse | null = null;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8_000);
+        try {
+          const response = await fetch("/api/ai/status", {
+            cache: "no-store",
+            credentials: "same-origin",
+            signal: controller.signal,
+          });
+          payload = await response.json().catch(() => null) as AIUsageStatusResponse | AIErrorResponse | null;
+          if (response.ok && payload && "remaining" in payload) break;
+          if (response.status === 401 || response.status === 403) throw new Error("authentication required");
+          payload = null;
+        } catch {
+          payload = null;
+        } finally {
+          window.clearTimeout(timeout);
+        }
+        if (attempt === 0) await new Promise((resolve) => window.setTimeout(resolve, 450));
+      }
+      if (!payload || !("remaining" in payload)) throw new Error("usage unavailable");
       setUsage(payload);
       setCountdown(payload.resetAt ? payload.retryAfterSeconds : null);
       const isReady = Boolean(payload.providerConfigured);

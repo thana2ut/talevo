@@ -48,6 +48,12 @@ async function verifyDeviceDelivery() {
 
   const worker = fs.readFileSync(path.join(projectRoot, "public/talevo-notification-worker.js"), "utf8");
   check(worker.includes('notificationclick') && worker.includes('candidate.origin === self.location.origin'), "notification worker must handle clicks and reject external destinations");
+  const deliverySource = fs.readFileSync(path.join(projectRoot, "src/lib/alerts/notification-delivery.ts"), "utf8");
+  check(deliverySource.includes("await navigator.serviceWorker.ready"), "device delivery must wait for an active Service Worker before showing a notification");
+  const providerSource = fs.readFileSync(path.join(projectRoot, "src/providers/app-state-provider.tsx"), "utf8");
+  check(providerSource.includes('window.addEventListener("focus", syncPermission)') && providerSource.includes('status.addEventListener("change", syncPermission)'), "notification permission state must refresh after browser permission changes");
+  check(providerSource.includes("browserNotifications: delivered") && providerSource.includes('setBrowserNotificationTestStatus(delivered ? "sent"'), "device notification toggle must remain enabled only after a successful test delivery");
+  check(providerSource.includes("Promise.race<NotificationPermission>") && providerSource.includes("15_000") && providerSource.includes("10_000"), "permission and test delivery must recover instead of leaving the notification toggle stuck forever");
   console.log(`Notification QA passed: ${checks} checks`);
 }
 

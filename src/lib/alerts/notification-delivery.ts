@@ -70,7 +70,8 @@ export function createBrowserNotificationChannel(): NotificationDeliveryChannel 
       };
 
       if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.register(NOTIFICATION_WORKER_PATH, { scope: NOTIFICATION_WORKER_SCOPE });
+        await navigator.serviceWorker.register(NOTIFICATION_WORKER_PATH, { scope: NOTIFICATION_WORKER_SCOPE });
+        const registration = await navigator.serviceWorker.ready;
         await registration.showNotification(notification.title, options);
         return;
       }
