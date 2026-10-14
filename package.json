@@ -19,8 +19,6 @@
     "qa:auth": "node scripts/qa-auth.cjs",
     "qa:supabase-schema": "node scripts/qa-supabase-schema.cjs",
     "qa:local-cloud-migration": "node scripts/qa-local-cloud-migration.cjs",
-    "qa:qa-migration": "node scripts/qa-qa-migration.cjs",
-    "qa:admin": "node scripts/qa-admin.cjs",
     "qa:ai": "node scripts/qa-ai.cjs",
     "qa:ui-ux": "node scripts/qa-ui-ux.cjs",
     "qa:ai-quota": "node scripts/qa-ai-quota.cjs",

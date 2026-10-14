@@ -94,7 +94,7 @@ const aiUi = read("src/features/ai/ai-page.tsx");
 const authProvider = read("src/providers/auth-provider.tsx");
 const appStateStorage = read("src/lib/persistence/app-state-storage.ts");
 const migration = read("src/lib/supabase/local-v8-migration.ts");
-const hydration = read("src/lib/supabase/qa-cloud-hydration.ts");
+const hydration = read("src/lib/supabase/cloud-hydration.ts");
 const cloudRepository = read("src/lib/supabase/cloud-v8-repository.ts");
 const globals = read("src/app/globals.css");
 const schedulePages = read("src/features/schedule/schedule-pages.tsx");
@@ -118,6 +118,6 @@ check(schedulePages.includes("endTime") && schedulePages.includes("startTime") &
 check(taskCreate.includes("parseLocalTaskDate") && taskCreate.includes("กำหนดส่งให้ถูกต้อง"), "Task form must reject an invalid due date");
 check(examForm.includes("validateExamDateTimeInput") || examForm.includes("startAt"), "Exam form lacks date/time validation contract");
 check(!/localStorage\.clear\s*\(|indexedDB\.deleteDatabase\s*\(/.test([accountActions, publicPages, syllabusUi, aiUi].join("\n")), "Failure handling must not clear global local data");
-check(read("docs/talevo-final-live-qa.md").includes("390x844") && read("docs/talevo-final-live-qa.md").includes("1366x768"), "Final authenticated QA checklist is incomplete");
+check(read("docs/qa/final-live-qa.md").includes("390x844") && read("docs/qa/final-live-qa.md").includes("1366x768"), "Final authenticated QA checklist is incomplete");
 
 console.log(`TALEVO Reliability contract: ${checks} checks passed`);
