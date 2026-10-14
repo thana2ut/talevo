@@ -8,15 +8,8 @@ import type { CloudRow, CloudTables } from "@/lib/supabase/cloud-v8-repository";
 import type {
   AppNotification,
   ChatMessage,
-  CourseGradePlan,
-  Exam,
-  ExamType,
-  FinanceCategory,
-  FinanceTransaction,
-  FinanceTransactionType,
   NotificationPriority,
   NotificationType,
-  SubjectColor,
   Task,
 } from "@/types";
 
@@ -110,34 +103,6 @@ export function hydrateCloudAccountToAppState(
     thresholdsByPlan.set(parentId, [...(thresholdsByPlan.get(parentId) ?? []), row]);
   }
 
-  const categoryById = new Map((tables.finance_categories ?? []).map((row) => [stringValue(row, "id"), row]));
-
-  const financeCategories: FinanceCategory[] = (tables.finance_categories ?? []).map((row) => ({
-    id: stringValue(row, "id"),
-    name: stringValue(row, "name"),
-    type: (stringValue(row, "type") as FinanceTransactionType) || "expense",
-    icon: stringValue(row, "icon", "WalletCards"),
-    color: (stringValue(row, "color") as SubjectColor) || "purple",
-    ...(row.monthly_budget !== null && row.monthly_budget !== undefined
-      ? { monthlyBudget: numberValue(row, "monthly_budget") }
-      : {}),
-    ...(optionalString(row, "created_at") ? { createdAt: optionalString(row, "created_at") } : {}),
-    isDefault: booleanValue(row, "is_default"),
-  }));
-
-  const financeTransactions: FinanceTransaction[] = (tables.finance_transactions ?? []).map((row) => {
-    const category = categoryById.get(stringValue(row, "category_id"));
-    const categoryName = category ? stringValue(category, "name") : stringValue(row, "title", "ทั่วไป");
-    return {
-      id: stringValue(row, "id"),
-      type: (stringValue(row, "type") as FinanceTransactionType) || "expense",
-      title: stringValue(row, "title"),
-      amount: numberValue(row, "amount", 0),
-      category: categoryName,
-      date: stringValue(row, "date"),
-      ...(optionalString(row, "note") ? { note: optionalString(row, "note") } : {}),
-    };
-  });
 
   const schedules = (tables.class_schedules ?? []).map((row) => ({
     id: stringValue(row, "id"),
@@ -196,58 +161,6 @@ export function hydrateCloudAccountToAppState(
     subtaskCount: numberValue(row, "subtask_count"),
   }));
 
-  const exams: Exam[] = (tables.exams ?? []).map((row) => {
-    const examId = stringValue(row, "id");
-    return {
-      id: examId,
-      courseId: stringValue(row, "course_id"),
-      title: stringValue(row, "title"),
-      type: (stringValue(row, "type") as ExamType) || "quiz",
-      startAt: stringValue(row, "start_at"),
-      ...(optionalString(row, "end_at") ? { endAt: optionalString(row, "end_at") } : {}),
-      ...(optionalString(row, "room") ? { room: optionalString(row, "room") } : {}),
-      ...(optionalString(row, "note") ? { note: optionalString(row, "note") } : {}),
-      topics: (topicsByExam.get(examId) ?? [])
-        .sort((a, b) => position(a) - position(b))
-        .map((child) => ({
-          id: stringValue(child, "id"),
-          title: stringValue(child, "title"),
-          completed: booleanValue(child, "completed"),
-          ...(optionalString(child, "completed_at") ? { completedAt: optionalString(child, "completed_at") } : {}),
-        })),
-      ...(optionalString(row, "completed_at") ? { completedAt: optionalString(row, "completed_at") } : {}),
-      createdAt: stringValue(row, "created_at"),
-      updatedAt: stringValue(row, "updated_at"),
-    };
-  });
-
-  const gradePlans: CourseGradePlan[] = (tables.grade_plans ?? []).map((row) => {
-    const planId = stringValue(row, "id");
-    return {
-      id: planId,
-      courseId: stringValue(row, "course_id"),
-      ...(optionalString(row, "target_grade") ? { targetGrade: optionalString(row, "target_grade") } : {}),
-      components: (componentsByPlan.get(planId) ?? [])
-        .sort((a, b) => position(a) - position(b))
-        .map((child) => ({
-          id: stringValue(child, "id"),
-          name: stringValue(child, "name"),
-          weight: numberValue(child, "weight"),
-          maxScore: numberValue(child, "max_score"),
-          ...(child.earned_score !== null && child.earned_score !== undefined
-            ? { earnedScore: numberValue(child, "earned_score") }
-            : {}),
-          ...(optionalString(child, "note") ? { note: optionalString(child, "note") } : {}),
-        })),
-      thresholds: (thresholdsByPlan.get(planId) ?? [])
-        .sort((a, b) => position(a) - position(b))
-        .map((child) => ({
-          label: stringValue(child, "label"),
-          minimumPercent: numberValue(child, "minimum_percent"),
-        })),
-    };
-  });
-
   const courseNotes = (tables.course_notes ?? []).map((row) => ({
     id: stringValue(row, "id"),
     courseId: stringValue(row, "course_id"),
@@ -259,17 +172,6 @@ export function hydrateCloudAccountToAppState(
     createdAt: stringValue(row, "created_at"),
     updatedAt: stringValue(row, "updated_at"),
   }));
-
-  const savingGoals = (tables.saving_goals ?? []).map((row) => ({
-    id: stringValue(row, "id"),
-    title: stringValue(row, "title"),
-    targetAmount: numberValue(row, "target_amount"),
-    savedAmount: numberValue(row, "saved_amount"),
-  }));
-
-  const financeSettings = {
-    dailyBudget: numberValue(financeSettingsRow, "daily_budget", fallbackDefaults.financeSettings.dailyBudget),
-  };
 
   const selectedFinanceMonth = stringValue(
     financeSettingsRow,

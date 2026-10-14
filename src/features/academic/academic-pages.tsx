@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Calculator, Check, ChevronDown, CircleAlert, CircleCheck, GraduationCap, Pencil, Pin, Plus, Search, Trash2, TrendingUp } from "lucide-react";
+import { Calculator, Check, ChevronDown, CircleAlert, CircleCheck, GraduationCap, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { BottomSheet, Card, EmptyState, Field, Input, PageHeader, ProgressBar, Select, StatusPill, Textarea } from "@/components/ui";
 import { calculateGradePlan, formatExamDateTime, getExamCountdown, getExamDate, getExamReadiness, getGradePlanSummary, hasEarnedScore, isGradeComponentUsed, validateGradePlan } from "@/lib/academic-utils";
@@ -11,7 +11,7 @@ import { toLocalDateKey } from "@/lib/finance-utils";
 import { normalizeTalevoColor } from "@/lib/talevo-color-utils";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
-import type { CourseGradePlan, ExamType, GradeComponent, GradeThreshold, NewCourseNoteInput, NewExamInput } from "@/types";
+import type { CourseGradePlan, ExamType, GradeComponent, GradeThreshold, NewExamInput } from "@/types";
 
 const examTypes: ExamType[] = ["quiz", "midterm", "final", "practical", "presentation", "other"];
 const thaiExamTypes: Record<ExamType, string> = { quiz: "สอบย่อย", midterm: "กลางภาค", final: "ปลายภาค", practical: "ปฏิบัติ", presentation: "นำเสนอ", other: "อื่น ๆ" };

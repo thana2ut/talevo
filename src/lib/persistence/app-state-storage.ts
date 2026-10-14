@@ -163,20 +163,6 @@ function normalizeTasks(value: unknown, fallback: Task[]) {
     }));
 }
 
-function normalizeExams(value: unknown, fallback: Exam[]) {
-  return normalizeArray<Exam>(value, fallback, (item) => hasStringId(item)
-    && isString(item.courseId)
-    && isString(item.title)
-    && isString(item.startAt)
-    && isString(item.type))
-    .map((exam) => ({
-      ...exam,
-      topics: Array.isArray(exam.topics)
-        ? exam.topics.filter((item) => hasStringId(item) && isString(item.title)).map((item) => ({ ...item }))
-        : [],
-    }));
-}
-
 function normalizeSettings(value: unknown, fallback: AppSettings): AppSettings {
   if (!isRecord(value)) return { ...fallback, notificationPreferences: { ...fallback.notificationPreferences } };
   const preferences = isRecord(value.notificationPreferences) ? value.notificationPreferences : {};
@@ -191,11 +177,6 @@ function normalizeSettings(value: unknown, fallback: AppSettings): AppSettings {
       ...supportedPreferences,
     },
   } as AppSettings;
-}
-
-function normalizeFinanceSettings(value: unknown, fallback: FinanceSettings): FinanceSettings {
-  if (!isRecord(value) || !isFiniteNumber(value.dailyBudget)) return { ...fallback };
-  return { ...fallback, dailyBudget: Math.max(0, value.dailyBudget) };
 }
 
 function normalizeGoals(value: unknown, fallback: LearningGoals): LearningGoals {

@@ -68,8 +68,8 @@ const normalized = normalizePersistedState({
 check(normalized?.version === APP_STATE_CURRENT_VERSION, "Normalized AppState must remain v8");
 check(normalized?.schedules.length === 0, "Invalid schedule day must be discarded safely");
 check(normalized?.tasks.length === 1 && normalized.tasks[0].subtasks.length === 0 && normalized.tasks[0].attachments.length === 0, "Corrupted task optional fields must normalize safely");
-check(normalized?.financeTransactions.length === 1 && normalized.financeTransactions[0].amount === 100, "Non-finite finance records must be discarded");
-check(normalized?.financeSettings.dailyBudget === 0, "Non-finite finance settings must fall back safely");
+check(normalized?.financeTransactions.length === 0 && normalized.exams.length === 0 && normalized.gradePlans.length === 0, "Retired finance/exam/grade data must be cleared on load");
+check(normalized?.financeSettings.dailyBudget === defaults.financeSettings.dailyBudget, "Retired finance settings must reset to defaults");
 check(normalized?.selectedFinanceMonth === defaults.selectedFinanceMonth, "Invalid selected month must use the current safe default");
 check(normalizePersistedState({ version: 999 }, defaults) === null, "Unknown future schema must fail closed");
 
