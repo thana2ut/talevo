@@ -454,3 +454,76 @@
   .auth-page-register .auth-panel::-webkit-scrollbar,
   .auth-page-forgot .auth-panel::-webkit-scrollbar { width: 0; height: 0; }
 }
+
+/* Password recovery: one box per digit of the emailed code. */
+.auth-recovery-stage {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-recovery-target {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+  text-align: center;
+  /* A long address must wrap rather than widen the card. */
+  overflow-wrap: anywhere;
+}
+
+.verification-code {
+  display: grid;
+  /* Equal fractions keep every box the same width and let the row shrink with
+     the card instead of overflowing it on a narrow phone. */
+  grid-template-columns: repeat(var(--verification-code-count, 6), 1fr);
+  gap: clamp(6px, 2vw, 10px);
+  margin-block: 4px 8px;
+}
+
+.verification-code-box {
+  aspect-ratio: 3 / 4;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  color: var(--text);
+  font-size: clamp(20px, 5vw, 26px);
+  font-weight: 700;
+  min-width: 0;
+  padding: 0;
+  text-align: center;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.verification-code-box:focus-visible {
+  border-color: var(--purple-500, #7656f6);
+  box-shadow: 0 0 0 4px rgba(118, 86, 246, .16);
+  outline: none;
+}
+
+.verification-code-box:disabled {
+  background: rgba(244, 242, 252, .8);
+  cursor: not-allowed;
+}
+
+.verification-code-invalid .verification-code-box {
+  border-color: var(--danger, #d83a52);
+}
+
+.auth-recovery-back {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 6px;
+  justify-content: center;
+  padding: 4px;
+}
+
+.auth-recovery-back:hover { color: var(--text); }
+.auth-recovery-back svg { height: 16px; width: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .verification-code-box { transition: none; }
+}

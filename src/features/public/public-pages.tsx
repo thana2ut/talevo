@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, BellRing, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Eye, EyeOff, LockKeyhole, Mail, Sparkles, TriangleAlert, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Field, Input, Select, TalevoBrand, TalevoMascot } from "@/components/ui";
+import { VerificationCodeInput } from "@/components/verification-code-input";
 import { APP_BRAND } from "@/lib/brand";
 import { getSafeInternalPath } from "@/lib/auth-redirects";
 import { initialRegistrationDraft, registrationDataFromDraft, validateRegistration, validateRegistrationAccount, type RegistrationDraft } from "@/lib/registration-utils";
@@ -67,11 +68,16 @@ export function WelcomePage() {
 }
 
 type AuthMode = "login" | "register" | "forgot" | "resend";
+type RecoveryStage = "email" | "code" | "password";
+
+// Supabase will not issue an email OTP shorter than six digits, so the boxes
+// follow the provider rather than the other way round.
+const RECOVERY_CODE_LENGTH = 6;
 
 export function AuthPage({ mode }: { mode: AuthMode }) {
   const router = useRouter();
   const { registerLocalAccount } = useAppState();
-  const { signIn, signUp, resendConfirmation, resetPassword } = useAuth();
+  const { signIn, signUp, resendConfirmation, resetPassword, verifyRecoveryCode, updatePassword } = useAuth();
   const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState<RegistrationDraft>(initialRegistrationDraft);
@@ -89,8 +95,14 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   const submitLockRef = useRef(false);
   const resendLockRef = useRef(false);
   const [registrationStep, setRegistrationStep] = useState<1 | 2>(1);
-  const title = mode === "login" ? "ยินดีต้อนรับ" : mode === "register" ? t("auth.registerTitle") : mode === "forgot" ? "ลืมรหัสผ่าน" : "ส่งอีเมลยืนยันอีกครั้ง";
-  const subtitle = mode === "login" ? "พร้อมจัดการการเรียนของคุณต่อหรือยัง?" : mode === "register" ? t("auth.registerSubtitle") : mode === "forgot" ? "กรอกอีเมลเพื่อรับคำแนะนำสำหรับตั้งรหัสผ่านใหม่" : "กรอกอีเมลที่ใช้สมัคร TALEVO เพื่อรับลิงก์ยืนยันฉบับใหม่";
+  const [recoveryStage, setRecoveryStage] = useState<RecoveryStage>("email");
+  const [recoveryCode, setRecoveryCode] = useState("");
+  const [recoveryPassword, setRecoveryPassword] = useState("");
+  const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState("");
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const verifyLockRef = useRef(false);
+  const title = mode === "login" ? "ยินดีต้อนรับ" : mode === "register" ? t("auth.registerTitle") : mode === "forgot" ? (recoveryStage === "email" ? "ลืมรหัสผ่าน" : recoveryStage === "code" ? "กรอกรหัสยืนยัน" : "ตั้งรหัสผ่านใหม่") : "ส่งอีเมลยืนยันอีกครั้ง";
+  const subtitle = mode === "login" ? "พร้อมจัดการการเรียนของคุณต่อหรือยัง?" : mode === "register" ? t("auth.registerSubtitle") : mode === "forgot" ? (recoveryStage === "email" ? `กรอกอีเมลเพื่อรับรหัสยืนยัน ${RECOVERY_CODE_LENGTH} หลัก` : recoveryStage === "code" ? `กรอกรหัส ${RECOVERY_CODE_LENGTH} หลักที่ส่งไปยังอีเมลของคุณ` : "ตั้งรหัสผ่านใหม่เพื่อเข้าใช้งานต่อได้ทันที") : "กรอกอีเมลที่ใช้สมัคร TALEVO เพื่อรับลิงก์ยืนยันฉบับใหม่";
   const errorMessage = (code: string) => t(`auth.validation.${code}`);
   useEffect(() => {
     if (mode !== "login") return;
@@ -151,6 +163,70 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     resendLockRef.current = false;
   };
 
+  const submitRecoveryCode = async (code: string) => {
+    if (verifyLockRef.current || isVerifyingCode) return;
+    if (code.length < RECOVERY_CODE_LENGTH) {
+      setLoginError("กรุณากรอกรหัสให้ครบทุกหลัก");
+      return;
+    }
+    verifyLockRef.current = true;
+    setIsVerifyingCode(true);
+    setLoginError("");
+    const result = await verifyRecoveryCode(form.email, code);
+    if (result.error) {
+      setLoginError(result.error);
+      setRecoveryCode("");
+    } else {
+      setRecoveryStage("password");
+    }
+    setIsVerifyingCode(false);
+    verifyLockRef.current = false;
+  };
+
+  const resendRecoveryCode = async () => {
+    if (resendLockRef.current || isResending || resendCooldown > 0) return;
+    resendLockRef.current = true;
+    setIsResending(true);
+    setLoginError("");
+    setResendFeedback("");
+    const result = await resetPassword(form.email);
+    if (result.error) setLoginError(result.error);
+    else {
+      setRecoveryCode("");
+      setResendCooldown(60);
+      setResendFeedback("ส่งรหัสยืนยันฉบับใหม่แล้ว กรุณาตรวจทั้งกล่องจดหมายและโฟลเดอร์สแปม");
+    }
+    setIsResending(false);
+    resendLockRef.current = false;
+  };
+
+  // The code stage already opened a recovery session, so saving the new
+  // password leaves the account signed in and the app can go straight in.
+  const submitNewPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (submitLockRef.current || isSubmitting) return;
+    if (recoveryPassword.length < 8) {
+      setLoginError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+      return;
+    }
+    if (recoveryPassword !== recoveryConfirmPassword) {
+      setLoginError("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
+      return;
+    }
+    submitLockRef.current = true;
+    setIsSubmitting(true);
+    setLoginError("");
+    const result = await updatePassword(recoveryPassword);
+    if (result.error) {
+      setLoginError(result.error);
+      setIsSubmitting(false);
+      submitLockRef.current = false;
+      return;
+    }
+    router.push("/today");
+    router.refresh();
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (submitLockRef.current || isSubmitting) return;
@@ -173,7 +249,11 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     if (mode === "forgot") {
       const result = await resetPassword(form.email);
       if (result.error) setLoginError(result.error);
-      else setSent(true);
+      else {
+        setRecoveryCode("");
+        setRecoveryStage("code");
+        setResendCooldown(60);
+      }
     } else if (mode === "resend") {
       const result = await resendConfirmation(form.email);
       if (result.error) setLoginError(result.error);
@@ -270,6 +350,48 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
               <Link className="primary-button button-block" href="/login">ไปหน้าเข้าสู่ระบบ</Link>
             </div>
           ) : (
+            mode === "forgot" && recoveryStage === "code" ? (
+            <div className="auth-recovery-stage">
+              <p className="auth-recovery-target">ส่งรหัสไปที่ <strong>{form.email}</strong></p>
+              <VerificationCodeInput
+                length={RECOVERY_CODE_LENGTH}
+                value={recoveryCode}
+                onChange={(next) => { setRecoveryCode(next); setLoginError(""); setResendFeedback(""); }}
+                onComplete={submitRecoveryCode}
+                disabled={isVerifyingCode}
+                label="รหัสยืนยัน"
+                invalid={Boolean(loginError)}
+              />
+              {loginError && <p className="form-error" role="alert">{loginError}</p>}
+              {resendFeedback && <p className="auth-status-message" role="status">{resendFeedback}</p>}
+              <button className="primary-button button-block" type="button" disabled={isVerifyingCode || recoveryCode.length < RECOVERY_CODE_LENGTH} onClick={() => submitRecoveryCode(recoveryCode)}>
+                {isVerifyingCode ? "กำลังตรวจสอบรหัส..." : "ยืนยันรหัส"}
+              </button>
+              <button className="secondary-button button-block" type="button" onClick={resendRecoveryCode} disabled={isResending || resendCooldown > 0}>
+                {isResending ? "กำลังส่งรหัสใหม่..." : resendCooldown > 0 ? `ขอรหัสใหม่ได้ใน ${resendCooldown} วินาที` : "ขอรหัสใหม่"}
+              </button>
+              <button className="auth-recovery-back" type="button" onClick={() => { setRecoveryStage("email"); setRecoveryCode(""); setLoginError(""); setResendFeedback(""); }}>
+                <ArrowLeft aria-hidden="true" /> เปลี่ยนอีเมล
+              </button>
+            </div>
+            ) : mode === "forgot" && recoveryStage === "password" ? (
+            <form className="form-grid auth-form" onSubmit={submitNewPassword} noValidate>
+              <Field label="รหัสผ่านใหม่ *">
+                <div className="input-with-icon password-input">
+                  <LockKeyhole />
+                  <Input type={showPassword ? "text" : "password"} value={recoveryPassword} onChange={(event) => { setRecoveryPassword(event.target.value); setLoginError(""); }} placeholder={t("auth.passwordPlaceholder")} autoComplete="new-password" />
+                  <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}>{showPassword ? <EyeOff /> : <Eye />}</button>
+                </div>
+              </Field>
+              <Field label="ยืนยันรหัสผ่านใหม่ *">
+                <Input type="password" value={recoveryConfirmPassword} onChange={(event) => { setRecoveryConfirmPassword(event.target.value); setLoginError(""); }} placeholder={t("auth.confirmPasswordPlaceholder")} autoComplete="new-password" />
+              </Field>
+              {loginError && <p className="form-error" role="alert">{loginError}</p>}
+              <button className="primary-button button-block" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "กำลังบันทึกรหัสผ่าน..." : "บันทึกและเข้าสู่ระบบ"}
+              </button>
+            </form>
+            ) : (
             <form className="form-grid auth-form" onSubmit={submit} noValidate>
               {mode === "register" && <div className="auth-registration-progress" role="status"><span>{t("auth.step").replace("{step}", String(registrationStep))}</span><i style={{ "--registration-progress": `${registrationStep * 50}%` } as React.CSSProperties} /></div>}
               {mode === "register" && registrationStep === 1 && <>
@@ -294,8 +416,9 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
               </>}
               {mode === "login" && <><p className="auth-local-notice">จัดการตารางเรียน งาน และเป้าหมายของคุณต่อได้อย่างเป็นระบบ</p>{loginNotice && <p className="auth-status-message" role="status">{loginNotice}</p>}{loginError && <><p className="form-error" role="alert">{loginError}</p>{showConfirmationResend && <Link className="auth-resend-link" href="/resend-confirmation">ขออีเมลยืนยันฉบับใหม่</Link>}</>}<div className="auth-helper"><span>เข้าสู่ระบบเพื่อกลับไปยังพื้นที่การเรียนของคุณ</span><Link href="/forgot-password">ลืมรหัสผ่าน?</Link></div></>}
               {mode !== "login" && loginError && <p className="form-error" role="alert">{loginError}</p>}
-              {mode === "register" && registrationStep === 1 ? <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{t("auth.next")} <ArrowRight /></button> : mode === "register" ? <div className="auth-registration-actions"><button className="secondary-button button-block auth-back-button" type="button" disabled={isSubmitting} onClick={() => setRegistrationStep(1)}><ArrowLeft />{t("auth.back")}</button><button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังสร้างบัญชี..." : t("auth.createAccount")}</button></div> : <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังเชื่อมต่อ..." : mode === "login" ? t("auth.signIn") : mode === "resend" ? "ส่งอีเมลยืนยัน" : "ส่งลิงก์ตั้งรหัสผ่าน"}</button>}
+              {mode === "register" && registrationStep === 1 ? <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{t("auth.next")} <ArrowRight /></button> : mode === "register" ? <div className="auth-registration-actions"><button className="secondary-button button-block auth-back-button" type="button" disabled={isSubmitting} onClick={() => setRegistrationStep(1)}><ArrowLeft />{t("auth.back")}</button><button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังสร้างบัญชี..." : t("auth.createAccount")}</button></div> : <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังเชื่อมต่อ..." : mode === "login" ? t("auth.signIn") : mode === "resend" ? "ส่งอีเมลยืนยัน" : "ส่งรหัสยืนยัน"}</button>}
             </form>
+            )
           )}
           {!sent && !isRegisterSuccess && <div className="auth-switch">{mode === "login" ? <>ยังไม่มีบัญชี? <Link href="/register">สมัครใช้งาน</Link></> : mode === "register" ? <>มีบัญชีแล้ว? <Link href="/login">เข้าสู่ระบบ</Link></> : <Link href="/login">กลับไปเข้าสู่ระบบ</Link>}</div>}
         </div>

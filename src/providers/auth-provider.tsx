@@ -25,6 +25,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<AuthResult>;
   resetPassword: (email: string) => Promise<AuthResult>;
+  verifyRecoveryCode: (email: string, code: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
   deleteAccount: () => Promise<AuthResult>;
 }
@@ -200,6 +201,16 @@ export function normalizeAuthError(
 
 const networkErrorMessage = "ไม่สามารถเชื่อมต่อระบบบัญชีได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่";
 
+// A wrong code and an expired code both come back as otp_expired, so the copy
+// has to cover either cause rather than claim the code was mistyped.
+function recoveryCodeErrorMessage(code?: string, status?: number) {
+  if (code === "otp_expired") return "รหัสไม่ถูกต้องหรือหมดอายุแล้ว กรุณาตรวจสอบอีกครั้งหรือขอรหัสใหม่";
+  if (code === "otp_disabled") return "ระบบรหัสยืนยันยังไม่เปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ";
+  if (code === "over_request_rate_limit" || status === 429) return "ขอรหัสบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่";
+  if (code === "validation_failed") return "กรุณากรอกรหัสให้ครบทุกหลัก";
+  return "ยืนยันรหัสไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+}
+
 function getEmailConfirmationRedirectUrl() {
   return `${window.location.origin}/auth/confirm`;
 }
@@ -369,6 +380,25 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase]);
 
+  // The recovery email carries a numeric code rather than a link. Verifying it
+  // opens the recovery session that updatePassword then writes through, so the
+  // whole reset happens on one page without leaving the browser.
+  const verifyRecoveryCode = useCallback(async (email: string, code: string): Promise<AuthResult> => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: "recovery",
+      });
+      if (error) return { error: recoveryCodeErrorMessage(error.code, error.status) };
+      if (!data.session) return { error: "ยืนยันรหัสไม่สำเร็จ กรุณาขอรหัสใหม่อีกครั้ง" };
+      setSession(data.session);
+      return { error: null };
+    } catch {
+      return { error: networkErrorMessage };
+    }
+  }, [supabase]);
+
   const updatePassword = useCallback(async (password: string): Promise<AuthResult> => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
@@ -403,9 +433,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signOut,
     resetPassword,
+    verifyRecoveryCode,
     updatePassword,
     deleteAccount,
-  }), [deleteAccount, isLoading, resendConfirmation, resetPassword, session, signIn, signOut, signUp, updatePassword]);
+  }), [deleteAccount, isLoading, resendConfirmation, resetPassword, session, signIn, signOut, signUp, updatePassword, verifyRecoveryCode]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
