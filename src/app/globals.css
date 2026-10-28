@@ -365,7 +365,25 @@ svg { width: 20px; height: 20px; stroke-width: 1.9; }
 .select { appearance: auto; }
 .field-error { color: var(--danger); font-size: 12px; font-weight: 550; }
 .form-grid { display: grid; gap: 18px; }
-.form-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* minmax(0, ...) rather than 1fr: a plain 1fr track refuses to shrink below its
+   content, so a field whose control is naturally wide - the end-time control and
+   its "สิ้นวัน 24:00" switch - pushed the whole row past the card edge on a phone.
+   align-items keeps the two fields' labels on one line when one wraps. */
+.form-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.form-two > .field { min-width: 0; }
+
+/* Each piece of the term summary stays whole; a line may only break at a
+   separator. Thai has no inter-word spaces, so without this the browser is
+   free to break "ปีการศึกษา" in half. */
+.term-summary-parts > span { white-space: nowrap; }
+.term-summary-parts > span > b { font-weight: inherit; }
+.term-summary-parts > span > i { font-style: normal; white-space: normal; }
+
+/* A time field with the all-day switch beneath it. */
+.academic-end-time-input { display: grid; gap: 8px; min-width: 0; }
+.academic-end-time-input .input { width: 100%; min-width: 0; }
+.academic-end-time-input > label { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; }
+.academic-end-time-input > label input[type="checkbox"] { flex: none; width: 18px; height: 18px; accent-color: var(--purple-500); cursor: pointer; }
 .color-picker { display: flex; flex-wrap: wrap; gap: 12px; padding: 4px 0; }
 .color-dot { width: 34px; height: 34px; border: 4px solid white; border-radius: 50%; box-shadow: 0 0 0 1px var(--border); cursor: pointer; }
 .color-dot.selected { box-shadow: 0 0 0 3px var(--purple-300); transform: scale(1.04); }
