@@ -14,6 +14,8 @@ const atomicContract = fs.readFileSync(path.join(root, "supabase/tests/talevo_at
 const qaAllowlist = fs.readFileSync(path.join(root, "supabase/migrations/20260902130000_talevo_migration_qa_allowlist.sql"), "utf8");
 const qaAllowlistContract = fs.readFileSync(path.join(root, "supabase/tests/talevo_qa_allowlist_contract.sql"), "utf8");
 const qaAllowlistSetup = fs.readFileSync(path.join(root, "supabase/runbooks/talevo_qa_allowlist_setup.sql"), "utf8");
+const push = fs.readFileSync(path.join(root, "supabase/migrations/20261029000000_talevo_push_notifications.sql"), "utf8");
+const pushGrants = fs.readFileSync(path.join(root, "supabase/migrations/20261029010000_talevo_push_grants.sql"), "utf8");
 
 const contentTables = [
   "profiles", "academic_terms", "class_schedules", "tasks", "task_subtasks",
@@ -102,6 +104,23 @@ for (const command of ["select", "insert", "update", "delete"]) {
 assert((rls.match(/\(select auth\.uid\(\)\) is not null/g) ?? []).length === 6, "Every owner policy path must reject unauthenticated null UIDs");
 assert(rls.includes("grant select on table public.app_state_sync to authenticated"), "app_state_sync must be authenticated SELECT-only");
 assert(!rls.includes("grant select, insert, update, delete on table public.app_state_sync"), "app_state_sync must not expose client writes");
+
+// The push tables shipped with RLS and no grants. A policy only narrows what a
+// role may already touch, so every read and write was refused and the dispatch
+// route answered the minute cron with 500 on every run for days.
+assert(push.includes("enable row level security"), "Push tables must enable RLS");
+for (const table of ["push_subscriptions", "talevo_scheduled_notifications"]) {
+  assert(pushGrants.includes(`revoke all on table public.${table} from anon`), `anon must be explicitly revoked on ${table}`);
+  assert(
+    new RegExp(`grant select, insert, update, delete[\\s\\S]{0,160}public\\.${table}[\\s\\S]{0,120}to service_role`).test(pushGrants),
+    `${table} must grant the dispatcher's role the privileges its RLS bypass sits on top of`,
+  );
+}
+assert(
+  /grant select, insert, update, delete\s+on table public\.talevo_scheduled_notifications\s+to authenticated/.test(pushGrants),
+  "the browser must be able to write the reminder queue it plans",
+);
+assert(pushGrants.includes("revoke all on table public.push_subscriptions from authenticated"), "endpoints are server-only; the browser must not reach push_subscriptions");
 
 assert(trigger.includes("security definer"), "Auth trigger must be security definer");
 assert(trigger.includes("set search_path = ''"), "Auth trigger must use an empty search_path");
