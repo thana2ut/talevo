@@ -14,7 +14,7 @@ import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ClassSchedule, Task } from "@/types";
 import { calculateDeadlineRisk, type DeadlineRiskAssessment } from "@/lib/alerts/deadline-risk";
-import { formatNotificationTime, getUnreadNotificationCount } from "@/lib/alerts/notification-utils";
+import { formatNotificationTime } from "@/lib/alerts/notification-utils";
 import type { MascotVariant } from "@/lib/mascot";
 
 const DAY_START = 8 * 60;
@@ -197,7 +197,6 @@ export function TodayPage() {
     const risks = tasks.map((task) => ({ task, assessment: calculateDeadlineRisk(task, schedules, referenceDate) })).filter((item) => item.assessment?.level === "at_risk");
     return { classes, pendingTasks, dueTodayTasks, nowMinutes, gaps, usefulGap, nextClass, atRisk: risks[0] };
   }, [referenceDate, schedules, tasks]);
-  const unread = getUnreadNotificationCount(notifications);
   const isLoadingProfile = isAuthLoading || !isHydrated || !clientReady;
   const greeting = formatHomeGreeting(profile.displayName, isLoadingProfile);
 
@@ -211,6 +210,12 @@ export function TodayPage() {
       <Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong>{view.gaps.length > 1 && <Link href="/schedule">ดูทั้งหมด</Link>}</header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card>
     </div>
     </section>
-    <div className="smart-today-bottom-grid"><section className="smart-later-section"><SectionHeader title="ภายหลังวันนี้" /><Card className="smart-later-card"><BookOpen /><div><strong>{view.nextClass ? `${view.nextClass.startTime} · ${getScheduleDisplayName(view.nextClass)}` : view.classes.length ? "วันนี้ไม่มีคาบเรียนต่อแล้ว" : "วันนี้ไม่มีคาบเรียน"}</strong><small>{view.nextClass ? `${view.nextClass.room}${view.nextClass.teacher ? ` · ${view.nextClass.teacher}` : ""}` : unread ? `มีการแจ้งเตือนใหม่ ${unread} รายการ` : "ไม่มีการแจ้งเตือนใหม่"}</small></div></Card></section><section className="smart-notification-section"><SectionHeader title="แจ้งเตือนล่าสุด" action="ดูทั้งหมด" href="/notifications" /><Card className="mini-notifications">{notifications.length ? notifications.slice(0, 3).map((item) => <Link href={item.href ?? "/notifications"} key={item.id} className={item.readAt ? "is-read" : ""} onClick={() => markNotificationRead(item.id)}><span className={`mini-tone tone-${item.priority === "high" ? "red" : item.priority === "medium" ? "orange" : "purple"}`} /><div><strong>{item.title}</strong><small>{formatNotificationTime(item.createdAt, language, referenceDate)}</small></div>{!item.readAt && <i aria-label="ยังไม่อ่าน" />}</Link>) : <div className="mini-notification-empty"><strong>ยังไม่มีการแจ้งเตือน</strong><small>TALEVO จะแจ้งจากงานและตารางเรียนที่คุณบันทึกไว้</small></div>}</Card></section></div>
+    {/* Each panel carries real content or nothing at all. An empty card still
+        costs a heading, a frame and a line of apology, which is more of the
+        screen than the absence of a class or an alert is worth. */}
+    {(view.nextClass || notifications.length > 0) && <div className="smart-today-bottom-grid">
+      {view.nextClass && <section className="smart-later-section"><SectionHeader title="ภายหลังวันนี้" /><Card className="smart-later-card"><BookOpen /><div><strong>{`${view.nextClass.startTime} · ${getScheduleDisplayName(view.nextClass)}`}</strong><small>{`${view.nextClass.room}${view.nextClass.teacher ? ` · ${view.nextClass.teacher}` : ""}`}</small></div></Card></section>}
+      {notifications.length > 0 && <section className="smart-notification-section"><SectionHeader title="แจ้งเตือนล่าสุด" action="ดูทั้งหมด" href="/notifications" /><Card className="mini-notifications">{notifications.slice(0, 3).map((item) => <Link href={item.href ?? "/notifications"} key={item.id} className={item.readAt ? "is-read" : ""} onClick={() => markNotificationRead(item.id)}><span className={`mini-tone tone-${item.priority === "high" ? "red" : item.priority === "medium" ? "orange" : "purple"}`} /><div><strong>{item.title}</strong><small>{formatNotificationTime(item.createdAt, language, referenceDate)}</small></div>{!item.readAt && <i aria-label="ยังไม่อ่าน" />}</Link>)}</Card></section>}
+    </div>}
   </div>;
 }

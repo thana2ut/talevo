@@ -24,8 +24,8 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(self.registration.showNotification(title, {
     body,
-    icon: "/icon.png",
-    badge: "/icon.png",
+    icon: "/brand/talevo-mascot-head.png",
+    badge: "/brand/talevo-mascot-head.png",
     tag: typeof payload.tag === "string" ? payload.tag.slice(0, 160) : undefined,
     data: { href },
   }));

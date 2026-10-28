@@ -531,3 +531,32 @@
 @media (prefers-reduced-motion: reduce) {
   .verification-code-box { transition: none; }
 }
+
+/* The stacked auth layout pinned the page to the viewport height but left the
+   panel at its content height, so the hero and card sat together at the top
+   with the page background filling the rest — around 670px of emptiness on an
+   iPad in portrait. A flex column hands the panel the leftover height, so the
+   card centres in the space that is actually free. Grid would need explicit
+   placement here: the surrounding rules assume normal flow and auto-placement
+   dropped the hero and panel into the same cell. */
+@media (max-width: 899px) and (min-height: 760px) {
+  .auth-page-login,
+  .auth-page-register,
+  .auth-page-forgot {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .auth-page-login .auth-hero,
+  .auth-page-register .auth-hero,
+  .auth-page-forgot .auth-hero { flex: 0 0 auto; }
+
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel {
+    flex: 1 1 auto;
+    /* Without this an overflowing card would stretch the panel past the
+       viewport instead of scrolling inside it. */
+    min-height: 0;
+  }
+}
