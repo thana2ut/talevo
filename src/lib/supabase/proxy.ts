@@ -3,12 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseConfiguration } from "@/lib/supabase/config";
 
 const protectedRoutePrefixes = [
-  "/admin",
   "/academic",
   "/ai",
   "/calendar",
   "/help",
-  "/notes",
   "/notifications",
   "/profile",
   "/schedule",

@@ -68,7 +68,7 @@ release gate จะเปิดได้หลัง:
 5. live RLS/atomic contract ด้วย User A/B
 
 ไฟล์ออกแบบและ runbook ปัจจุบันอยู่ที่
-`docs/talevo-local-v8-cloud-migration.md`
+`docs/supabase/local-v8-cloud-migration.md`
 
 Finance Pocket Dashboard V2 ยังใช้ business logic เดิมครบ และ local transaction name
 จะถูก resolve เป็น stable category ID ใน preview โดยหยุดทันทีถ้าหมวดหมู่หายหรือชื่อซ้ำ

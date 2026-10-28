@@ -23,8 +23,6 @@ const source = sourceFiles.map(read).join("\n");
 const tsxSource = sourceFiles.filter((file) => file.endsWith(".tsx")).map(read).join("\n");
 const globals = read("src/app/globals.css");
 const ui = read("src/components/ui.tsx");
-const adminCss = read("src/app/admin/admin.css");
-const adminUsers = read("src/app/admin/users/page.tsx");
 const publicPages = read("src/features/public/public-pages.tsx");
 const rootLayout = read("src/app/layout.tsx");
 const pwaManifest = read("src/app/manifest.ts");
@@ -32,8 +30,6 @@ const pwaRuntime = read("src/components/pwa-runtime.tsx");
 const notificationWorker = read("public/talevo-notification-worker.js");
 const nextConfig = read("next.config.ts");
 const defaults = read("src/lib/app-state-defaults.ts");
-const proxy = read("src/proxy.ts");
-const qaPage = read("src/app/qa/local-cloud-migration/page.tsx");
 const aiProvider = read("src/lib/ai/gemini-provider.ts");
 const aiUi = read("src/features/ai/ai-page.tsx");
 const appShell = read("src/components/app-shell.tsx");
@@ -45,7 +41,7 @@ const profilePages = read("src/features/profile/profile-pages.tsx");
 const taskCreatePage = read("src/features/tasks/task-create-page.tsx");
 const packageJson = JSON.parse(read("package.json"));
 
-check(exists("docs/talevo-ui-ux-inventory.md"), "Route/component UI inventory is missing");
+check(exists("docs/design/ui-ux-inventory.md"), "Route/component UI inventory is missing");
 check(!/href\s*=\s*["']#["']/.test(tsxSource), "Active UI must not contain href=\"#\"");
 check(!/onClick\s*=\s*\{\s*\(\s*\)\s*=>\s*\{\s*\}\s*\}/.test(tsxSource), "Known empty click handler found");
 const unexplainedButtons = sourceFiles.filter((file) => file.endsWith(".tsx")).flatMap((file) => {
@@ -185,9 +181,6 @@ check(ui.includes("export function EmptyState") && ui.includes('className="empty
 check(source.includes('role="status"'), "Loading/success status announcements are missing");
 check(source.includes('role="alert"'), "Error announcements are missing");
 
-check(adminCss.includes("@media (max-width: 620px)") && adminCss.includes(".admin-table { min-width: 0; display: block"), "Admin directory must switch from the wide table on phones");
-check((adminUsers.match(/data-label=/g) ?? []).length === 5, "Admin mobile user cards need five readable field labels");
-check(!adminCss.includes("focus-visible { background: rgb(255 255 255 / 10%); color: #fff; outline: none"), "Admin navigation must not suppress focus without an alternative");
 check(globals.includes(".page .floating-add { display: none; }"), "Feature pages must not duplicate the global mobile add action");
 
 for (const collection of ["schedules", "tasks", "exams", "gradePlans", "financeTransactions", "savingGoals", "notifications", "chat"]) {
@@ -197,8 +190,6 @@ check(!/localStorage\.clear\s*\(/.test(source) && !/indexedDB\.deleteDatabase\s*
 
 check(publicPages.includes('registrationStep === 1') && publicPages.includes('registrationStep === 2'), "Two-step registration regressed");
 check(publicPages.includes('router.push("/today")') && (publicPages.includes("isRegisterSuccess") || publicPages.includes("requiresEmailConfirmation")), "Register success flow regressed");
-check(proxy.includes('process.env.NODE_ENV !== "development"') && proxy.includes('startsWith("/qa/")'), "Production QA-route proxy guard is missing");
-check(qaPage.includes('process.env.NODE_ENV !== "development"') && qaPage.includes("notFound()"), "Production QA page guard is missing");
 check(aiProvider.includes('process.env.NODE_ENV === "development"') && !aiUi.includes("providerDebug") && !aiUi.includes("interactions.create"), "AI provenance must stay out of the student-facing UI");
 check(!aiUi.includes("GEMINI_API_KEY") && !aiUi.includes("SUPABASE_SECRET_KEY"), "Server secret name leaked into client UI");
 check(packageJson.scripts["qa:ui-ux"] === "node scripts/qa-ui-ux.cjs", "qa:ui-ux package script is missing");

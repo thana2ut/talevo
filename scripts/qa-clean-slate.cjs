@@ -95,19 +95,8 @@ function collectProductionFiles(directory) {
 }
 collectProductionFiles(path.join(projectRoot, "src"));
 const forbiddenProductionData = /\b(mock|demo|sample|fixture|seed)\b/i;
-const qaOnlyRelativeFiles = new Set([
-  "src/app/qa/local-cloud-migration/page.tsx",
-  "src/components/qa-local-cloud-migration-panel.tsx",
-  "src/lib/ai/syllabus-probe.ts",
-  "src/lib/supabase/qa-local-v8-fixture.ts",
-  "src/lib/supabase/qa-cloud-hydration.ts",
-]);
-const activeProductionFiles = productionFiles.filter((file) => !qaOnlyRelativeFiles.has(path.relative(projectRoot, file).replaceAll("\\", "/")));
+const activeProductionFiles = productionFiles.filter((file) => path.relative(projectRoot, file).replaceAll("\\", "/") !== "src/lib/ai/syllabus-probe.ts");
+check(!fs.existsSync(path.join(projectRoot, "src/app/qa")), "QA-only routes must not ship");
 check(activeProductionFiles.every((file) => !forbiddenProductionData.test(fs.readFileSync(file, "utf8"))), "active production TypeScript must not contain demo-data injection markers");
-const qaRoute = read("src/app/qa/local-cloud-migration/page.tsx");
-check(qaRoute.includes('process.env.NODE_ENV !== "development"') && qaRoute.includes("notFound()"), "QA data route must return 404 outside development");
-const proxySource = read("src/proxy.ts");
-check(proxySource.includes('process.env.NODE_ENV !== "development"') && proxySource.includes('pathname.startsWith("/qa/")') && proxySource.includes("status: 404"), "Production Proxy must reject QA routes before session/page rendering");
-check(productionFiles.filter((file) => fs.readFileSync(file, "utf8").includes("QaLocalCloudMigrationPanel")).length === 2, "QA panel must be referenced only by its own component and development-only route");
 
 console.log(`TALEVO clean-slate QA passed: ${checks} checks`);

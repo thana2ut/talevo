@@ -31,10 +31,6 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       {
-        source: "/admin/:path*",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
-      },
-      {
         source: "/talevo-notification-worker.js",
         headers: [
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },

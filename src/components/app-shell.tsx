@@ -44,7 +44,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     setDesktopDrawerOpen(false);
   }
   const isPublicRoute = publicRoutes.includes(pathname);
-  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
 
   // Close drawer on Escape key and return focus to hamburger button
@@ -61,12 +60,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [desktopDrawerOpen]);
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated && !isPublicRoute && !isAdminRoute) {
+    if (!isAuthLoading && !isAuthenticated && !isPublicRoute) {
       router.replace(`/login?auth-error=authentication-required&next=${encodeURIComponent(pathname)}`);
     }
-  }, [isAdminRoute, isAuthenticated, isAuthLoading, isPublicRoute, pathname, router]);
+  }, [isAuthenticated, isAuthLoading, isPublicRoute, pathname, router]);
 
-  if (isAdminRoute) return <>{children}</>;
   if (isPublicRoute) return <>{children}</>;
   if (isAuthLoading || !isHydrated) return <div className="app-hydration-screen" role="status" aria-live="polite">กำลังโหลดข้อมูล TALEVO...</div>;
   if (!isAuthenticated) return null;

@@ -106,9 +106,6 @@ const accountRoute = read("src/app/api/account/route.ts");
 const chatHandler = read("src/lib/ai/chat-handler.ts");
 const analyzeRoute = read("src/app/api/ai/syllabus/analyze/route.ts");
 const statusRoute = read("src/app/api/ai/status/route.ts");
-const proxy = read("src/proxy.ts");
-const admin = read("src/lib/admin/admin-repository.ts");
-const adminLayout = read("src/app/admin/layout.tsx");
 const context = read("src/lib/ai/talevo-context.ts");
 const provider = read("src/lib/ai/gemini-provider.ts");
 const extractor = read("src/lib/ai/syllabus-extractor.ts");
@@ -132,9 +129,6 @@ check(accountRoute.includes("supabase.auth.getUser()") && accountRoute.indexOf("
 check(chatHandler.includes("supabase.auth.getUser()") && chatHandler.indexOf("supabase.auth.getUser()") < chatHandler.indexOf("request.json()"), "AI route must authenticate before parsing payload");
 check(analyzeRoute.includes("supabase.auth.getUser()") && analyzeRoute.indexOf("supabase.auth.getUser()") < analyzeRoute.indexOf("request.formData()"), "Upload route must authenticate before multipart parsing");
 check(statusRoute.includes("supabase.auth.getUser()"), "AI status must be authenticated");
-check(admin.includes("supabase.auth.getUser()") && admin.includes('rpc("get_talevo_admin_access")'), "Admin access must verify user and database membership server-side");
-check(adminLayout.includes("await requireTalevoAdmin()"), "Admin payload must be denied before layout render");
-check(!/localStorage[^\n]{0,100}(?:admin|isAdmin)|searchParams[^\n]{0,100}(?:admin|isAdmin)/i.test(admin + adminLayout), "Admin trust must not come from local/client parameters");
 check(!/using\s*\(\s*true\s*\)|with\s+check\s*\(\s*true\s*\)/i.test(migrations), "User RLS contains an unconditional true policy");
 check((migrations.match(/enable row level security/gi) ?? []).length >= 4 && migrations.includes("(select auth.uid()) = user_id") && migrations.includes("user_content_tables"), "RLS enablement/owner predicate contract is incomplete");
 check(migrations.includes("foreign key (user_id") && migrations.includes("references public.tasks(user_id"), "Nested owner relation must use a composite owner foreign key");
@@ -143,7 +137,6 @@ check(nextConfig.includes("X-Content-Type-Options") && nextConfig.includes("nosn
 check(nextConfig.includes("Referrer-Policy") && nextConfig.includes("Permissions-Policy"), "Privacy/security headers are incomplete");
 check(nextConfig.includes("productionBrowserSourceMaps: false"), "Production browser source maps must remain disabled");
 check(nextConfig.includes('source: "/api/:path*"') && nextConfig.includes("private, no-store"), "Sensitive API cache policy is missing");
-check(proxy.includes('process.env.NODE_ENV !== "development"') && proxy.includes('startsWith("/qa/")') && proxy.includes("status: 404"), "QA routes must fail closed in production");
 for (const route of ["src/lib/ai/chat-probe-handler.ts", "src/app/api/ai/syllabus/probe/route.ts"]) {
   const value = read(route);
   check(value.includes('process.env.NODE_ENV !== "development"') && value.includes("404"), `Probe is not production guarded: ${route}`);

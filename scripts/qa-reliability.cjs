@@ -68,8 +68,8 @@ const normalized = normalizePersistedState({
 check(normalized?.version === APP_STATE_CURRENT_VERSION, "Normalized AppState must remain v8");
 check(normalized?.schedules.length === 0, "Invalid schedule day must be discarded safely");
 check(normalized?.tasks.length === 1 && normalized.tasks[0].subtasks.length === 0 && normalized.tasks[0].attachments.length === 0, "Corrupted task optional fields must normalize safely");
-check(normalized?.financeTransactions.length === 1 && normalized.financeTransactions[0].amount === 100, "Non-finite finance records must be discarded");
-check(normalized?.financeSettings.dailyBudget === 0, "Non-finite finance settings must fall back safely");
+check(normalized?.financeTransactions.length === 0 && normalized.exams.length === 0 && normalized.gradePlans.length === 0, "Retired finance/exam/grade data must be cleared on load");
+check(normalized?.financeSettings.dailyBudget === defaults.financeSettings.dailyBudget, "Retired finance settings must reset to defaults");
 check(normalized?.selectedFinanceMonth === defaults.selectedFinanceMonth, "Invalid selected month must use the current safe default");
 check(normalizePersistedState({ version: 999 }, defaults) === null, "Unknown future schema must fail closed");
 
@@ -94,7 +94,7 @@ const aiUi = read("src/features/ai/ai-page.tsx");
 const authProvider = read("src/providers/auth-provider.tsx");
 const appStateStorage = read("src/lib/persistence/app-state-storage.ts");
 const migration = read("src/lib/supabase/local-v8-migration.ts");
-const hydration = read("src/lib/supabase/qa-cloud-hydration.ts");
+const hydration = read("src/lib/supabase/cloud-hydration.ts");
 const cloudRepository = read("src/lib/supabase/cloud-v8-repository.ts");
 const globals = read("src/app/globals.css");
 const schedulePages = read("src/features/schedule/schedule-pages.tsx");
@@ -118,6 +118,6 @@ check(schedulePages.includes("endTime") && schedulePages.includes("startTime") &
 check(taskCreate.includes("parseLocalTaskDate") && taskCreate.includes("กำหนดส่งให้ถูกต้อง"), "Task form must reject an invalid due date");
 check(examForm.includes("validateExamDateTimeInput") || examForm.includes("startAt"), "Exam form lacks date/time validation contract");
 check(!/localStorage\.clear\s*\(|indexedDB\.deleteDatabase\s*\(/.test([accountActions, publicPages, syllabusUi, aiUi].join("\n")), "Failure handling must not clear global local data");
-check(read("docs/talevo-final-live-qa.md").includes("390x844") && read("docs/talevo-final-live-qa.md").includes("1366x768"), "Final authenticated QA checklist is incomplete");
+check(read("docs/qa/final-live-qa.md").includes("390x844") && read("docs/qa/final-live-qa.md").includes("1366x768"), "Final authenticated QA checklist is incomplete");
 
 console.log(`TALEVO Reliability contract: ${checks} checks passed`);
