@@ -238,6 +238,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         email: email.trim(),
         password,
         options: {
+          emailRedirectTo: getEmailConfirmationRedirectUrl(),
           data: {
             display_name: profile.displayName,
             major: profile.major,
