@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bot, CalendarDays, ClipboardList, Home, Menu, MoreHorizontal, Plus, Settings, UserRound, X } from "lucide-react";
+import { Bot, CalendarDays, ChevronLeft, ClipboardList, Home, Menu, MoreHorizontal, Plus, Settings, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BottomSheet, TalevoBrand, NotificationBell } from "@/components/ui";
 import { useAppState } from "@/providers/app-state-provider";
@@ -114,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={closeDrawer}
             aria-label="ปิดเมนูหลัก"
           >
-            <X aria-hidden="true" />
+            <ChevronLeft aria-hidden="true" />
           </button>
         </div>
 
