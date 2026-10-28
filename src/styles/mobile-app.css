@@ -78,3 +78,60 @@
     line-height: 1.18;
   }
 }
+
+/* Phone polish, from screenshots on a real device. */
+@media (max-width: 1199px) {
+  /* The bar floated clear of all three edges, so page content showed through
+     the gaps around it and it read as a card drifting over the page rather
+     than the app's own tab bar. Docking it to the bottom edge is what makes
+     it look like a native tab bar. */
+  html .mobile-bottom-nav {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: calc(var(--mobile-nav-bar) + env(safe-area-inset-bottom));
+    padding: 5px 6px env(safe-area-inset-bottom);
+    border-top: 1px solid var(--border);
+    border-radius: 22px 22px 0 0;
+  }
+
+  /* features.css parks a 24px dot at top:-3px behind the active item. Inside
+     the old floating bar it merely sat behind the icon; against the docked
+     bar's top edge it pokes out as a stray bubble. The active pill already
+     marks the current tab. */
+  html .mobile-bottom-nav .nav-link.active::before { content: none; }
+
+  html .app-main,
+  html .app-main.app-main-ai {
+    padding-bottom: calc(var(--mobile-nav-bar) + 24px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 519px) {
+  /* The context picker lives behind this button on a phone, and with its label
+     hidden it read as a bare "+" that nobody would connect to choosing which
+     TALEVO data the question may use. */
+  html .ai-context-trigger {
+    width: auto;
+    min-width: 0;
+    gap: 6px;
+    padding-inline: 10px;
+  }
+
+  html .ai-context-trigger span {
+    display: inline;
+    font-size: .7rem;
+    font-weight: 750;
+  }
+
+  /* The composer is a one-line box that grows as you type. A placeholder that
+     wrapped to two lines was cut in half by that starting height. */
+  html .ai-composer-row textarea { font-size: .82rem; }
+}
+
+@media (max-width: 519px) {
+  /* Last resort for a placeholder that still wraps: the box is one line tall
+     by design and only grows once there is real text to grow against, so a
+     wrapped placeholder would otherwise be sliced through the middle. */
+  html .ai-composer-row textarea { overflow-y: auto; }
+}

@@ -651,16 +651,16 @@ export function AIPage() {
   const canSend = !isLoading && !isRechecking && (mode === "on-device" ? LOCAL_MODE_AVAILABLE : onlineCanSend);
   const selectedOptions = CONTEXT_OPTIONS.filter((item) => selectedContext[item.key]);
   const placeholder = mode === "on-device"
-    ? "ถามเรื่องงานหรือตารางเรียนจากข้อมูลที่เลือก..."
+    ? "ถามจากข้อมูลที่เลือก..."
     : isRechecking || onlineAvailability === "checking"
       ? "กำลังตรวจสอบ AI ออนไลน์..."
       : onlineAvailability === "unconfigured"
-        ? "AI ออนไลน์ยังไม่ได้เชื่อมต่อ · เลือกโหมดในอุปกรณ์เพื่อถามต่อ"
+        ? "AI ออนไลน์ยังไม่พร้อม..."
         : quotaReached
-          ? "AI ออนไลน์ครบโควตาชั่วคราว เลือกโหมดในอุปกรณ์เพื่อถามต่อ"
+          ? "ครบโควตาชั่วคราว..."
           : onlineAvailability === "unavailable"
-            ? "AI ออนไลน์ไม่พร้อมใช้งานชั่วคราว เลือกโหมดในอุปกรณ์เพื่อถามต่อ"
-            : "พิมพ์คำถามเกี่ยวกับการเรียนหรืองาน...";
+            ? "AI ออนไลน์ไม่พร้อมชั่วคราว..."
+            : "ถามเรื่องเรียนหรืองาน...";
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
