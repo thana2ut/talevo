@@ -74,28 +74,6 @@
   line-height: 1.6;
   color: var(--text-secondary);
 }
-.notification-device-strip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: rgba(121, 85, 250, 0.08);
-  border: 1px solid rgba(121, 85, 250, 0.15);
-  color: var(--purple-700);
-  font-size: 12px;
-  font-weight: 650;
-}
-.notification-device-strip svg {
-  flex-shrink: 0;
-}
-.notification-device-strip-footer {
-  display: flex;
-  max-width: 400px;
-  margin: 24px auto 16px;
-}
 @media (max-width: 600px) {
   .notification-empty-unified-card {
     padding: 24px 18px;
@@ -116,18 +94,118 @@
   .notification-empty-card-body p {
     font-size: 13px;
   }
-  .notification-device-strip {
-    font-size: 11px;
-    padding: 6px 12px;
-  }
 }
 html[data-theme="dark"] .notification-empty-unified-card {
   border-color: var(--border);
   background: var(--surface);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 }
-html[data-theme="dark"] .notification-device-strip {
-  background: rgba(121, 85, 250, 0.14);
-  border-color: rgba(121, 85, 250, 0.25);
-  color: var(--purple-300, #b197fc);
+
+/* ==========================================================================
+   Notification centre rows
+   --------------------------------------------------------------------------
+   The row used to be a grid of loose parts: the unread dot and the chevron
+   each took a column of their own, so the chevron rode up to the top corner,
+   and the delete action was a full-height bordered column that cut the card in
+   two. One row is now icon | copy | trailing actions, aligned on one centre
+   line, and a read row keeps its contrast instead of fading out.
+   ========================================================================== */
+.notification-list { display: grid; gap: 10px; }
+
+.notification-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  /* The badge lines up with the title, the way a sender's avatar does, rather
+     than floating against the middle of a message that runs to three lines. */
+  align-items: start;
+  gap: 14px;
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-left-width: 1px;
+  border-radius: 18px;
+  background: var(--surface-elevated);
+  box-shadow: 0 6px 18px rgba(74, 55, 130, .05);
 }
+
+/* Unread is carried by a left accent and a tint, so read rows do not have to
+   be dimmed to tell the two apart. */
+.notification-card.is-unread { border-left: 3px solid var(--purple-500); padding-left: 14px; background: linear-gradient(90deg, color-mix(in srgb, var(--purple-500) 5%, var(--surface-elevated)), var(--surface-elevated) 180px); }
+.notification-card.is-read { opacity: 1; box-shadow: 0 4px 14px rgba(74, 55, 130, .035); }
+.notification-card.notification-red.is-unread { border-left-color: var(--danger); }
+.notification-card.notification-orange.is-unread { border-left-color: var(--orange); }
+.notification-card.notification-green.is-unread { border-left-color: var(--success); }
+
+.notification-card .notification-icon { width: 44px; height: 44px; border-radius: 14px; align-self: start; }
+.notification-card .notification-icon svg { width: 20px; height: 20px; }
+
+.notification-copy { display: grid; gap: 3px; min-width: 0; }
+.notification-copy strong { font-size: 14.5px; font-weight: 750; line-height: 1.35; color: var(--text-primary); }
+.notification-copy > span { font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.notification-copy small { font-size: 11.5px; color: var(--text-muted); }
+
+.notification-trailing { display: flex; align-items: center; gap: 10px; flex: none; align-self: center; }
+.notification-card .notification-trailing i { width: 8px; height: 8px; margin: 0; border-radius: 50%; background: var(--purple-500); flex: none; }
+.notification-chevron { width: 18px; height: 18px; color: var(--text-muted); flex: none; }
+
+/* Delete sits inside the row as a round action, not as a slab down its side. */
+.notification-card-with-delete { grid-template-columns: minmax(0, 1fr) auto !important; gap: 8px !important; padding: 0 !important; align-items: stretch; }
+.notification-card-with-delete .notification-card-main {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  min-height: 0;
+  padding: 16px 4px 16px 16px;
+  text-align: left;
+  border-radius: inherit;
+}
+.notification-card-with-delete.is-unread .notification-card-main { padding-left: 14px; }
+.notification-card-with-delete .notification-delete-button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  min-height: 0;
+  align-self: center;
+  margin-right: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+}
+.notification-card-with-delete .notification-delete-button:hover { background: var(--danger-soft); color: var(--danger); }
+.notification-card-with-delete .notification-delete-button svg { width: 17px; height: 17px; }
+
+.notification-groups { display: grid; gap: 22px; margin-top: 18px; }
+.notification-group { display: grid; gap: 10px; }
+.notification-group > h2 { margin: 0 0 2px 2px; font-size: 13px; font-weight: 800; letter-spacing: .02em; color: var(--text-secondary); }
+
+@media (max-width: 480px) {
+  .notification-card, .notification-card-with-delete .notification-card-main { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 11px; padding: 14px; }
+  .notification-card-with-delete .notification-card-main { padding-right: 2px; }
+  .notification-card .notification-icon { width: 40px; height: 40px; border-radius: 13px; }
+  .notification-copy strong { font-size: 14px; }
+  .notification-card-with-delete .notification-delete-button { margin-right: 8px; }
+}
+
+html[data-theme="dark"] .notification-card { background: var(--surface-elevated); border-color: var(--border); }
+html[data-theme="dark"] .notification-card.is-unread { background: var(--surface-elevated); }
+
+/* ==========================================================================
+   Home page summary rows
+   --------------------------------------------------------------------------
+   The colour chip here was a 34x36 box carrying tone-purple's 4px left border,
+   which a 12px radius drew as a clipped crescent, and the row showed a title
+   and a time with nothing between them. It is the same icon as the centre now,
+   with the alert's own line of copy.
+   ========================================================================== */
+.smart-notification-section .mini-notifications a { align-items: center; gap: 12px; min-height: 0; padding: 11px 12px; }
+.mini-notification-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 13px; background: var(--purple-50); color: var(--purple-600); }
+.mini-notification-icon svg { width: 18px; height: 18px; }
+.mini-notification-icon.tone-red { border-left: 0; background: var(--danger-soft); color: var(--danger); }
+.mini-notification-icon.tone-orange { border-left: 0; background: var(--warning-soft); color: var(--orange); }
+.mini-notification-icon.tone-purple { border-left: 0; background: var(--purple-50); color: var(--purple-600); }
+.smart-notification-section .mini-notifications a > div { min-width: 0; gap: 2px; }
+.smart-notification-section .mini-notifications a > div > span { overflow: hidden; color: var(--text-secondary); font-size: 12px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+.smart-notification-section .mini-notifications a i { flex: none; margin-left: 8px; }

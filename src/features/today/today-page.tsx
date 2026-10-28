@@ -13,6 +13,7 @@ import { formatTodayTaskDeadline, getPendingTasksForToday, getTaskDueState, getT
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ClassSchedule, Task } from "@/types";
+import { NotificationIcon } from "@/components/domain";
 import { calculateDeadlineRisk, type DeadlineRiskAssessment } from "@/lib/alerts/deadline-risk";
 import { formatNotificationTime } from "@/lib/alerts/notification-utils";
 import type { MascotVariant } from "@/lib/mascot";
@@ -215,7 +216,7 @@ export function TodayPage() {
         screen than the absence of a class or an alert is worth. */}
     {(view.nextClass || notifications.length > 0) && <div className="smart-today-bottom-grid">
       {view.nextClass && <section className="smart-later-section"><SectionHeader title="ภายหลังวันนี้" /><Card className="smart-later-card"><BookOpen /><div><strong>{`${view.nextClass.startTime} · ${getScheduleDisplayName(view.nextClass)}`}</strong><small>{`${view.nextClass.room}${view.nextClass.teacher ? ` · ${view.nextClass.teacher}` : ""}`}</small></div></Card></section>}
-      {notifications.length > 0 && <section className="smart-notification-section"><SectionHeader title="แจ้งเตือนล่าสุด" action="ดูทั้งหมด" href="/notifications" /><Card className="mini-notifications">{notifications.slice(0, 3).map((item) => <Link href={item.href ?? "/notifications"} key={item.id} className={item.readAt ? "is-read" : ""} onClick={() => markNotificationRead(item.id)}><span className={`mini-tone tone-${item.priority === "high" ? "red" : item.priority === "medium" ? "orange" : "purple"}`} /><div><strong>{item.title}</strong><small>{formatNotificationTime(item.createdAt, language, referenceDate)}</small></div>{!item.readAt && <i aria-label="ยังไม่อ่าน" />}</Link>)}</Card></section>}
+      {notifications.length > 0 && <section className="smart-notification-section"><SectionHeader title="แจ้งเตือนล่าสุด" action="ดูทั้งหมด" href="/notifications" /><Card className="mini-notifications">{notifications.slice(0, 3).map((item) => <Link href={item.href ?? "/notifications"} key={item.id} className={item.readAt ? "is-read" : ""} onClick={() => markNotificationRead(item.id)}><span className={`mini-notification-icon tone-${item.priority === "high" ? "red" : item.priority === "medium" ? "orange" : "purple"}`}><NotificationIcon type={item.type} /></span><div><strong>{item.title}</strong><span>{item.message}</span><small>{formatNotificationTime(item.createdAt, language, referenceDate)}</small></div>{!item.readAt && <i aria-label="ยังไม่อ่าน" />}</Link>)}</Card></section>}
     </div>}
   </div>;
 }

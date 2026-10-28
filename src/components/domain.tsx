@@ -41,11 +41,23 @@ export function ScheduleCard({ item, onClick }: { item: ClassSchedule; onClick?:
   );
 }
 
+/** One icon per kind of alert, shared by the centre and the home summary so the
+    same reminder is recognisable in both. */
+export function NotificationIcon({ type }: { type: AppNotification["type"] }) {
+  if (type === "deadline_risk" || type === "academic_weather") return <TriangleAlert aria-hidden="true" />;
+  if (type === "class_upcoming" || type === "class_ending") return <BellRing aria-hidden="true" />;
+  if (type === "exam_upcoming" || type === "exam_today") return <CalendarClock aria-hidden="true" />;
+  if (type === "weekly_radar" || type === "daily_brief" || type === "morning_summary") return <Sparkles aria-hidden="true" />;
+  return <Bell aria-hidden="true" />;
+}
+
 export function NotificationCard({ item, onClick, onDelete, deleteLabel }: { item: AppNotification; onClick: () => void; onDelete?: () => void; deleteLabel?: string }) {
   const { language } = useLanguage();
   const tone = getNotificationTone(item);
-  const Icon = item.type === "deadline_risk" || item.type === "academic_weather" ? TriangleAlert : item.type === "class_upcoming" || item.type === "class_ending" ? BellRing : item.type === "exam_upcoming" || item.type === "exam_today" ? CalendarClock : item.type === "weekly_radar" || item.type === "daily_brief" || item.type === "morning_summary" ? Sparkles : Bell;
-  const content = <><span className="notification-icon"><Icon aria-hidden="true" /></span><span className="notification-copy"><strong>{item.title}</strong><span>{item.message}</span><small>{formatNotificationTime(item.createdAt, language)}</small></span>{!item.readAt && <i aria-label={language === "th" ? "ยังไม่อ่าน" : "Unread"} />}{item.href && <ChevronRight className="notification-chevron" aria-hidden="true" />}</>;
+  // The unread dot and the chevron share one trailing cell. Loose in the grid
+  // they each claimed a column, which is what pushed the chevron to the top
+  // corner and left the row looking lopsided.
+  const content = <><span className="notification-icon"><NotificationIcon type={item.type} /></span><span className="notification-copy"><strong>{item.title}</strong><span>{item.message}</span><small>{formatNotificationTime(item.createdAt, language)}</small></span><span className="notification-trailing">{!item.readAt && <i aria-label={language === "th" ? "ยังไม่อ่าน" : "Unread"} />}{item.href && <ChevronRight className="notification-chevron" aria-hidden="true" />}</span></>;
   const className = `notification-card notification-${tone} ${item.readAt ? "is-read" : "is-unread"}`;
   if (onDelete) {
     const deleteNotification = (event: React.MouseEvent<HTMLButtonElement>) => {

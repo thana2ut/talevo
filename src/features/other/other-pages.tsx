@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, Languages, Smartphone, Sparkles, Trash2 } from "lucide-react";
+import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, Languages, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BottomSheet, Card, PageHeader, Select } from "@/components/ui";
 import { NotificationCard } from "@/components/domain";
@@ -71,10 +71,6 @@ export function NotificationsPage() {
             </section>
           ))}
         </div>
-        <div className="notification-device-strip notification-device-strip-footer">
-          <Smartphone size={14} aria-hidden="true" />
-          <span>{language === "th" ? "สถานะอ่านจะบันทึกไว้บนอุปกรณ์นี้" : "Read status is stored on this device."}</span>
-        </div>
       </>
     ) : (
       <Card className="notification-empty-unified-card">
@@ -92,10 +88,6 @@ export function NotificationsPage() {
           </span>
           <h2>{t("notifications.emptyTitle")}</h2>
           <p>{language === "th" ? "TALEVO จะแจ้งเตือนจากงานและตารางเรียนของคุณเมื่อมีสิ่งที่ต้องรู้" : "TALEVO will alert you from your tasks and class schedule when there is something to know."}</p>
-          <div className="notification-device-strip">
-            <Smartphone size={14} aria-hidden="true" />
-            <span>{language === "th" ? "สถานะอ่านจะบันทึกไว้บนอุปกรณ์นี้" : "Read status is stored on this device."}</span>
-          </div>
         </div>
       </Card>
     )}
