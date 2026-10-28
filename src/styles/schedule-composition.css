@@ -424,3 +424,14 @@ html[data-theme="dark"] .week-class-block.schedule-custom,
 html[data-theme="dark"] .schedule-event-card.schedule-custom {
   background: color-mix(in srgb, var(--course-color) 18%, var(--surface-elevated));
 }
+
+/* One column, one width.
+   The schedule page stacked three different widths: the heading ran to the
+   page width (1176px measured at a 1440px window), the month grid stopped at
+   1150px and the agenda under it at 790px, so no two edges lined up. The caps
+   predate the page's own max-width, which already keeps the line length
+   sensible, so dropping them leaves every block sharing one edge. */
+.schedule-month-view,
+.schedule-day-view,
+.schedule-week-view,
+.selected-date-agenda { max-width: none; }

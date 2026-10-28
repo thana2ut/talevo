@@ -135,3 +135,29 @@
      wrapped placeholder would otherwise be sliced through the middle. */
   html .ai-composer-row textarea { overflow-y: auto; }
 }
+
+/* iOS draws its status bar over the top of the page, and content that sits
+   under it is dimmed and softened - the "blurry" strip in the screenshots.
+   env(safe-area-inset-top) reports 0 in a browser tab, so the padding that
+   was meant to clear the status bar collapsed there. A floor keeps the first
+   row of controls below it either way. */
+@media (max-width: 1199px) {
+  html .app-main,
+  html .app-main.app-main-ai {
+    padding-top: calc(16px + max(env(safe-area-inset-top), 22px));
+  }
+}
+
+/* An iPad in landscape is wide enough for the AI page's two-column desktop
+   layout but still carries the phone's bottom bar, and the conversation card
+   sized itself against the viewport alone. The composer ended up 44px behind
+   the bar, which is the part you type into. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  html .ai-conversation-card {
+    height: max(420px, min(820px, calc(100dvh - 180px - var(--mobile-nav-bar) - 20px - env(safe-area-inset-bottom))));
+  }
+
+  html .app-main.app-main-ai {
+    padding-bottom: calc(var(--mobile-nav-bar) + 24px + env(safe-area-inset-bottom));
+  }
+}
