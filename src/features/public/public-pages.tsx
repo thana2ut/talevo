@@ -70,9 +70,10 @@ export function WelcomePage() {
 type AuthMode = "login" | "register" | "forgot" | "resend";
 type RecoveryStage = "email" | "code" | "password";
 
-// Supabase will not issue an email OTP shorter than six digits, so the boxes
-// follow the provider rather than the other way round.
-const RECOVERY_CODE_LENGTH = 6;
+// Must match "Email OTP Length" in the Supabase auth settings: the boxes
+// gate submission on a full code, so a mismatch either blocks a valid code
+// or sends a short one. Supabase accepts 6 to 10.
+const RECOVERY_CODE_LENGTH = 8;
 
 export function AuthPage({ mode }: { mode: AuthMode }) {
   const router = useRouter();

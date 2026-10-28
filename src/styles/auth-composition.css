@@ -475,7 +475,9 @@
   /* Equal fractions keep every box the same width and let the row shrink with
      the card instead of overflowing it on a narrow phone. */
   grid-template-columns: repeat(var(--verification-code-count, 6), 1fr);
-  gap: clamp(6px, 2vw, 10px);
+  /* The gap closes up as the code gets longer so eight boxes still fit the
+     card at the same width six did. */
+  gap: clamp(4px, calc(60px / var(--verification-code-count, 6)), 10px);
   margin-block: 4px 8px;
 }
 
@@ -485,7 +487,9 @@
   border: 1.5px solid var(--border);
   border-radius: 14px;
   color: var(--text);
-  font-size: clamp(20px, 5vw, 26px);
+  /* Sized against the box rather than the viewport, so a longer code keeps
+     its digits proportionate instead of overflowing narrower boxes. */
+  font-size: clamp(17px, calc(150px / var(--verification-code-count, 6)), 26px);
   font-weight: 700;
   min-width: 0;
   padding: 0;
