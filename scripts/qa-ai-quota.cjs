@@ -11,7 +11,9 @@ const check = (condition, message) => {
   checks += 1;
 };
 
-const migration = read("supabase/migrations/20260902170000_talevo_ai_rolling_24h_quota.sql");
+// The quota ceiling moved to 20 in a later migration; assert the installed
+// version rather than the one it superseded.
+const migration = read("supabase/migrations/20261028130000_talevo_ai_quota_20.sql");
 const originalMigration = read("supabase/migrations/20260902160000_talevo_ai_free_rate_limit.sql");
 const handler = read("src/lib/ai/chat-handler.ts");
 const repository = read("src/lib/ai/usage-repository.ts");
@@ -40,7 +42,7 @@ check(
 check(migration.includes("grant execute on function public.get_talevo_ai_usage_status() to authenticated"), "Authenticated status access must be granted");
 check(migration.includes("short_window_request_count >= 4"), "Four-per-minute gate must remain");
 check(migration.includes("'concurrent'::text"), "Single concurrent request gate must remain");
-check(migration.includes("successful_count >= 40"), "Forty-success rolling gate must remain");
+check(migration.includes("successful_count >= 20"), "Twenty-success rolling gate must remain");
 check(!/\b(prompt|response_content|message_content|chat_messages)\b/i.test(migration), "Quota storage must not contain chat content");
 check(!/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i.test(migration), "Migration must not contain a real UUID");
 
@@ -77,7 +79,7 @@ function normalize(state, now) {
 function begin(state, now) {
   normalize(state, now);
   if (state.active) return "concurrent";
-  if (state.successfulCount >= 40) return "rolling";
+  if (state.successfulCount >= 20) return "rolling";
   state.active = true;
   return "allowed";
 }
@@ -109,14 +111,14 @@ check(begin(state, start + 3_000) === "allowed", "Second request must be allowed
 finish(state, start + 4_000, true);
 check(state.successfulCount === 2 && state.resetAt === fixedReset, "Later successes must not slide the reset time");
 
-for (let count = 2; count < 40; count += 1) {
+for (let count = 2; count < 20; count += 1) {
   const now = start + 5_000 + count * 1_000;
   assert.equal(begin(state, now), "allowed");
   finish(state, now + 100, true);
 }
-check(state.successfulCount === 40, "Exactly forty successful responses must be counted");
-check(begin(state, fixedReset - 1) === "rolling", "The forty-first request must be blocked before reset");
-check(state.successfulCount === 40, "A blocked request must not change usage");
+check(state.successfulCount === 20, "Exactly twenty successful responses must be counted");
+check(begin(state, fixedReset - 1) === "rolling", "The twenty-first request must be blocked before reset");
+check(state.successfulCount === 20, "A blocked request must not change usage");
 check(begin(state, fixedReset) === "allowed", "A request must be allowed at the authoritative reset instant");
 check(state.successfulCount === 0 && state.resetAt === null, "Expired state must normalize before the next success");
 finish(state, fixedReset + 250, true);

@@ -290,7 +290,7 @@ function UsageCard({
           </button>
         )}
       </div>
-      <div className="ai-usage-track" role="progressbar" aria-valuemin={0} aria-valuemax={usage?.limit ?? 40} aria-valuenow={isUnconfigured ? 0 : (usage?.used ?? 0)}>
+      <div className="ai-usage-track" role="progressbar" aria-valuemin={0} aria-valuemax={usage?.limit ?? 20} aria-valuenow={isUnconfigured ? 0 : (usage?.used ?? 0)}>
         <span style={{ width: `${percent}%` }} />
       </div>
       <div className="ai-usage-meta">
