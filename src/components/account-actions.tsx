@@ -29,7 +29,7 @@ function ConfirmationPhraseInput({ value, onChange }: { value: string; onChange:
 export function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
   const { deleteUserAccount } = useAppState();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [step, setStep] = useState<"warning" | "confirm">("warning");
   const [phrase, setPhrase] = useState("");
   const [error, setError] = useState("");
@@ -55,7 +55,9 @@ export function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose:
     router.refresh();
   };
 
-  const requiredPhrase = language === "th" ? "ลบบัญชี" : "DELETE";
+  // One phrase in both languages: the product name is what the dialog asks
+  // for, so it does not change when the interface language does.
+  const requiredPhrase = "talevo";
 
   return (
     <BottomSheet open={open} title={step === "warning" ? t("settings.deleteDialogTitle") : t("settings.deleteConfirmTitle")} onClose={close}>
