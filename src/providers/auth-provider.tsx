@@ -362,7 +362,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async (): Promise<AuthResult> => {
     try {
-      const { error } = await supabase.auth.signOut();
+      // "local" ends the session on this device only. The default is "global",
+      // which revokes the refresh token everywhere, so signing out on a phone
+      // also signed the same account out on a laptop that was left open.
+      const { error } = await supabase.auth.signOut({ scope: "local" });
       return { error: error ? authErrorMessage(error.code) : null };
     } catch {
       return { error: networkErrorMessage };

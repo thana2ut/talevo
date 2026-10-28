@@ -202,3 +202,21 @@
     top: calc(22px + max(env(safe-area-inset-top), 22px));
   }
 }
+
+/* The page heading is a row that wraps on a phone, and its action column
+   sized itself to the button instead of to the row. The import button ended
+   up 217px wide under a 358px title, beside a 358px view switcher and 358px
+   cards - the one element on the page that did not share the column's edges. */
+@media (max-width: 699px) {
+  html .schedule-heading,
+  html .tasks-heading {
+    /* The heading resolves to a grid here, so the single column has to be
+       declared: its automatic track sized itself to the button's text and
+       the row's own width:100% then resolved against that narrow track. */
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+
+  html .schedule-heading-actions,
+  html .tasks-heading-actions { width: 100%; }
+}
