@@ -58,9 +58,12 @@ check(plan.eligibleForUploadAfterDeployment, "valid owned v8 data should be elig
 check(plan.issues.filter((issue) => issue.severity === "error").length === 0, "valid preview should have no validation errors");
 check(plan.counts.tasks === 1 && plan.counts.task_subtasks === 1 && plan.counts.task_attachments === 1, "preview counts must include parent and child rows");
 check(plan.payload.tables.tasks[0].id === "task-stable" && plan.payload.tables.task_subtasks[0].task_id === "task-stable", "stable Task identity must be preserved");
-check(plan.payload.tables.finance_transactions[0].category_id === "category-stable", "Finance relation must use stable category ID");
+// Finance was retired, so normalization clears these before a plan is built.
+// Asserting they arrive empty is what keeps a removed domain from creeping
+// back into an upload.
+check(plan.payload.tables.finance_transactions.length === 0 && plan.payload.tables.finance_categories.length === 0, "Retired finance data must not reach the cloud payload");
 check(plan.payload.tables.class_schedules.some((row) => row.day === 5 && row.end_time === "24:00") && plan.payload.tables.class_schedules.some((row) => row.day === 6 && row.start_time === "00:00"), "weekend and 24:00 schedules must survive the local-to-cloud payload unchanged");
-check(plan.financeTotals.expense === 50 && plan.financeTotals.remaining === -50, "Finance totals must preserve income - expense - saving");
+check(plan.financeTotals.expense === 0 && plan.financeTotals.income === 0, "Retired finance totals must stay at zero");
 check(!JSON.stringify(plan.payload).includes("not-uploaded@example.test"), "Auth email must not be duplicated in migration payload");
 check(!JSON.stringify(plan.payload).includes("user_id"), "client payload must never provide trusted user_id fields");
 check(LOCAL_V8_TABLE_ORDER.every((table) => Array.isArray(plan.payload.tables[table])), "every active normalized table must have an array payload");
@@ -74,10 +77,10 @@ const duplicate = createLocalV8MigrationPlan({ ...snapshot, tasks: [snapshot.tas
 check(duplicate.blockingReasons.includes("duplicate_cloud_key_detected"), "duplicate stable IDs must be rejected");
 const orphan = createLocalV8MigrationPlan({ ...snapshot, tasks: [{ ...snapshot.tasks[0], attachments: [{ ...snapshot.tasks[0].attachments[0], taskId: "missing-task" }] }] }, userA, confirmed);
 check(orphan.blockingReasons.includes("orphan_task_attachment"), "orphan attachment relation must be rejected");
-const invalidFinance = createLocalV8MigrationPlan({ ...snapshot, financeTransactions: [{ ...snapshot.financeTransactions[0], amount: -1 }] }, userA, confirmed);
-check(invalidFinance.blockingReasons.includes("invalid_money_value"), "invalid money must block upload");
-const missingCategory = createLocalV8MigrationPlan({ ...snapshot, financeTransactions: [{ ...snapshot.financeTransactions[0], category: "ไม่มี" }] }, userA, confirmed);
-check(missingCategory.blockingReasons.includes("finance_transaction_category_is_missing"), "missing Finance category must block upload");
+// The finance validation paths can no longer be reached: normalization empties
+// financeTransactions before a plan is built, so there is no row left to make
+// invalid. The guard that matters now is the one above - that the retired
+// domain arrives empty rather than carrying rows into an upload.
 const removed = createLocalV8MigrationPlan({ ...snapshot, studyBlocks: [{ id: "removed" }] }, userA, confirmed);
 check(removed.blockingReasons.includes("removed_top_level_feature_data_detected"), "removed feature data must never become active cloud data");
 
@@ -100,16 +103,14 @@ function mockClient(tables) {
 (async () => {
   const cloudRows = cloudRowsFromPlan(plan);
   const verified = await verifyCloudReadBack(mockClient(cloudRows), plan);
-  check(verified.verified && verified.errors.length === 0, "read-back must verify counts, IDs, relations and Finance totals");
-  const changed = cloudRowsFromPlan(plan);
-  changed.finance_transactions[0].amount = 999;
-  const mismatchReadBack = await verifyCloudReadBack(mockClient(changed), plan);
-  check(!mismatchReadBack.verified && mismatchReadBack.errors.includes("finance_total_mismatch:expense"), "read-back must reject Finance mismatches");
+  check(verified.verified && verified.errors.length === 0, "read-back must verify counts, IDs and relations");
+  // Exams and grade plans were retired alongside finance, so their child rows
+  // never reach a payload. Task subtasks are the surviving child relation and
+  // carry the same drift check.
   const changedChildren = cloudRowsFromPlan(plan);
-  changedChildren.exam_topics[0].completed = true;
-  changedChildren.grade_components[0].earned_score = 10;
+  changedChildren.task_subtasks[0].completed = true;
   const childMismatch = await verifyCloudReadBack(mockClient(changedChildren), plan);
-  check(!childMismatch.verified && childMismatch.errors.includes("field_mismatch:exam_topics.completed") && childMismatch.errors.includes("field_mismatch:grade_components.earned_score"), "read-back must compare Exam topic and Grade component values, not only IDs");
+  check(!childMismatch.verified && childMismatch.errors.includes("field_mismatch:task_subtasks.completed"), "read-back must compare child row values, not only IDs");
   const normalizedTimestamps = cloudRowsFromPlan(plan);
   normalizedTimestamps.tasks[0].due_date = "2026-09-30T03:00:00+00:00";
   const timestampEquivalent = await verifyCloudReadBack(mockClient(normalizedTimestamps), plan);

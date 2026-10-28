@@ -69,9 +69,15 @@ check(authSource.includes('mode === "login" && form.password.length < 8'), "logi
 const authProviderSource = fs.readFileSync(path.join(projectRoot, "src/providers/auth-provider.tsx"), "utf8");
 const confirmRouteSource = fs.readFileSync(path.join(projectRoot, "src/app/auth/confirm/route.ts"), "utf8");
 
-// 1 & 2: signUp normal flow without emailRedirectTo and returns immediate session
+// 1 & 2: signUp points its confirmation link at the callback and returns an
+// immediate session when confirmation is switched off.
+//
+// This once asserted the opposite. Without emailRedirectTo Supabase falls back
+// to the project Site URL, so the link in the confirmation email landed on /
+// instead of /auth/confirm, where the token is exchanged, and confirming an
+// address silently failed.
 const signUpFnSource = authProviderSource.slice(authProviderSource.indexOf("const signUp ="), authProviderSource.indexOf("const resendConfirmation ="));
-check(!signUpFnSource.includes("emailRedirectTo"), "normal signUp must not require emailRedirectTo");
+check(signUpFnSource.includes("emailRedirectTo: getEmailConfirmationRedirectUrl()"), "signUp must send its confirmation link to the auth callback");
 check(authProviderSource.includes("requiresEmailConfirmation: !data.session"), "signUp must evaluate confirmation requirement based on session presence");
 check(authProviderSource.includes("userId: data.user?.id ?? null"), "signUp must return userId on success");
 check(authProviderSource.includes("identities.length === 0"), "signUp must detect empty identities array when user already exists");

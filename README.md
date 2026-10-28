@@ -1,48 +1,67 @@
 # TALEVO — Your Academic OS
 
-ตัวช่วยจัดการการเรียนที่เข้าใจนิสิตที่สุด โปรเจกต์นี้เป็น UI/UX foundation ที่ทำงานด้วย typed local state ภายใน browser session โดยยังไม่เชื่อม authentication, database, Supabase หรือ AI API จริง
+ตัวช่วยจัดการการเรียนสำหรับนิสิต จัดตารางเรียน งาน และเป้าหมายไว้ในที่เดียว พร้อมผู้ช่วย AI
+
+**เว็บใช้งานจริง:** https://talevoo.vercel.app
 
 ## Technology
 
-- Next.js 16 (App Router)
-- React 19
-- TypeScript
-- Tailwind CSS 4
-- lucide-react
+- Next.js 16 (App Router) + React 19 + TypeScript
+- Tailwind CSS 4, lucide-react
+- Supabase — Auth และ Postgres (project `talevo-sg`, ap-southeast-1)
+- Groq — ผู้ให้บริการ AI (สลับไป Gemini ได้ด้วย `TALEVO_AI_PROVIDER`)
+- Vercel — deployment (region `sin1`)
 
-## เริ่มใช้งาน
+## เริ่มพัฒนา
 
-ตรวจว่า PowerShell อยู่ที่โฟลเดอร์ `C:\Users\asus\talevo` แล้วรันทีละบรรทัด:
-
-```powershell
+```bash
 npm install
+cp .env.example .env.local   # แล้วเติมค่าจริง
 npm run dev
 ```
 
 เปิด `http://localhost:3000`
 
+> `npm run build` ต้องมีค่า `NEXT_PUBLIC_SUPABASE_*` ไม่งั้นจะล้มตอน prerender หน้า `/profile`
+
+## Environment variables
+
+| ตัวแปร | ฝั่ง | ใช้ทำอะไร |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | เบราว์เซอร์ | ที่อยู่โปรเจกต์ Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | เบราว์เซอร์ | คีย์สาธารณะ ปลอดภัยที่จะส่งไปกับหน้าเว็บ |
+| `SUPABASE_SECRET_KEY` | เซิร์ฟเวอร์ | ใช้ตอนผู้ใช้ลบบัญชีตัวเองเท่านั้น **ห้ามหลุด** |
+| `TALEVO_AI_PROVIDER` | เซิร์ฟเวอร์ | `groq` หรือ `gemini` |
+| `GROQ_API_KEY` / `GEMINI_API_KEY` | เซิร์ฟเวอร์ | คีย์ของผู้ให้บริการที่เลือก **ห้ามหลุด** |
+| `TALEVO_AI_MODEL` | เซิร์ฟเวอร์ | ทับชื่อโมเดลเริ่มต้น (ไม่ใส่ก็ได้) |
+
 ## ตรวจคุณภาพ
 
-```powershell
+```bash
 npm run lint
 npm run typecheck
 npm run build
-git diff --check
+npm run qa:auth        # และ qa:* ตัวอื่น ดูรายการใน package.json
 ```
+
+ชุด `qa:*` เป็นสคริปต์ Node ที่อ่านซอร์สและจำลองตรรกะ ไม่ต้องต่อเน็ต
 
 ## โครงสร้างสำคัญ
 
-- `src/app` — App Router pages
-- `src/components` — reusable UI, navigation และ domain cards
-- `src/features` — page-level feature modules
-- `src/lib/app-state-defaults.ts` — production clean-slate defaults และ system configuration
-- `src/providers/app-state-provider.tsx` — state abstraction สำหรับ UI
-- `src/styles` — shared responsive feature styles
-- `src/types` — shared data types
+- `src/app` — App Router pages และ API routes
+- `src/components` — UI ที่ใช้ร่วมกัน และโครงหน้าจอ
+- `src/features` — โมดูลระดับหน้า
+- `src/lib` — ตรรกะโดเมน (`ai/`, `alerts/`, `supabase/`, `persistence/`, `timetable/`)
+- `src/providers` — app state, auth, language
+- `src/styles` — สไตล์ที่ใช้ร่วมกันและการจัดหน้าจอตามขนาดอุปกรณ์
+- `supabase/migrations` — schema, RLS และฟังก์ชันฐานข้อมูล
+- `docs/` — เอกสารแยกตามหมวด ดู `docs/README.md`
 
-## ข้อจำกัดของระยะนี้
+## สิ่งที่ควรรู้
 
-- state ถูกบันทึกใน browser ด้วย AppState schema v8 และมี primary/backup snapshot
-- login/register ใช้ Supabase Auth และแยก AppState ในอุปกรณ์ตามบัญชี
-- AI ใช้คำตอบแบบ rule-based จากข้อมูลที่ผู้ใช้บันทึกในอุปกรณ์ ยังไม่เชื่อมบริการ AI ภายนอก
-- มาสคอต canonical อยู่ที่ `public/assets/mascot/` และเรียกผ่าน shared `TalevoMascot` component
+- AppState schema v8 เก็บใน browser พร้อม snapshot สำรอง และซิงก์ขึ้น Supabase
+- ทุกตารางเปิด Row Level Security ผู้ใช้เห็นเฉพาะข้อมูลตัวเอง
+- โควตา AI จำกัด 20 คำตอบต่อ 24 ชั่วโมงต่อบัญชี บังคับที่ฐานข้อมูล
+- ลืมรหัสผ่านใช้รหัส 8 หลักทางอีเมล ต้องตั้ง **Email OTP Length = 8** ใน Supabase ให้ตรงกัน
+- การแจ้งเตือนทำงานในเบราว์เซอร์ขณะเปิดเว็บอยู่ ยังไม่มีระบบ push จากเซิร์ฟเวอร์
+- มาสคอตอยู่ที่ `public/assets/mascot/` เรียกผ่านคอมโพเนนต์ `TalevoMascot`
