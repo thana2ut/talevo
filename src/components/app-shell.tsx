@@ -61,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated && !isPublicRoute) {
-      router.replace(`/login?auth-error=authentication-required&next=${encodeURIComponent(pathname)}`);
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
   }, [isAuthenticated, isAuthLoading, isPublicRoute, pathname, router]);
 

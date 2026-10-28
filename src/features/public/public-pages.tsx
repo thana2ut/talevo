@@ -117,7 +117,6 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
       if (authError === "expired-recovery") setLoginError("ลิงก์ตั้งรหัสผ่านหมดอายุหรือถูกใช้ไปแล้ว กรุณาขอลิงก์ใหม่");
       if (authError === "callback-failed") setLoginError("ระบบตรวจสอบลิงก์ยืนยันไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่");
       if (authError === "confirmation-session") setLoginError("ยืนยันอีเมลสำเร็จ แต่ระบบปิดเซสชันชั่วคราวไม่สำเร็จ กรุณาปิดหน้านี้แล้วเข้าสู่ระบบใหม่");
-      if (authError === "authentication-required") setLoginError("เซสชันหมดอายุหรือยังไม่ได้เข้าสู่ระบบ กรุณาเข้าสู่ระบบอีกครั้ง");
       if (params.get("confirmed") === "1") setLoginNotice("ยืนยันอีเมลสำเร็จแล้ว กรุณาเข้าสู่ระบบ");
       if (params.get("password-updated") === "1") setLoginNotice("ตั้งรหัสผ่านใหม่สำเร็จแล้ว กรุณาเข้าสู่ระบบ");
     }, 0);

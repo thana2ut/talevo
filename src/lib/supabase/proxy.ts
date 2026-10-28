@@ -79,8 +79,11 @@ export async function updateSession(request: NextRequest) {
 
   if (isProtectedRoute && !isAuthenticated) {
     const loginUrl = new URL("/login", request.url);
+    // No auth-error here: being signed out is the ordinary state for someone
+    // who just logged out, deleted their account, or opened a bookmark, and an
+    // alarming banner on the login page reads as a fault. `next` still carries
+    // them back to the page they asked for once they sign in.
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
-    loginUrl.searchParams.set("auth-error", "authentication-required");
     return NextResponse.redirect(loginUrl);
   }
 
