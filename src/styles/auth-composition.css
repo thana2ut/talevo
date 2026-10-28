@@ -392,3 +392,42 @@
     animation: none;
   }
 }
+
+/* The auth pages clip their own overflow so the decorative glows stay inside
+   the frame. That clipping also cut the card itself whenever the card was
+   taller than the panel — the registration step, with its progress bar and
+   four fields, hit this on shorter desktop windows and lost its footer.
+   The panel scrolls its own overflow instead, and `safe` centring keeps the
+   card's top reachable rather than pushing it above the panel. */
+@media (min-width: 900px) {
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel {
+    align-content: safe center;
+    justify-items: center;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  /* Vertical padding belongs to the card's own box here. On the panel it is
+     collapsed away by the scroll container, leaving the card flush with the
+     frame at both ends. */
+  .auth-page-login .auth-card,
+  .auth-page-register .auth-card,
+  .auth-page-forgot .auth-card {
+    margin-block: auto;
+    max-width: 470px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 899px) and (min-height: 760px) {
+  .auth-page-login .auth-panel,
+  .auth-page-register .auth-panel,
+  .auth-page-forgot .auth-panel {
+    align-content: safe center;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
