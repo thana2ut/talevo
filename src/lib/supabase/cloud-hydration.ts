@@ -161,18 +161,6 @@ export function hydrateCloudAccountToAppState(
     subtaskCount: numberValue(row, "subtask_count"),
   }));
 
-  const courseNotes = (tables.course_notes ?? []).map((row) => ({
-    id: stringValue(row, "id"),
-    courseId: stringValue(row, "course_id"),
-    title: stringValue(row, "title"),
-    content: stringValue(row, "content"),
-    tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
-    pinned: booleanValue(row, "pinned"),
-    ...(optionalString(row, "class_date") ? { classDate: optionalString(row, "class_date") } : {}),
-    createdAt: stringValue(row, "created_at"),
-    updatedAt: stringValue(row, "updated_at"),
-  }));
-
   const selectedFinanceMonth = stringValue(
     financeSettingsRow,
     "selected_month",
@@ -258,7 +246,6 @@ export function hydrateCloudAccountToAppState(
       taskCompletionHistory,
       exams: [],
       gradePlans: [],
-      courseNotes,
       financeCategories: [],
       financeTransactions: [],
       savingGoals: [],

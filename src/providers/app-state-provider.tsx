@@ -22,8 +22,6 @@ import type {
   NewFinanceTransactionInput,
   SavingGoal,
   FinanceCategory,
-  CourseNote,
-  NewCourseNoteInput,
   CourseGradePlan,
   NewExamInput,
   TaskAttachment,
@@ -149,16 +147,11 @@ interface AppStateValue {
   addFinanceCategory: (value: Omit<FinanceCategory, "id">) => string;
   updateFinanceCategory: (id: string, value: Partial<Omit<FinanceCategory, "id">>) => void;
   deleteFinanceCategory: (id: string) => boolean;
-  courseNotes: CourseNote[];
   gradePlans: CourseGradePlan[];
   addExam: (value: NewExamInput) => string;
   updateExam: (id: string, value: Partial<NewExamInput>) => void;
   deleteExam: (id: string) => void;
   toggleExamTopic: (examId: string, topicId: string) => void;
-  addCourseNote: (value: NewCourseNoteInput) => string;
-  updateCourseNote: (id: string, value: Partial<NewCourseNoteInput>) => void;
-  deleteCourseNote: (id: string) => void;
-  toggleNotePinned: (id: string) => void;
   upsertGradePlan: (courseId: string, value: Omit<CourseGradePlan, "id" | "courseId">) => void;
 }
 
@@ -240,7 +233,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [financeSettings, setFinanceSettings] = useState<FinanceSettings>(defaultAppState.financeSettings);
   const [financeCategories, setFinanceCategories] = useState<FinanceCategory[]>(defaultAppState.financeCategories);
   const [exams, setExams] = useState<Exam[]>(defaultAppState.exams);
-  const [courseNotes, setCourseNotes] = useState<CourseNote[]>(defaultAppState.courseNotes);
   const [gradePlans, setGradePlans] = useState<CourseGradePlan[]>(defaultAppState.gradePlans);
   const [selectedFinanceMonth, setSelectedFinanceMonth] = useState(() => getLocalMonthKey());
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
@@ -276,7 +268,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setTaskCompletionHistory(snapshot.taskCompletionHistory);
     setExams(snapshot.exams);
     setGradePlans(snapshot.gradePlans);
-    setCourseNotes(snapshot.courseNotes);
     setFinanceTransactions(snapshot.financeTransactions);
     setSavingGoals(snapshot.savingGoals);
     setFinanceSettings(snapshot.financeSettings);
@@ -431,7 +422,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     taskCompletionHistory,
     exams,
     gradePlans,
-    courseNotes,
     financeTransactions,
     savingGoals,
     financeSettings,
@@ -443,7 +433,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     projects,
     chat,
     selectedFinanceMonth,
-  }), [academicTerm, chat, courseNotes, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, notifications, profile, projects, savingGoals, schedules, selectedFinanceMonth, settings, taskCompletionHistory, tasks]);
+  }), [academicTerm, chat, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, notifications, profile, projects, savingGoals, schedules, selectedFinanceMonth, settings, taskCompletionHistory, tasks]);
 
   useEffect(() => {
     if (!isCurrentScopeHydrated) return;
@@ -579,7 +569,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     schedules,
     notifications,
     exams,
-    courseNotes,
     gradePlans,
     projects,
     chat,
@@ -1057,10 +1046,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         runCloudMutation((client, uid) => persistExam(client, uid, ex));
       }
     },
-    addCourseNote: (input) => { const id = uid("note"); const now = new Date().toISOString(); setCourseNotes((current) => [{ ...input, id, createdAt: now, updatedAt: now }, ...current]); return id; },
-    updateCourseNote: (id, next) => setCourseNotes((current) => current.map((note) => note.id === id ? { ...note, ...next, updatedAt: new Date().toISOString() } : note)),
-    deleteCourseNote: (id) => setCourseNotes((current) => current.filter((note) => note.id !== id)),
-    toggleNotePinned: (id) => setCourseNotes((current) => current.map((note) => note.id === id ? { ...note, pinned: !note.pinned, updatedAt: new Date().toISOString() } : note)),
     upsertGradePlan: (courseId, next) => {
       let targetPlan: CourseGradePlan | null = null;
       setGradePlans((current) => {
@@ -1079,7 +1064,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         runCloudMutation((client, uid) => persistGradePlan(client, uid, gp));
       }
     },
-  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, courseNotes, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
+  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

@@ -55,7 +55,6 @@ const SELECT_COLUMNS: Record<LocalV8TableName, string> = {
   grade_plans: "user_id,id,course_id,target_grade",
   grade_components: "user_id,grade_plan_id,id,name,weight,max_score,earned_score,note,position",
   grade_thresholds: "user_id,grade_plan_id,label,minimum_percent,position",
-  course_notes: "user_id,id,course_id,title,content,tags,pinned,class_date,created_at,updated_at",
   finance_categories: "user_id,id,name,type,icon,color,monthly_budget,created_at,is_default",
   finance_transactions: "user_id,id,type,title,amount,category_id,date,note",
   saving_goals: "user_id,id,title,target_amount,saved_amount",

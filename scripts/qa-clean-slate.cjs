@@ -31,7 +31,7 @@ const read = (file) => fs.readFileSync(path.join(projectRoot, file), "utf8");
 const baseline = createEmptyAccountAppState();
 const emptyCollections = [
   "schedules", "tasks", "taskCompletionHistory", "exams", "gradePlans",
-  "courseNotes", "financeTransactions", "savingGoals",
+  "financeTransactions", "savingGoals",
   "financeCategories", "notifications", "dismissedNotificationEventKeys", "projects", "chat",
 ];
 for (const field of emptyCollections) {

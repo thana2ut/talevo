@@ -31,7 +31,6 @@ export function createEmptyAccountAppState(
     taskCompletionHistory: [],
     exams: [],
     gradePlans: [],
-    courseNotes: [],
     financeTransactions: [],
     savingGoals: [],
     financeSettings: { dailyBudget: 0 },

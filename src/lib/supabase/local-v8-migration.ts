@@ -10,7 +10,7 @@ export const CLOUD_IMPORT_RELEASE_ENABLED = false as const;
 export const LOCAL_V8_TABLE_ORDER = [
   "profiles", "academic_terms", "class_schedules", "tasks", "task_subtasks",
   "task_attachments", "task_completion_history", "exams", "exam_topics",
-  "grade_plans", "grade_components", "grade_thresholds", "course_notes",
+  "grade_plans", "grade_components", "grade_thresholds",
   "finance_categories", "finance_transactions",
   "saving_goals", "finance_settings", "learning_goals", "notifications",
   "dismissed_notification_events", "app_settings", "chat_messages",
@@ -128,7 +128,7 @@ function collectSafetyIssues(snapshot: PersistedAppState, ownership: LocalMigrat
   const idCollections: Array<[string, string[]]> = [
     ["schedules", snapshot.schedules.map((item) => item.id)], ["tasks", snapshot.tasks.map((item) => item.id)],
     ["taskCompletionHistory", snapshot.taskCompletionHistory.map((item) => item.id)], ["exams", snapshot.exams.map((item) => item.id)],
-    ["gradePlans", snapshot.gradePlans.map((item) => item.id)], ["courseNotes", snapshot.courseNotes.map((item) => item.id)],
+    ["gradePlans", snapshot.gradePlans.map((item) => item.id)],
     ["financeCategories", snapshot.financeCategories.map((item) => item.id)],
     ["financeTransactions", snapshot.financeTransactions.map((item) => item.id)], ["savingGoals", snapshot.savingGoals.map((item) => item.id)],
     ["notifications", snapshot.notifications.map((item) => item.id)], ["chat", snapshot.chat.map((item) => item.id)],
@@ -173,7 +173,6 @@ function collectSafetyIssues(snapshot: PersistedAppState, ownership: LocalMigrat
     if (exam.endAt && new Date(toCloudTimestamp(exam.startAt)) >= new Date(toCloudTimestamp(exam.endAt))) addIssue(issues, "invalid_exam_range", `exams[${index}]`, "เวลาสิ้นสุดสอบต้องอยู่หลังเวลาเริ่ม");
     exam.topics.forEach((topic, topicIndex) => { if (!validTimestamp(topic.completedAt)) addIssue(issues, "invalid_timestamp", `exams[${index}].topics[${topicIndex}].completedAt`, "เวลาทำหัวข้อสอบเสร็จไม่ถูกต้อง"); });
   });
-  snapshot.courseNotes.forEach((note, index) => { if (!validTimestamp(note.createdAt, true) || !validTimestamp(note.updatedAt, true) || note.classDate !== undefined && !validDate(note.classDate)) addIssue(issues, "invalid_note_date", `courseNotes[${index}]`, "วันที่ของโน้ตไม่ถูกต้อง"); });
   snapshot.financeTransactions.forEach((transaction, index) => {
     if (!validMoney(transaction.amount, false)) addIssue(issues, "invalid_money_value", `financeTransactions[${index}].amount`, "จำนวนเงินต้องมากกว่า 0 และอยู่ในช่วงที่ Cloud รองรับ");
     if (!validDate(transaction.date)) addIssue(issues, "invalid_finance_date", `financeTransactions[${index}].date`, "วันที่รายการเงินไม่ถูกต้อง");
@@ -218,7 +217,6 @@ function buildTables(snapshot: PersistedAppState): Record<LocalV8TableName, Migr
     grade_plans: snapshot.gradePlans.map((row) => ({ id: row.id, course_id: row.courseId, target_grade: row.targetGrade ?? null })),
     grade_components: snapshot.gradePlans.flatMap((plan) => plan.components.map((row, position) => ({ grade_plan_id: plan.id, id: row.id, name: row.name, weight: row.weight, max_score: row.maxScore, earned_score: row.earnedScore ?? null, note: row.note ?? null, position }))),
     grade_thresholds: snapshot.gradePlans.flatMap((plan) => plan.thresholds.map((row, position) => ({ grade_plan_id: plan.id, label: row.label, minimum_percent: row.minimumPercent, position }))),
-    course_notes: snapshot.courseNotes.map((row) => ({ id: row.id, course_id: row.courseId, title: row.title, content: row.content, tags: row.tags, pinned: row.pinned, class_date: row.classDate ?? null, created_at: toCloudTimestamp(row.createdAt), updated_at: toCloudTimestamp(row.updatedAt) })),
     finance_categories: snapshot.financeCategories.map((row) => ({ id: row.id, name: row.name, type: row.type, icon: row.icon, color: row.color, monthly_budget: row.monthlyBudget ?? null, created_at: row.createdAt ? toCloudTimestamp(row.createdAt) : null, is_default: row.isDefault ?? false })),
     finance_transactions: snapshot.financeTransactions.map((row) => ({ id: row.id, type: row.type, title: row.title, amount: row.amount, category_id: financeCategoryIdByName.get(normalizedCategoryName(row.category)) ?? null, date: row.date, note: row.note ?? null })),
     saving_goals: snapshot.savingGoals.map((row) => ({ id: row.id, title: row.title, target_amount: row.targetAmount, saved_amount: row.savedAmount })),

@@ -86,8 +86,6 @@ export interface ExamTopic { id: string; title: string; completed: boolean; comp
 export interface Exam { id: string; courseId: string; title: string; type: ExamType; startAt: string; endAt?: string; room?: string; note?: string; topics: ExamTopic[]; completedAt?: string; createdAt: string; updatedAt: string; }
 export type NewExamInput = Omit<Exam, "id" | "createdAt" | "updatedAt" | "completedAt">;
 
-export interface CourseNote { id: string; courseId: string; title: string; content: string; tags: string[]; pinned: boolean; classDate?: string; createdAt: string; updatedAt: string; }
-export type NewCourseNoteInput = Omit<CourseNote, "id" | "createdAt" | "updatedAt">;
 
 
 export interface GradeComponent { id: string; name: string; weight: number; maxScore: number; earnedScore?: number; note?: string; }

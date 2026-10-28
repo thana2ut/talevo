@@ -5,7 +5,6 @@ import type {
   ChatMessage,
   ClassSchedule,
   CourseGradePlan,
-  CourseNote,
   Exam,
   FinanceCategory,
   FinanceSettings,
@@ -57,7 +56,6 @@ export interface PersistedAppState {
   taskCompletionHistory: TaskCompletionHistory[];
   exams: Exam[];
   gradePlans: CourseGradePlan[];
-  courseNotes: CourseNote[];
   financeTransactions: FinanceTransaction[];
   savingGoals: SavingGoal[];
   financeSettings: FinanceSettings;
@@ -305,7 +303,6 @@ export function normalizePersistedState(rawState: unknown, defaults: AppStateDef
     taskCompletionHistory: normalizeArray<TaskCompletionHistory>(migrated.taskCompletionHistory, defaults.taskCompletionHistory, (item) => hasStringId(item) && isString(item.originalTaskId) && isString(item.completedAt)),
     exams: [],
     gradePlans: [],
-    courseNotes: normalizeArray<CourseNote>(migrated.courseNotes, defaults.courseNotes, (item) => hasStringId(item) && isString(item.courseId) && isString(item.title)),
     financeTransactions: [],
     savingGoals: [],
     financeSettings: defaults.financeSettings,
