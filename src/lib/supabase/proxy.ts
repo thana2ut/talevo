@@ -16,10 +16,27 @@ const protectedRoutePrefixes = [
   "/today",
 ];
 
-const authCheckTimeoutMs = 1500;
+// Long enough for a cold start on a mobile network. A slow check no longer
+// signs anyone out, so there is no reason to cut it short.
+const authCheckTimeoutMs = 5000;
+
+// Supabase stores the session as sb-<project-ref>-auth-token, split across
+// .0/.1 suffixes once it outgrows a single cookie.
+const authCookiePattern = /^sb-.+-auth-token(\.\d+)?$/;
 
 function matchesRoute(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * Whether this device has a session stored at all.
+ *
+ * It says nothing about whether the session is still valid - only Auth can -
+ * but it separates "never signed in here" from "signed in, and we have yet to
+ * check", and those two deserve different treatment.
+ */
+function hasStoredSession(request: NextRequest) {
+  return request.cookies.getAll().some((cookie) => authCookiePattern.test(cookie.name));
 }
 
 function fetchWithAuthTimeout(input: RequestInfo | URL, init?: RequestInit) {
@@ -41,6 +58,15 @@ export async function updateSession(request: NextRequest) {
   }
   if (matchesRoute(pathname, "/grades")) {
     return NextResponse.redirect(new URL("/tasks", request.url));
+  }
+
+  // The app on a home screen launches at "/", so sending everyone to the
+  // welcome page from there showed the sign-in screen on every launch, however
+  // long the session still had to run. Someone carrying a session belongs in
+  // the app; "/welcome" stays reachable for anyone who asks for it by name.
+  if (pathname === "/") {
+    const destination = hasStoredSession(request) ? "/today" : "/welcome";
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   const isProtectedRoute = protectedRoutePrefixes.some((prefix) => matchesRoute(pathname, prefix));
@@ -68,13 +94,24 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  let isAuthenticated = false;
-  try {
-    const { data, error } = await supabase.auth.getClaims();
-    isAuthenticated = !error && Boolean(data?.claims?.sub);
-  } catch {
-    // Fail closed for protected routes without leaving the navigation blocked by a network retry.
-    isAuthenticated = false;
+  const hasSessionCookie = hasStoredSession(request);
+
+  // Start optimistic. A stored session is the normal state for someone
+  // reopening the app, and the only thing that should end it is Auth saying so
+  // - not a slow network. The app shell checks again in the browser and sends
+  // them to Login if the session really is gone, while RLS and the API routes
+  // remain the actual guard on their data.
+  let isAuthenticated = hasSessionCookie;
+
+  if (hasSessionCookie) {
+    try {
+      const { data, error } = await supabase.auth.getClaims();
+      // Only a definite answer overrides the stored session: an aborted or
+      // failed request tells us about the connection, not the account.
+      if (!error) isAuthenticated = Boolean(data?.claims?.sub);
+    } catch {
+      // Cold start on a phone network. Let them through on the cookie.
+    }
   }
 
   if (isProtectedRoute && !isAuthenticated) {

@@ -177,7 +177,13 @@ check(!appShell.includes("LocalOwnershipGate"), "Normal authenticated startup mu
 check(appStateProvider.includes("adoptExistingLocalData"), "Explicit adoption mechanism must remain available for legacy data");
 check(appShell.includes('"/resend-confirmation"'), "The resend confirmation page must remain public before authentication");
 check(proxy.includes("getClaims()") && proxy.includes("isProtectedRoute && !isAuthenticated"), "Protected routes must reject users without a valid Supabase claim");
-check(proxy.includes("authCheckTimeoutMs = 1500") && proxy.includes("fetchWithAuthTimeout") && proxy.includes("if (!isProtectedRoute)"), "Public routes must not wait for Auth and protected-route checks must have a bounded timeout");
+check(/authCheckTimeoutMs = \d+/.test(proxy) && proxy.includes("fetchWithAuthTimeout") && proxy.includes("if (!isProtectedRoute)"), "Public routes must not wait for Auth and protected-route checks must have a bounded timeout");
+// A session must outlive a slow request. Signing someone out because the Auth
+// check timed out is what made the installed app ask for a password on every
+// cold launch.
+check(proxy.includes("hasStoredSession") && proxy.includes("let isAuthenticated = hasSessionCookie"), "A stored session must survive an Auth check that could not complete");
+check(proxy.includes("if (!error) isAuthenticated"), "Only a definite answer from Auth may end a stored session");
+check(proxy.includes('pathname === "/"') && proxy.includes('hasStoredSession(request) ? "/today" : "/welcome"'), "A signed-in launch from the home screen must open the app, not the welcome page");
 for (const route of ["/today", "/schedule", "/tasks", "/statistics", "/ai", "/notifications", "/profile", "/settings"]) {
   check(proxy.includes(`"${route}"`), `Protected route missing from Proxy: ${route}`);
 }
