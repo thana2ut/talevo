@@ -393,12 +393,14 @@
   }
 }
 
-/* The auth pages clip their own overflow so the decorative glows stay inside
-   the frame. That clipping also cut the card itself whenever the card was
-   taller than the panel — the registration step, with its progress bar and
-   four fields, hit this on shorter desktop windows and lost its footer.
-   The panel scrolls its own overflow instead, and `safe` centring keeps the
-   card's top reachable rather than pushing it above the panel. */
+/* The registration step is the tallest card here: a progress bar, a section
+   label and four fields. It used to be clipped by the pages' own overflow
+   rule, which exists to keep the decorative glows inside the frame.
+
+   Scrolling the panel fixed the clipping but put a scrollbar beside the card.
+   Instead the card now compacts as the viewport gets shorter, so it keeps
+   fitting on one screen, and the panel keeps an invisible scroll as a last
+   resort for viewports too short for even the compact sizes. */
 @media (min-width: 900px) {
   .auth-page-login .auth-panel,
   .auth-page-register .auth-panel,
@@ -407,12 +409,13 @@
     justify-items: center;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-gutter: stable both-edges;
+    scrollbar-width: none;
   }
 
-  /* Vertical padding belongs to the card's own box here. On the panel it is
-     collapsed away by the scroll container, leaving the card flush with the
-     frame at both ends. */
+  .auth-page-login .auth-panel::-webkit-scrollbar,
+  .auth-page-register .auth-panel::-webkit-scrollbar,
+  .auth-page-forgot .auth-panel::-webkit-scrollbar { width: 0; height: 0; }
+
   .auth-page-login .auth-card,
   .auth-page-register .auth-card,
   .auth-page-forgot .auth-card {
@@ -422,6 +425,21 @@
   }
 }
 
+/* Tie the card's vertical rhythm to the viewport height so the whole card
+   lands on one screen. Horizontal padding stays put: only the stacked
+   spacing needs to give way. */
+@media (min-width: 900px) and (max-height: 900px) {
+  .auth-page-register .auth-panel { padding-block: clamp(14px, 2vh, 30px); }
+  .auth-page-register .auth-card { padding-block: clamp(18px, 2.4vh, 30px); }
+  .auth-page-register .auth-card h1 { font-size: clamp(28px, 3.4vh, 36px); margin-block: clamp(6px, 1vh, 10px) clamp(2px, .5vh, 6px); }
+  .auth-page-register .auth-card > p { margin-bottom: clamp(8px, 1.4vh, 16px); }
+  .auth-page-register .auth-registration-progress { margin-bottom: clamp(8px, 1.4vh, 16px); }
+  .auth-page-register .auth-form { gap: clamp(6px, 1.1vh, 15px); }
+  .auth-page-register .auth-form .input,
+  .auth-page-register .auth-form .primary-button { min-height: clamp(42px, 5.4vh, 52px); }
+  .auth-page-register .auth-switch { margin-top: clamp(7px, 1.2vh, 14px); }
+}
+
 @media (max-width: 899px) and (min-height: 760px) {
   .auth-page-login .auth-panel,
   .auth-page-register .auth-panel,
@@ -429,5 +447,10 @@
     align-content: safe center;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: none;
   }
+
+  .auth-page-login .auth-panel::-webkit-scrollbar,
+  .auth-page-register .auth-panel::-webkit-scrollbar,
+  .auth-page-forgot .auth-panel::-webkit-scrollbar { width: 0; height: 0; }
 }
