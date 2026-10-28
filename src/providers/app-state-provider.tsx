@@ -35,6 +35,12 @@ import type { SyllabusImportPayload } from "@/lib/syllabus-import";
 import { createTaskCompletionHistory, getExpiredCompletedTasks } from "@/lib/task-retention";
 import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
 import { removeAllReadNotifications, removeReadNotification } from "@/lib/alerts/notification-deletion";
+import { disablePushOnThisDevice, enablePushOnThisDevice, syncScheduledPush } from "@/lib/push/client";
+import { buildPushSchedule } from "@/lib/push/schedule-plan";
+
+// Read once: it is inlined at build time, and referencing process.env inside a
+// callback would not survive the client bundle.
+const NEXT_PUBLIC_VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 import { claimAlertDeliveryLeadership, deliverBrowserNotificationTest, deliverNewBrowserNotifications } from "@/lib/alerts/notification-delivery";
 import {
   createAppStateSnapshot,
@@ -513,7 +519,33 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     if (settings.notificationPreferences.browserNotifications && browserNotificationPermission === "granted" && claimAlertDeliveryLeadership(window.localStorage, tabIdRef.current)) {
       void deliverNewBrowserNotifications(generated);
     }
-  }, [academicTerm, browserNotificationPermission, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks]);
+  }, [academicTerm, browserNotificationPermission, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks])
+
+  // Queue the next week of reminders so they can be delivered while the app is
+  // closed. Only the data the plan reads is in the dependencies: `now` is not,
+  // or this would rewrite the queue every minute for no change.
+  useEffect(() => {
+    if (!userId || !isCurrentScopeHydrated) return;
+    if (!settings.notificationPreferences.browserNotifications) return;
+    if (!NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
+
+    const timer = window.setTimeout(() => {
+      const plan = buildPushSchedule({
+        now: new Date(),
+        tasks,
+        schedules,
+        profile,
+        academicTerm,
+        preferences: settings.notificationPreferences,
+        language,
+      });
+      void syncScheduledPush(createClient(), userId, plan).catch(() => {
+        // The in-app alerts are unaffected; the next change retries.
+      });
+    }, 1_500);
+
+    return () => window.clearTimeout(timer);
+  }, [academicTerm, isCurrentScopeHydrated, language, profile, schedules, settings.notificationPreferences, tasks, userId]);;
 
   const adoptExistingLocalData = useCallback(() => {
     if (!userId) return;
@@ -614,6 +646,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setBrowserNotificationsEnabled: async (enabled) => {
       if (!enabled) {
         setBrowserNotificationTestStatus("idle");
+        void disablePushOnThisDevice();
         setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: false } }));
         return;
       }
@@ -641,6 +674,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       ]);
       setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: delivered } }));
       setBrowserNotificationTestStatus(delivered ? "sent" : permission === "granted" ? "failed" : "idle");
+      // Registering for push is what lets a reminder arrive with the app shut.
+      // It is deliberately not allowed to fail the toggle: in-app alerts still
+      // work without it, and the key may simply not be configured yet.
+      if (delivered && NEXT_PUBLIC_VAPID_PUBLIC_KEY) void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY);
     },
     updateGoals: (next) => setGoals((current) => ({ ...current, ...next })),
     updateAcademicTerm: (next) => {
