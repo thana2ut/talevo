@@ -62,8 +62,11 @@
   .auth-page-register .auth-hero,
   .auth-page-forgot .auth-hero {
     height: auto;
-    min-height: calc(168px + env(safe-area-inset-top));
-    padding: calc(14px + env(safe-area-inset-top)) 20px 30px;
+    /* Floor the inset the same way the other pages do: it reports 0 in a
+       browser tab, which left the brand mark 22px from the top and under the
+       status bar. */
+    min-height: calc(168px + max(env(safe-area-inset-top), 22px));
+    padding: calc(14px + max(env(safe-area-inset-top), 22px)) 20px 30px;
   }
 
   .auth-page-login .auth-hero > div.auth-hero-copy,
@@ -159,5 +162,43 @@
 
   html .app-main.app-main-ai {
     padding-bottom: calc(var(--mobile-nav-bar) + 24px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Same status-bar clearance for the pages that sit outside .app-main.
+   The signed-in pages were fixed first; welcome, the auth pages and the
+   system-state screens have their own full-height containers and still ran
+   their first row of controls under the status bar. */
+@media (max-width: 1199px) {
+  html .welcome-page {
+    padding-top: calc(16px + max(env(safe-area-inset-top), 22px));
+  }
+
+  html .system-state-page {
+    padding-top: calc(18px + max(env(safe-area-inset-top), 22px));
+  }
+}
+
+/* A tablet in landscape keeps the auth pages' two-column layout, which is
+   sized against the viewport rather than padded, so the clearance has to come
+   off the height as well as the top margin or the card is pushed off-screen.
+   Narrower widths stack instead, and their hero already carries the inset. */
+@media (min-width: 900px) and (max-width: 1199px) {
+  html .auth-page-login,
+  html .auth-page-register,
+  html .auth-page-forgot {
+    height: calc(100dvh - 40px - max(env(safe-area-inset-top), 22px));
+    margin-block: calc(20px + max(env(safe-area-inset-top), 22px)) 20px;
+  }
+}
+
+@media (max-width: 899px) {
+  /* The brand mark is absolutely positioned at top: 22px, so it ignores the
+     hero's padding and was the one thing still sitting under the status bar
+     once everything else had been moved clear. */
+  html .auth-page-login .auth-hero > a,
+  html .auth-page-register .auth-hero > a,
+  html .auth-page-forgot .auth-hero > a {
+    top: calc(22px + max(env(safe-area-inset-top), 22px));
   }
 }
