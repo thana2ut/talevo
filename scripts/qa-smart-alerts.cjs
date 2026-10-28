@@ -38,7 +38,6 @@ const defaultPreferences = {
   exam1d: true,
   examMorning: true,
   weeklyRadar: true,
-  browserNotifications: false,
 };
 const profile = { displayName: "ผู้ทดสอบ", email: "qa@example.com", major: "QA", university: "TALEVO" };
 const academicTerm = { level: "ชั้นปีที่ 2", term: "ภาคเรียนที่ 1", academicYear: "2569" };

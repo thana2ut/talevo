@@ -145,7 +145,6 @@ export interface NotificationPreferences {
   exam1d: boolean;
   examMorning: boolean;
   weeklyRadar: boolean;
-  browserNotifications: boolean;
 }
 
 export interface ChatMessage {

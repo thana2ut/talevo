@@ -67,7 +67,7 @@
 - `user_id`: มาจาก `auth.uid()` ฝั่งฐานข้อมูล
 - Auth email: มาจาก Supabase Auth ไม่ทำซ้ำใน `profiles`
 - timestamps/update fields ฝั่ง server: อาจ normalize รูปแบบแต่ต้องแทนเวลาเดียวกัน
-- `browserNotifications`: device-only และไม่ขึ้น Cloud
+- สวิตช์แจ้งเตือนของอุปกรณ์ (`talevo-device-notifications`): device-only และไม่ขึ้น Cloud
 - `projects`: compatibility/local-only และไม่ขึ้น Cloud
 - attachment binary: IndexedDB ของ browser เดิมเท่านั้น; Cloud เก็บ metadata
 

@@ -52,7 +52,7 @@ normalize ไว้แล้ว ไม่พึ่ง default ที่อาจ
 | `notifications[]` | `notifications` | notification columns | preserve stable ID + `event_key`; metadata เป็น object | optional → `null` |
 | `dismissedNotificationEventKeys[]` | `dismissed_notification_events` | `event_key` | unique tombstone | `dismissed_at=now()` |
 | `settings` (account fields) | `app_settings` | timezone/date/year/alert flags | ตรงตัว ยกเว้น browser flag | AppState normalized defaults |
-| `settings.notificationPreferences.browserNotifications` | Local only | — | device permission ไม่ upload | — |
+| สวิตช์แจ้งเตือนของอุปกรณ์ (`talevo-device-notifications`) | Local only | — | สิทธิ์และ push subscription เป็นของเครื่อง จึงไม่ upload | — |
 | notification leader lease/runtime locks | Local only | — | ไม่อยู่ใน AppState payload | — |
 | `chat[]` | `chat_messages` | `id,role,content,kind,position` | stable ID + array index | `kind → null` |
 | `projects[]` | Local compatibility | — | ไม่ upload เพราะไม่มี active feature | warning ใน preview |

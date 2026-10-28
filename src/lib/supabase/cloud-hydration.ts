@@ -216,7 +216,7 @@ export function hydrateCloudAccountToAppState(
       task12h: booleanValue(appSettingsRow, "task_12h", true),
       deadlineRisk: booleanValue(appSettingsRow, "deadline_risk", true),
       morning0600: booleanValue(appSettingsRow, "morning_0600", true),
-      daily0700: booleanValue(appSettingsRow, "daily0700", true),
+      daily0700: booleanValue(appSettingsRow, "daily_0700", true),
       class30m: booleanValue(appSettingsRow, "class_30m", true),
       classEnd10m: booleanValue(appSettingsRow, "class_end_10m", true),
       exam7d: booleanValue(appSettingsRow, "exam_7d", true),
@@ -224,7 +224,6 @@ export function hydrateCloudAccountToAppState(
       exam1d: booleanValue(appSettingsRow, "exam_1d", true),
       examMorning: booleanValue(appSettingsRow, "exam_morning", true),
       weeklyRadar: booleanValue(appSettingsRow, "weekly_radar", true),
-      browserNotifications: false,
     },
   };
 

@@ -86,6 +86,9 @@
 }
 
 .academic-timetable {
+  /* Wide enough for the longest weekday name ("พฤหัสบดี") to sit inside the
+     highlight box instead of running into the cell's edge. */
+  --timetable-day-column: 96px;
   display: flex;
   flex-direction: column;
   min-width: 1180px;
@@ -104,9 +107,9 @@
 }
 
 .timetable-corner-cell {
-  width: 88px;
-  min-width: 88px;
-  max-width: 88px;
+  width: var(--timetable-day-column);
+  min-width: var(--timetable-day-column);
+  max-width: var(--timetable-day-column);
   flex-shrink: 0;
   position: sticky;
   left: 0;
@@ -185,11 +188,16 @@
   background-color: color-mix(in srgb, var(--surface-soft) 40%, transparent);
 }
 
-/* Day Header Cell (Sticky Left) */
+/* Day Header Cell (Sticky Left)
+
+   Every day is the same white cell. Today used to be a flat purple fill that
+   ran to the card's rounded corner, so its leading edge had no frame at all
+   while the other six did. The highlight now lives in an inset box with equal
+   margins on all four sides, which reads as the same cell, only purple. */
 .timetable-day-header {
-  width: 88px;
-  min-width: 88px;
-  max-width: 88px;
+  width: var(--timetable-day-column);
+  min-width: var(--timetable-day-column);
+  max-width: var(--timetable-day-column);
   flex-shrink: 0;
   position: sticky;
   left: 0;
@@ -201,20 +209,41 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 4px;
-  gap: 2px;
+  padding: 10px 8px;
+  gap: 3px;
   cursor: pointer;
   text-align: center;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 2px 0 6px rgba(0, 0, 0, 0.02);
 }
 
-.timetable-day-header:hover {
+.timetable-day-header::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.timetable-day-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.timetable-day-header:hover::before {
   background: var(--hover-bg);
 }
 
-.timetable-day-header.is-selected {
-  background: color-mix(in srgb, var(--purple-500) 10%, var(--surface-elevated));
+.timetable-day-header.is-selected::before {
+  background: color-mix(in srgb, var(--purple-500) 7%, var(--surface-elevated));
+  border-color: color-mix(in srgb, var(--purple-500) 16%, transparent);
+}
+
+.timetable-day-header.is-today::before {
+  background: color-mix(in srgb, var(--purple-500) 11%, var(--surface-elevated));
+  border-color: color-mix(in srgb, var(--purple-500) 32%, transparent);
 }
 
 .timetable-day-header .day-name {
@@ -222,6 +251,8 @@
   font-weight: 700;
   color: var(--text-secondary);
   line-height: 1.15;
+  max-width: 100%;
+  white-space: nowrap;
 }
 
 .timetable-day-header .day-date {

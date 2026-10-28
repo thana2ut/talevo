@@ -20,3 +20,9 @@ export const LEGACY_KERNOVA_ALERT_LEADER_STORAGE_KEY = "kernova-alert-delivery-l
 
 export const TALEVO_ATTACHMENTS_DATABASE_NAME = "talevo-files";
 export const LEGACY_KERNOVA_ATTACHMENTS_DATABASE_NAME = "kernova-files";
+
+/* Device notifications are a property of the browser install, not the account:
+   permission and the push subscription both live here and cannot travel to
+   another device. Keeping the switch out of the synced AppState is what makes
+   "turn it on once" hold after a reload. */
+export const TALEVO_DEVICE_NOTIFICATIONS_KEY = "talevo-device-notifications";

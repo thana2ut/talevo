@@ -53,7 +53,7 @@ const preferences = {
   enabled: true, task24h: true, task12h: true, deadlineRisk: true,
   morning0600: true, daily0700: true, class30m: true, classEnd10m: true,
   exam7d: true, exam3d: true, exam1d: true, examMorning: true,
-  weeklyRadar: true, browserNotifications: false,
+  weeklyRadar: true,
 };
 const schedule = {
   id: "class-database", courseId: "course-database", name: "Database",

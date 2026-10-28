@@ -24,13 +24,13 @@
 .language-option-check { width: 20px; height: 20px; color: var(--purple-600); stroke-width: 3; }
 
 .settings-page .notification-settings > .setting-row { border-bottom: 0; }
-.notification-preference-group { border-top: 1px solid var(--border); padding: 16px; }
-.notification-preference-group.is-disabled { opacity: .58; }
-.notification-preference-heading { grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 11px; margin-bottom: 9px; display: grid; }
-.notification-preference-heading strong { font-size: 13px; }
-.notification-preference-rows { padding-left: 51px; }
-.notification-preference-row { grid-template-columns: minmax(0, 1fr) 48px; align-items: center; column-gap: 16px; min-height: 52px; display: grid; }
-.notification-preference-row > strong { min-width: 0; font-size: 13px; line-height: 1.35; }
+/* One row per heading: icon, name, switch. The nested per-alert list this
+   replaced needed its own heading row, its own indent and its own disabled
+   state; a heading that carries its own switch needs none of them. */
+.notification-preference-row { grid-template-columns: 40px minmax(0, 1fr) 48px; }
+.notification-preference-row.is-disabled { opacity: .58; }
+.notification-preference-row > strong { min-width: 0; font-size: 14px; line-height: 1.35; }
+.notification-preference-row.device-notification-row { border-bottom: 0; }
 .settings-page .toggle { justify-self: end; position: relative; width: 48px; min-width: 48px; height: 44px; padding: 0; background: transparent; }
 .settings-page .toggle::before { position: absolute; top: 9px; right: 1px; width: 46px; height: 26px; border-radius: 99px; background: #d9d7e1; content: ""; transition: background .18s ease; }
 .settings-page .toggle span { position: absolute; z-index: 1; top: 11px; left: 3px; width: 22px; height: 22px; transform: none; }
@@ -40,11 +40,7 @@
 .settings-page .toggle:focus-visible { outline: 3px solid rgba(118, 86, 246, .38); outline-offset: 2px; }
 .settings-page .toggle:disabled { cursor: not-allowed; }
 
-.device-notification-setting { padding-bottom: 14px; }
-.device-notification-row { grid-template-columns: 40px minmax(0, 1fr) 48px; min-height: 62px; gap: 11px; }
-.device-notification-row > div { min-width: 0; display: grid; }
-.device-notification-row small { color: var(--text-muted); font-size: 11px; line-height: 1.4; }
-.notification-permission { color: var(--text-secondary); margin: 5px 0 0 51px; font-size: 11px; line-height: 1.45; }
+.notification-permission { color: var(--text-secondary); margin: -6px 0 0; padding: 0 16px 14px 69px; font-size: 11.5px; line-height: 1.45; }
 .notification-permission.permission-denied, .notification-permission.permission-unsupported { color: #9a4c09; }
 
 .account-management { margin-top: 28px; }
@@ -63,10 +59,7 @@
 @media (max-width: 480px) {
   .settings-page .setting-row { padding-inline: 14px; }
   .settings-page .setting-row .input { width: min(138px, 39vw); }
-  .notification-preference-group { padding-inline: 14px; }
-  .notification-preference-rows { padding-left: 0; }
-  .notification-preference-heading { grid-template-columns: 1fr; gap: 7px; }
-  .notification-preference-heading .setting-icon { display: none; }
+  .notification-permission { padding-right: 14px; padding-left: 67px; }
   .account-action-row { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
   .account-action-row > button { grid-column: 2; justify-self: start; }
   .account-action-row > .account-data-badge { grid-column: 2; justify-self: start; }
@@ -74,6 +67,5 @@
 
 @media (min-width: 700px) {
   .settings-page .settings-card { box-shadow: var(--shadow-small); }
-  .notification-preference-group { padding-inline: 22px; }
-  .notification-preference-rows { padding-left: 51px; }
+  .notification-permission { padding-left: 69px; }
 }

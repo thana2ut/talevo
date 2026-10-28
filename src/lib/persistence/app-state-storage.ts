@@ -166,6 +166,7 @@ function normalizeSettings(value: unknown, fallback: AppSettings): AppSettings {
   const preferences = isRecord(value.notificationPreferences) ? value.notificationPreferences : {};
   const supportedPreferences = { ...preferences };
   delete supportedPreferences.submissionReminders;
+  delete supportedPreferences.browserNotifications;
   return {
     ...fallback,
     ...value,
@@ -270,6 +271,10 @@ export function migratePersistedState(rawState: unknown): UnknownRecord | null {
     if (isRecord(settings) && isRecord(settings.notificationPreferences)) {
       const notificationPreferences = { ...settings.notificationPreferences };
       delete notificationPreferences.submissionReminders;
+      // Older snapshots carried the device switch in the synced settings. It
+      // belongs to the install now, so an account read must not resurrect a
+      // stale value and silence a device that is in fact subscribed.
+      delete notificationPreferences.browserNotifications;
       settings.notificationPreferences = notificationPreferences;
     }
     state = {

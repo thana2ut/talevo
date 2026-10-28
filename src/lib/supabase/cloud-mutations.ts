@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   AcademicTerm,
+  AppSettings,
   ClassSchedule,
   CourseGradePlan,
   Exam,
@@ -392,6 +393,48 @@ export async function persistDailyBudget(
       user_id: userId,
       daily_budget: Math.max(0, dailyBudget),
       selected_month: month,
+      updated_at: new Date().toISOString(),
+    });
+    return { error: error ? new Error(error.message) : null };
+  } catch (err) {
+    return { error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
+/**
+ * Persist the settings screen to Supabase.
+ *
+ * Nothing wrote this row outside the one-time local-to-cloud import, so every
+ * launch hydrated `app_settings` from its database defaults and handed the
+ * person back an all-on alert list no matter what they had chosen. The date
+ * format and year system rode along in the same row and were lost the same
+ * way.
+ */
+export async function persistAppSettings(
+  supabase: SupabaseClient,
+  userId: string,
+  settings: AppSettings,
+): Promise<{ error: Error | null }> {
+  const preferences = settings.notificationPreferences;
+  try {
+    const { error } = await supabase.from("app_settings").upsert({
+      user_id: userId,
+      timezone: settings.timezone,
+      date_format: settings.dateFormat,
+      year_system: settings.yearSystem,
+      alerts_enabled: preferences.enabled,
+      task_24h: preferences.task24h,
+      task_12h: preferences.task12h,
+      deadline_risk: preferences.deadlineRisk,
+      morning_0600: preferences.morning0600,
+      daily_0700: preferences.daily0700,
+      class_30m: preferences.class30m,
+      class_end_10m: preferences.classEnd10m,
+      exam_7d: preferences.exam7d,
+      exam_3d: preferences.exam3d,
+      exam_1d: preferences.exam1d,
+      exam_morning: preferences.examMorning,
+      weekly_radar: preferences.weeklyRadar,
       updated_at: new Date().toISOString(),
     });
     return { error: error ? new Error(error.message) : null };

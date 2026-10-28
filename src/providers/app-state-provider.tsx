@@ -36,6 +36,7 @@ import { createTaskCompletionHistory, getExpiredCompletedTasks } from "@/lib/tas
 import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
 import { removeAllReadNotifications, removeReadNotification } from "@/lib/alerts/notification-deletion";
 import { disablePushOnThisDevice, enablePushOnThisDevice, syncScheduledPush } from "@/lib/push/client";
+import { readDeviceNotificationPreference, writeDeviceNotificationPreference } from "@/lib/push/device-preference";
 import { buildPushSchedule } from "@/lib/push/schedule-plan";
 
 // Read once: it is inlined at build time, and referencing process.env inside a
@@ -75,6 +76,7 @@ import {
   deleteFinanceTransaction as deleteFinanceTransactionFromCloud,
   persistProfile,
   persistAcademicTerm,
+  persistAppSettings,
   persistDailyBudget,
 } from "@/lib/supabase/cloud-mutations";
 import { useLanguage } from "@/providers/language-provider";
@@ -101,6 +103,7 @@ interface AppStateValue {
   settings: AppSettings;
   browserNotificationPermission: NotificationPermission | "unsupported";
   browserNotificationTestStatus: "idle" | "sending" | "sent" | "failed";
+  deviceNotificationsEnabled: boolean;
   goals: LearningGoals;
   academicTerm: AcademicTerm;
   financeTransactions: FinanceTransaction[];
@@ -232,6 +235,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(defaultAppState.settings);
   const [browserNotificationPermission, setBrowserNotificationPermission] = useState<NotificationPermission | "unsupported">("unsupported");
   const [browserNotificationTestStatus, setBrowserNotificationTestStatus] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+  // What this install was asked to do, read back from the device on every
+  // launch. The effective switch below is this AND a granted permission.
+  const [deviceNotificationIntent, setDeviceNotificationIntent] = useState(false);
+  const pushRegistrationRef = useRef<string | null>(null);
   const [goals, setGoals] = useState<LearningGoals>(defaultAppState.goals);
   const [academicTerm, setAcademicTerm] = useState<AcademicTerm>(defaultAppState.academicTerm);
   const [financeTransactions, setFinanceTransactions] = useState<FinanceTransaction[]>(defaultAppState.financeTransactions);
@@ -383,17 +390,21 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [accountDefaults, applySnapshot, isAuthLoading, userEmail, userId]);
 
   useEffect(() => {
+    // Both halves of the device switch come from outside React: the browser
+    // owns the permission, the device store owns the request. Reading them
+    // together means a change made in another tab, or in the browser's own
+    // settings, is picked up the next time this one is looked at.
     const syncPermission = () => {
       const permission: NotificationPermission | "unsupported" = "Notification" in window
         ? window.Notification.permission
         : "unsupported";
       setBrowserNotificationPermission(permission);
-      if (permission !== "granted") {
-        setBrowserNotificationTestStatus("idle");
-        setSettings((current) => current.notificationPreferences.browserNotifications
-          ? { ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: false } }
-          : current);
-      }
+      setDeviceNotificationIntent(readDeviceNotificationPreference());
+      // The stored request is left alone on purpose. Clearing it here is what
+      // made the switch forget itself: a browser that reports "default" for a
+      // moment, or has no Notification API in this context at all, would erase
+      // a choice the person had already made and had already been asked about.
+      if (permission !== "granted") setBrowserNotificationTestStatus("idle");
     };
 
     syncPermission();
@@ -497,6 +508,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     };
   }, [isCurrentScopeHydrated]);
 
+  // What the switch actually reports: the request this device stored, and a
+  // permission the browser still grants.
+  const deviceNotificationsEnabled = deviceNotificationIntent && browserNotificationPermission === "granted";
+
+  // Re-subscribe on every launch, not only when the switch is flipped.
+  //
+  // A push subscription is not permanent: browsers drop it when the app is
+  // reinstalled or site data is cleared, and the server deletes endpoints the
+  // push service has retired. Registering again on each launch is cheap, keeps
+  // one row per device, and means a person who turned alerts on once on their
+  // phone stays reachable there without opening settings again.
+  useEffect(() => {
+    if (!userId || !deviceNotificationsEnabled || !NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
+    if (pushRegistrationRef.current === userId) return;
+    pushRegistrationRef.current = userId;
+    void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY).catch(() => {
+      // In-app alerts carry on; the next launch tries again.
+      pushRegistrationRef.current = null;
+    });
+  }, [deviceNotificationsEnabled, userId]);
+
   useEffect(() => {
     if (!isCurrentScopeHydrated || !settings.notificationPreferences.enabled) return;
     const currentNotifications = notificationsRef.current;
@@ -516,17 +548,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const nextNotifications = [...generated, ...currentNotifications];
     notificationsRef.current = nextNotifications;
     setNotifications(nextNotifications);
-    if (settings.notificationPreferences.browserNotifications && browserNotificationPermission === "granted" && claimAlertDeliveryLeadership(window.localStorage, tabIdRef.current)) {
+    if (deviceNotificationsEnabled && claimAlertDeliveryLeadership(window.localStorage, tabIdRef.current)) {
       void deliverNewBrowserNotifications(generated);
     }
-  }, [academicTerm, browserNotificationPermission, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks])
+  }, [academicTerm, deviceNotificationsEnabled, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks])
 
   // Queue the next week of reminders so they can be delivered while the app is
   // closed. Only the data the plan reads is in the dependencies: `now` is not,
   // or this would rewrite the queue every minute for no change.
   useEffect(() => {
     if (!userId || !isCurrentScopeHydrated) return;
-    if (!settings.notificationPreferences.browserNotifications) return;
+    if (!deviceNotificationsEnabled) return;
     if (!NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
 
     const timer = window.setTimeout(() => {
@@ -545,7 +577,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }, 1_500);
 
     return () => window.clearTimeout(timer);
-  }, [academicTerm, isCurrentScopeHydrated, language, profile, schedules, settings.notificationPreferences, tasks, userId]);;
+  }, [academicTerm, deviceNotificationsEnabled, isCurrentScopeHydrated, language, profile, schedules, settings.notificationPreferences, tasks, userId]);
 
   const adoptExistingLocalData = useCallback(() => {
     if (!userId) return;
@@ -607,6 +639,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     settings,
     browserNotificationPermission,
     browserNotificationTestStatus,
+    deviceNotificationsEnabled,
     goals,
     academicTerm,
     financeTransactions,
@@ -641,13 +674,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     adoptExistingLocalData,
     startFreshLocalData,
     setSelectedFinanceMonth,
-    updateSettings: (next) => setSettings((current) => ({ ...current, ...next })),
-    updateNotificationPreferences: (next) => setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, ...next } })),
+    updateSettings: (next) => setSettings((current) => {
+      const updated = { ...current, ...next };
+      runCloudMutation((client, uid) => persistAppSettings(client, uid, updated));
+      return updated;
+    }),
+    updateNotificationPreferences: (next) => setSettings((current) => {
+      const updated = { ...current, notificationPreferences: { ...current.notificationPreferences, ...next } };
+      runCloudMutation((client, uid) => persistAppSettings(client, uid, updated));
+      return updated;
+    }),
     setBrowserNotificationsEnabled: async (enabled) => {
       if (!enabled) {
         setBrowserNotificationTestStatus("idle");
+        writeDeviceNotificationPreference(false);
+        setDeviceNotificationIntent(false);
+        pushRegistrationRef.current = null;
         void disablePushOnThisDevice();
-        setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: false } }));
         return;
       }
       if (!("Notification" in window)) {
@@ -668,16 +711,30 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         permission = window.Notification.permission;
       }
       setBrowserNotificationPermission(permission);
-      const delivered = permission === "granted" && await Promise.race([
+      if (permission !== "granted") {
+        setBrowserNotificationTestStatus("idle");
+        return;
+      }
+
+      // The request is recorded as soon as the browser says yes, before the
+      // test popup and before the push subscription. Both can fail on a device
+      // that will still receive reminders perfectly well, and tying the switch
+      // to them is what made it come back off after a restart.
+      writeDeviceNotificationPreference(true);
+      setDeviceNotificationIntent(true);
+
+      if (NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+        pushRegistrationRef.current = userId;
+        void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY).catch(() => {
+          pushRegistrationRef.current = null;
+        });
+      }
+
+      const delivered = await Promise.race([
         deliverBrowserNotificationTest(language),
         new Promise<false>((resolve) => window.setTimeout(() => resolve(false), 10_000)),
       ]);
-      setSettings((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, browserNotifications: delivered } }));
-      setBrowserNotificationTestStatus(delivered ? "sent" : permission === "granted" ? "failed" : "idle");
-      // Registering for push is what lets a reminder arrive with the app shut.
-      // It is deliberately not allowed to fail the toggle: in-app alerts still
-      // work without it, and the key may simply not be configured yet.
-      if (delivered && NEXT_PUBLIC_VAPID_PUBLIC_KEY) void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+      setBrowserNotificationTestStatus(delivered ? "sent" : "failed");
     },
     updateGoals: (next) => setGoals((current) => ({ ...current, ...next })),
     updateAcademicTerm: (next) => {
@@ -1101,7 +1158,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         runCloudMutation((client, uid) => persistGradePlan(client, uid, gp));
       }
     },
-  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
+  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, deviceNotificationsEnabled, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

@@ -63,5 +63,7 @@ npm run qa:auth        # และ qa:* ตัวอื่น ดูรายก
 - ทุกตารางเปิด Row Level Security ผู้ใช้เห็นเฉพาะข้อมูลตัวเอง
 - โควตา AI จำกัด 20 คำตอบต่อ 24 ชั่วโมงต่อบัญชี บังคับที่ฐานข้อมูล
 - ลืมรหัสผ่านใช้รหัส 8 หลักทางอีเมล ต้องตั้ง **Email OTP Length = 8** ใน Supabase ให้ตรงกัน
-- การแจ้งเตือนทำงานในเบราว์เซอร์ขณะเปิดเว็บอยู่ ยังไม่มีระบบ push จากเซิร์ฟเวอร์
+- เปิดการแจ้งเตือนบนอุปกรณ์ครั้งเดียวแล้วจำไว้ เก็บไว้ที่ `localStorage` ของเครื่องนั้น (คีย์ `talevo-device-notifications`) ไม่ขึ้น cloud เพราะสิทธิ์และ push subscription เป็นของเครื่อง
+- ตั้งค่าแจ้งเตือน (เปิด/ปิดแต่ละหัวข้อ) เก็บในตาราง `app_settings` จึงตามไปทุกเครื่องที่ล็อกอินบัญชีเดียวกัน
+- เตือนตอนปิดแอปได้ผ่าน Web Push ต้องตั้ง `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `PUSH_DISPATCH_SECRET` และ cron ที่ยิง `/api/push/dispatch` (ดู `supabase/migrations/20261029000000_talevo_push_notifications.sql`) ถ้าไม่ได้ตั้ง จะเหลือเฉพาะแจ้งเตือนขณะเปิดแอป
 - มาสคอตอยู่ที่ `public/assets/mascot/` เรียกผ่านคอมโพเนนต์ `TalevoMascot`

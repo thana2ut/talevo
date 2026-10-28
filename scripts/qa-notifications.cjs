@@ -19,6 +19,7 @@ require.extensions[".ts"] = function compileTypeScript(module, filename) {
 
 const { removeAllReadNotifications, removeReadNotification } = require("../src/lib/alerts/notification-deletion.ts");
 const { deliverBrowserNotificationTest, deliverNewBrowserNotifications } = require("../src/lib/alerts/notification-delivery.ts");
+const { hydrateCloudAccountToAppState } = require("../src/lib/supabase/cloud-hydration.ts");
 const notifications = [
   { id: "unread", eventKey: "task-12h:task", createdAt: "2026-08-31T08:00:00.000Z", title: "Unread", message: "Keep", type: "task_deadline", priority: "high" },
   { id: "read-a", eventKey: "task-24h:task", createdAt: "2026-08-31T07:00:00.000Z", readAt: "2026-08-31T07:05:00.000Z", title: "Read A", message: "Delete", type: "task_deadline", priority: "medium" },
@@ -52,9 +53,78 @@ async function verifyDeviceDelivery() {
   check(deliverySource.includes("await navigator.serviceWorker.ready"), "device delivery must wait for an active Service Worker before showing a notification");
   const providerSource = fs.readFileSync(path.join(projectRoot, "src/providers/app-state-provider.tsx"), "utf8");
   check(providerSource.includes('window.addEventListener("focus", syncPermission)') && providerSource.includes('status.addEventListener("change", syncPermission)'), "notification permission state must refresh after browser permission changes");
-  check(providerSource.includes("browserNotifications: delivered") && providerSource.includes('setBrowserNotificationTestStatus(delivered ? "sent"'), "device notification toggle must remain enabled only after a successful test delivery");
+  check(providerSource.includes("writeDeviceNotificationPreference(true)") && providerSource.includes("readDeviceNotificationPreference()"), "enabling device notifications must be written to the device and read back on launch");
+  check(!providerSource.includes("browserNotifications: false"), "the permission sync must not erase a stored device notification request");
+  check(providerSource.includes("pushRegistrationRef.current === userId"), "an enabled device must re-subscribe to push on launch, not only when the switch is flipped");
+  const hydrationSource = fs.readFileSync(path.join(projectRoot, "src/lib/supabase/cloud-hydration.ts"), "utf8");
+  check(!hydrationSource.includes("browserNotifications"), "cloud hydration must not overwrite the device notification switch");
+  check(hydrationSource.includes('booleanValue(appSettingsRow, "daily_0700"'), "cloud hydration must read the daily brief from its real column");
+  const pushClientSource = fs.readFileSync(path.join(projectRoot, "src/lib/push/client.ts"), "utf8");
+  check(pushClientSource.includes("matchesVapidKey") && pushClientSource.includes("getSubscription()"), "re-registering a device must reuse its push subscription instead of minting a new endpoint each launch");
+  check(!pushClientSource.includes("ignoreDuplicates: true"), "a queued reminder must pick up edits to the class or task it belongs to");
+  const mutationSource = fs.readFileSync(path.join(projectRoot, "src/lib/supabase/cloud-mutations.ts"), "utf8");
+  check(mutationSource.includes("persistAppSettings") && mutationSource.includes('from("app_settings")'), "notification preferences must be written back to Supabase");
+  check(providerSource.includes("persistAppSettings(client, uid, updated)"), "changing a notification preference must persist it to the account");
   check(providerSource.includes("Promise.race<NotificationPermission>") && providerSource.includes("15_000") && providerSource.includes("10_000"), "permission and test delivery must recover instead of leaving the notification toggle stuck forever");
+  verifyEnableOnceSurvivesRestart();
+  verifyPreferencesSurviveCloudHydration();
   console.log(`Notification QA passed: ${checks} checks`);
+}
+
+/* The reported bug: turn device notifications on, close the installed app,
+   open it again, and the switch is back off. It has to survive a reload with
+   nothing but what the device itself kept. */
+function verifyEnableOnceSurvivesRestart() {
+  const store = new Map();
+  global.window = {
+    localStorage: {
+      getItem: (key) => (store.has(key) ? store.get(key) : null),
+      setItem: (key, value) => store.set(key, String(value)),
+      removeItem: (key) => store.delete(key),
+    },
+  };
+  try {
+    const { readDeviceNotificationPreference, writeDeviceNotificationPreference } = require("../src/lib/push/device-preference.ts");
+    check(readDeviceNotificationPreference() === false, "a device that was never asked starts with notifications off");
+    writeDeviceNotificationPreference(true);
+    check(readDeviceNotificationPreference() === true, "turning device notifications on must survive a relaunch of the app");
+    writeDeviceNotificationPreference(false);
+    check(readDeviceNotificationPreference() === false, "turning device notifications off must survive a relaunch of the app");
+  } finally {
+    delete global.window;
+  }
+}
+
+/* The other half of the same bug: every launch rehydrates from Supabase, so a
+   preference the cloud does not carry is silently reset to its default. */
+function verifyPreferencesSurviveCloudHydration() {
+  const hydrated = hydrateCloudAccountToAppState({
+    app_settings: [{
+      timezone: "Asia/Bangkok",
+      date_format: "เดือน/วัน/ปี",
+      year_system: "ค.ศ.",
+      alerts_enabled: true,
+      task_24h: false,
+      task_12h: false,
+      deadline_risk: false,
+      morning_0600: true,
+      daily_0700: false,
+      class_30m: true,
+      class_end_10m: true,
+      exam_7d: true,
+      exam_3d: true,
+      exam_1d: true,
+      exam_morning: true,
+      weekly_radar: false,
+    }],
+  }, { email: "student@example.com" });
+
+  const preferences = hydrated.settings.notificationPreferences;
+  check(preferences.task24h === false && preferences.task12h === false && preferences.deadlineRisk === false, "alerts switched off in the account must stay off after a cloud hydration");
+  check(preferences.daily0700 === false, "the daily brief must hydrate from its own column instead of falling back to the default");
+  check(preferences.weeklyRadar === false, "the weekly radar switch must survive a cloud hydration");
+  check(!("browserNotifications" in preferences), "the device switch must not travel through the account state");
+  check(hydrated.settings.dateFormat === "เดือน/วัน/ปี" && hydrated.settings.yearSystem === "ค.ศ.", "date format and year system must hydrate from the account");
 }
 
 verifyDeviceDelivery().catch((error) => {

@@ -50,7 +50,7 @@
 - Local persistence v8, `talevo-app-state`, backup key และ IndexedDB ไม่ถูกลบหรือแก้
 - Supabase Auth เป็น canonical source ของ email; `profiles` ไม่ทำสำเนา email
 - `avatarUrl` เป็น object URL ใน session จึงไม่ถูกเก็บในฐานข้อมูล
-- `browserNotifications` และ leader lease เป็นสถานะของอุปกรณ์ จึงไม่ส่งขึ้น cloud
+- สวิตช์แจ้งเตือนของอุปกรณ์ (`talevo-device-notifications`) และ leader lease เป็นสถานะของอุปกรณ์ จึงไม่ส่งขึ้น cloud
 - `task_attachments` เป็น metadata เท่านั้น; ยังไม่อ้างว่า binary อยู่บน cloud
 - ไม่มี column/table สำหรับ Academic GPS, Life Rescue หรือ Did I Submit
 - `app_state_sync` เก็บสถานะการ import/snapshot hash เท่านั้น ไม่เก็บ AppState ทั้งก้อน

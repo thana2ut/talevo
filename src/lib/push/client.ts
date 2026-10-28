@@ -30,10 +30,21 @@ function encodeKey(buffer: ArrayBuffer | null) {
     .replace(/=+$/, "");
 }
 
+/** True when an existing subscription was signed with the key we still use. */
+function matchesVapidKey(subscription: PushSubscription, expected: Uint8Array) {
+  const applied = subscription.options?.applicationServerKey;
+  if (!applied) return false;
+  const bytes = new Uint8Array(applied);
+  return bytes.length === expected.length && bytes.every((byte, index) => byte === expected[index]);
+}
+
 /**
  * Registers this device with the push service and tells our server where to
  * reach it. Returns false when push is unavailable or not permitted, so the
  * caller can leave the in-app alerts as the only channel.
+ *
+ * Safe to call on every launch: it reuses the subscription the device already
+ * holds and only re-registers it with the server.
  */
 export async function enablePushOnThisDevice(vapidPublicKey: string) {
   if (!isPushSupported() || !vapidPublicKey) return false;
@@ -42,18 +53,39 @@ export async function enablePushOnThisDevice(vapidPublicKey: string) {
   try {
     await navigator.serviceWorker.register(WORKER_PATH, { scope: WORKER_SCOPE });
     const registration = await navigator.serviceWorker.ready;
+    const expectedKey = decodeVapidKey(vapidPublicKey);
 
-    // An existing subscription may be signed with a key we no longer use (the
-    // VAPID pair was rotated), and the push service will reject deliveries for
-    // it. Replacing it is cheaper than discovering that at send time.
-    const current = await registration.pushManager.getSubscription();
-    if (current) await current.unsubscribe().catch(() => undefined);
+    // Reuse the subscription this device already has. Unsubscribing first
+    // would be the simpler code, but the push service hands out a fresh
+    // endpoint each time, and this runs on every launch: the device would
+    // collect a new row per launch and receive one copy of every reminder for
+    // each of them until the dead endpoints finally bounced.
+    let subscription = await registration.pushManager.getSubscription();
 
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: decodeVapidKey(vapidPublicKey) as BufferSource,
-    });
+    // A subscription signed with a key we no longer use (the VAPID pair was
+    // rotated) will be rejected at send time, so that one does have to go. Its
+    // server row goes with it, or it would linger and bounce forever.
+    if (subscription && !matchesVapidKey(subscription, expectedKey)) {
+      const staleEndpoint = subscription.endpoint;
+      await subscription.unsubscribe().catch(() => undefined);
+      await fetch("/api/push/subscribe", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ endpoint: staleEndpoint }),
+      }).catch(() => undefined);
+      subscription = null;
+    }
 
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: expectedKey as BufferSource,
+      });
+    }
+
+    // Sent even when the subscription was reused: the row is keyed by
+    // endpoint, so this re-attaches a device whose row was dropped after a
+    // delivery bounced, and keeps it pointed at the account signed in now.
     const response = await fetch("/api/push/subscribe", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -109,6 +141,10 @@ export async function syncScheduledPush(client: SupabaseClient, userId: string, 
 
   if (!plan.length) return;
 
+  // Updating rather than ignoring a conflict: a class renamed or moved keeps
+  // its event key, so ignoring the row would leave the old wording queued.
+  // sent_at is absent from the payload and survives the update, which is what
+  // keeps an already-delivered reminder from being sent a second time.
   await client.from("talevo_scheduled_notifications").upsert(
     plan.map((item) => ({
       user_id: userId,
@@ -118,6 +154,6 @@ export async function syncScheduledPush(client: SupabaseClient, userId: string, 
       body: item.body,
       href: item.href,
     })),
-    { onConflict: "user_id,event_key", ignoreDuplicates: true },
+    { onConflict: "user_id,event_key" },
   );
 }

@@ -58,7 +58,6 @@ export function createEmptyAccountAppState(
         exam1d: true,
         examMorning: true,
         weeklyRadar: true,
-        browserNotifications: false,
       },
       timezone: "Asia/Bangkok",
       dateFormat: "วัน/เดือน/ปี",
