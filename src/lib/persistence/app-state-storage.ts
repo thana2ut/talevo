@@ -306,7 +306,16 @@ export function normalizePersistedState(rawState: unknown, defaults: AppStateDef
     schedules: normalizeSchedules(migrated.schedules, defaults.schedules),
     tasks: normalizeTasks(migrated.tasks, defaults.tasks),
     taskCompletionHistory: normalizeArray<TaskCompletionHistory>(migrated.taskCompletionHistory, defaults.taskCompletionHistory, (item) => hasStringId(item) && isString(item.originalTaskId) && isString(item.completedAt)),
-    exams: [],
+    exams: normalizeArray<Exam>(migrated.exams, defaults.exams, (item) => hasStringId(item)
+      && isString(item.courseId) && isString(item.title)
+      && ["quiz", "midterm", "final", "practical", "presentation", "other"].includes(String(item.type))
+      && isString(item.startAt) && Number.isFinite(Date.parse(item.startAt))
+      && isString(item.createdAt) && isString(item.updatedAt))
+      .map((exam) => ({
+        ...exam,
+        topics: Array.isArray(exam.topics) ? exam.topics.filter((topic) => hasStringId(topic)
+          && isString(topic.title) && typeof topic.completed === "boolean") : [],
+      })),
     gradePlans: [],
     financeTransactions: [],
     savingGoals: [],
