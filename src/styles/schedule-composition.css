@@ -586,3 +586,17 @@ html[data-theme="dark"] .schedule-event-card.schedule-custom {
 .free-time-copy svg { width: 17px; height: 17px; flex: none; }
 .free-time-copy strong { font-size: 12px; }
 .free-time-copy small { color: var(--text-secondary); font-size: 10px; }
+/* Keep the free-time block centered between neighbouring class cards. */
+.schedule-timeline { gap: 12px; }
+.schedule-timeline > div { display: grid; gap: 12px; }
+.schedule-timeline .free-time-gap { margin: 0; }
+.schedule-timeline .free-time-copy { min-height: 68px; padding: 14px 16px; align-content: center; gap: 5px; }
+.schedule-timeline .free-time-gap > time { align-self: center; padding-top: 0; }
+.schedule-timeline .free-time-rail { min-height: 68px; }
+.free-time-copy > span { line-height: 1.4; }
+.free-time-copy small { line-height: 1.5; }
+@media (max-width: 520px) {
+ .schedule-timeline, .schedule-timeline > div { gap: 10px; }
+ .schedule-timeline .free-time-copy { min-height: 64px; padding: 12px 14px; }
+ .schedule-timeline .free-time-rail { min-height: 64px; }
+}
