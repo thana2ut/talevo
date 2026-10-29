@@ -783,3 +783,29 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 .study-hero-ring > span { text-align: center; }
 .study-hero-ring strong { display: flex; align-items: baseline; justify-content: center; }
 @media (prefers-reduced-motion: reduce) { .study-hero-action, .study-hero-ring circle + circle { transition: none; } .study-hero-action:hover { transform: none; } }
+/* Keep the study details and visual on matching baselines. */
+@media (min-width: 1100px) {
+  .study-hero { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 22px; padding: 28px; }
+  .study-hero-content { display: flex; flex-direction: column; }
+  .study-hero-label { align-self: flex-start; }
+  .study-hero h2 { font-size: 32px; margin-bottom: 18px; }
+  .study-hero-facts { grid-template-columns: 1.08fr .88fr 1.16fr; gap: 10px; }
+  .study-hero-facts > div { min-height: 76px; padding: 13px 14px; gap: 12px; }
+  .study-hero-facts strong { font-size: 15px; }
+  .study-hero-facts small { font-size: 12px; }
+  .study-hero-summary { grid-template-columns: minmax(0, .9fr) minmax(0, 1.25fr); margin-top: 14px; padding: 16px; gap: 18px; min-height: 140px; }
+  .study-hero-progress { gap: 14px; padding-inline-end: 16px; }
+  .study-hero-ring { width: 106px; height: 106px; }
+  .study-hero-progress > div:last-child > span, .study-hero-progress > div:last-child > small { font-size: 13px; }
+  .study-hero-progress > div:last-child > strong { font-size: 25px; }
+  .study-hero-tasks h3 { min-height: 26px; font-size: 15px; }
+  .study-hero-tasks > p { font-size: 13px; padding-top: 13px; }
+  .study-hero-tasks a strong { font-size: 12px; }
+  .study-hero-tasks a small { font-size: 11px; }
+  .study-hero-visual { align-items: center; }
+  .study-hero-mascot { inset: 25px -16px 52px; }
+  .study-hero-action { width: 100%; max-width: 300px; min-height: 52px; padding: 10px 16px; border-radius: 16px; font-size: 20px; gap: 10px; }
+  .study-hero-action svg { width: 24px; height: 24px; }
+  .study-hero-speech { left: 0; top: 20px; max-width: 140px; }
+}
+@media (max-width: 1099px) { .study-hero-action { align-self: center; width: 100%; max-width: 300px; min-height: 50px; font-size: 18px; padding: 10px 12px; } .study-hero-action svg { width: 24px; height: 24px; } }
