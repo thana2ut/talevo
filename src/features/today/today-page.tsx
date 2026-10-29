@@ -202,9 +202,9 @@ export function TodayPage() {
     <section className="smart-today-hero"><StudyHero classes={view.classes} tasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
+      <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
       <TodayTaskCard task={view.pendingTasks[0]} now={referenceDate} schedules={schedules} />
       <TodayFreeTimeCard gap={view.usefulGap} nowMinutes={view.nowMinutes} />
-      <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
     </div>
     </section>
   </div>;
