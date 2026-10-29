@@ -245,13 +245,8 @@
 }
 
 .timetable-day-header.is-selected:not(.is-today)::before {
-  background: var(--purple-600);
+  background: color-mix(in srgb, var(--purple-500) 8%, var(--surface-elevated));
   border-color: transparent;
-}
-
-.timetable-day-header.is-selected:not(.is-today) .day-name,
-.timetable-day-header.is-selected:not(.is-today) .day-date {
-  color: #fff;
 }
 
 .timetable-day-header.is-today::before {
