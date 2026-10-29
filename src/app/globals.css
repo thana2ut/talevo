@@ -1099,3 +1099,35 @@ html[data-theme="dark"] .exam-list h2 svg { color: #bb9aff; }
 html[data-theme="dark"] .exam-calendar { border-color: #393347; }
 html[data-theme="dark"] .exam-days button { border-color: #ffffff0d; }
 html[data-theme="dark"] .exam-days button.outside { color: #8e879f; }
+
+/* Night treatment for the illustrated recommendation, without dimming its text. */
+html[data-theme="dark"] .smart-today-page .study-hero {
+  background-color: #211b32;
+  background-image: linear-gradient(90deg,#211b32 0%,#211b32ed 46%,#211b3266 78%),url('/assets/dashboard/room.webp');
+  border-color: #54416b;
+}
+html[data-theme="dark"] .smart-today-page .study-hero h2 { color: #f5efff; }
+html[data-theme="dark"] .study-hero-eyebrow { color: #c4b8d8; }
+html[data-theme="dark"] .study-hero-label { color: #d4bcff; background: #3c2b5b; }
+html[data-theme="dark"] .study-hero-facts > div { background: #292139e8; border: 1px solid #77608b55; }
+html[data-theme="dark"] .study-hero-facts strong { color: #f3edff; }
+html[data-theme="dark"] .study-hero-facts small { color: #c0b2cf; }
+html[data-theme="dark"] .study-hero-facts > div > svg { color: #bd99ff; }
+html[data-theme="dark"] .study-hero-summary { background: #211d30e8; border-color: #54416b; }
+html[data-theme="dark"] .study-hero-tasks h3 { color: #f3edff; }
+html[data-theme="dark"] .study-hero-tasks > a { background: #30253f; color: #e1d5ee; }
+html[data-theme="dark"] .study-hero .study-hero-speech-glass {
+  background: linear-gradient(135deg,#393047eb,#282137eb);
+  border-color: #b69bd577;
+  box-shadow: inset 0 1px 3px #ffffff20,0 8px 24px #08051044;
+}
+html[data-theme="dark"] .study-hero-speech-glass strong { color: #f4eaff; }
+html[data-theme="dark"] .study-hero-speech-glass::after { background: #30273f; border-color: #b69bd577; }
+@media(max-width:699px) {
+  html[data-theme="dark"] .smart-today-page .study-hero { background: none; border: 0; }
+  html[data-theme="dark"] .smart-today-page .study-hero::before {
+    background-image: linear-gradient(90deg,#211a32fa 0%,#211a32df 36%,#211a3255 66%,#211a3233 100%),url('/assets/dashboard/study-scene-cat-logo.webp');
+    border-color: #68517d;
+    box-shadow: 0 14px 32px #00000033;
+  }
+}
