@@ -263,6 +263,13 @@
 
 .schedule-date-strip button.selected:not(.today) span { color: var(--text-muted); }
 .schedule-date-strip button.selected:not(.today) strong { color: var(--text-primary); }
+.schedule-date-strip button.today:not(.selected) {
+  color: #fff;
+  background: linear-gradient(145deg, var(--purple-500), var(--purple-700));
+  box-shadow: 0 8px 16px #6843ee38;
+}
+.schedule-date-strip button.today:not(.selected) span { color: #ffffffc2; }
+.schedule-date-strip button.today:not(.selected) strong { color: #fff; }
 
 .timetable-day-header .day-name {
   font-size: 12px;
