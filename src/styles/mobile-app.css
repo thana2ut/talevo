@@ -407,3 +407,50 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .exam-legend::before { content:'ความหมายสีในปฏิทิน'; grid-column:1 / -1; color:var(--text-primary); font-size:16px; font-weight:800; }
  html .exam-legend > div { align-items:center; font-size:11px; gap:8px; }
 }
+
+.ai-phone-context-button { display:none; }
+@media(max-width:699px) {
+ html .ai-premium-page { padding:12px 14px 100px; }
+ html .ai-premium-header { position:relative; display:block; padding:0 42px 0 0; margin-bottom:16px; }
+ html .ai-header-left { gap:10px; align-items:center; }
+ html .ai-back-button { width:36px; height:40px; border-radius:13px; flex:none; }
+ html .ai-brand-lockup { gap:10px; min-width:0; }
+ html .ai-brand-info { min-width:0; }
+ html .ai-brand-kicker { display:none; }
+ html .ai-brand-info h1 { font-size:23px; line-height:1.25; margin:5px 0 2px; }
+ html .ai-brand-info > p { font-size:11px; line-height:1.5; }
+ html .ai-mode-badge { font-size:9px; padding:4px 7px; white-space:normal; }
+ html .ai-title-row .ai-info-button { display:none; }
+ html .ai-phone-context-button { display:grid; place-items:center; position:absolute; right:0; top:5px; width:38px; height:40px; border-radius:13px; background:var(--surface); color:var(--purple-600); }
+ html .ai-phone-context-button > span { position:absolute; right:-3px; top:-3px; display:grid; place-items:center; width:17px; height:17px; border-radius:50%; color:white; background:var(--purple-600); font-size:10px; }
+ html .ai-header-right { display:none; }
+ html .ai-workbench { display:flex; flex-direction:column; gap:12px; min-width:0; }
+ html .ai-mobile-summary { display:grid; gap:10px; }
+ html .ai-usage-card { border:1px solid var(--purple-200); border-radius:17px; padding:13px; background:var(--surface); }
+ html .ai-usage-top { font-size:12px; flex-wrap:wrap; gap:5px; }
+ html .ai-usage-top strong { font-size:15px; }
+ html .ai-usage-meta { font-size:10px; gap:8px; flex-wrap:wrap; }
+ html .ai-usage-track { height:7px; margin-block:10px; border-radius:20px; }
+ html .ai-conversation-card { border:0; background:transparent; box-shadow:none; min-width:0; }
+ html .ai-conversation-scroll { padding:0 0 12px; }
+ html .ai-empty-state { padding:20px 12px 14px; border:1px solid var(--border); border-radius:23px; background:radial-gradient(ellipse at 50% 15%,#e9dfff66,transparent 60%),var(--surface); }
+ html .ai-empty-orbit { margin:0 auto 12px; }
+ html .ai-empty-state h2 { font-size:20px; line-height:1.4; margin:8px 0; }
+ html .ai-empty-state > p { font-size:12px; line-height:1.7; }
+ html .ai-empty-state > small { font-size:10px; line-height:1.6; }
+ html .ai-suggestion-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:13px; }
+ html .ai-suggestion-grid button { display:flex; align-items:center; min-width:0; gap:7px; padding:11px 8px; min-height:45px; font-size:11px; line-height:1.5; text-align:left; border:1px solid var(--purple-200); border-radius:13px; background:var(--surface-soft); }
+ html .ai-suggestion-grid button svg { width:19px; height:19px; flex:none; }
+ html .ai-premium-message { gap:8px; margin-block:13px; }
+ html .ai-premium-bubble { border-radius:18px; padding:12px; font-size:13px; line-height:1.7; overflow-wrap:anywhere; }
+ html .ai-premium-message.user .ai-premium-bubble { background:#eee6ff; border-bottom-right-radius:5px; }
+ html .ai-premium-message.assistant .ai-premium-bubble { background:var(--surface); border-bottom-left-radius:5px; }
+ html .ai-premium-composer { padding:7px; border:1px solid white; border-radius:23px; background:var(--surface); box-shadow:0 6px 24px #7553bb12; }
+ html .ai-composer-row { align-items:center; gap:7px; }
+ html .ai-composer-row textarea { font-size:16px; min-height:42px; }
+ html .ai-send-button { width:42px; height:42px; border-radius:50%; flex:none; background:linear-gradient(135deg,#ad8cff,#7040f5); }
+ html .ai-composer-meta { font-size:9px; }
+ html .ai-context-sheet { border-radius:25px 25px 0 0; }
+ html .ai-context-sheet .ai-context-panel { padding:14px; }
+ html .ai-context-sheet .ai-context-note,html .ai-context-sheet .ai-panel-heading p { white-space:normal; font-size:12px; }
+}

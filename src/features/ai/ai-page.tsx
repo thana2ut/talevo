@@ -721,6 +721,10 @@ export function AIPage() {
   return (
     <div className="page ai-premium-page">
       <header className="ai-premium-header">
+        <button className="ai-phone-context-button icon-button" type="button" onClick={() => setContextSheetOpen(true)} aria-label="เลือกบริบทที่ให้ AI ใช้" aria-haspopup="dialog" aria-expanded={contextSheetOpen}>
+          <Info aria-hidden="true" />
+          {selectedOptions.length > 0 && <span>{selectedOptions.length}</span>}
+        </button>
         <div className="ai-header-left">
           <Link href="/today" className="icon-button ai-back-button" aria-label="ย้อนกลับ">
             <ChevronLeft />
