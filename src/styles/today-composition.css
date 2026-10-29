@@ -354,9 +354,12 @@ html[data-theme="dark"] .academic-weather-empty {
 .smart-today-schedule-time { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 999px; color: var(--text-secondary); background: var(--surface-soft); font-size: 12px; font-weight: 800; white-space: nowrap; }
 .smart-today-schedule-time.is-active { color: var(--purple-700); background: var(--purple-50); }
 .smart-today-schedule-status { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 12px; font-weight: 750; white-space: nowrap; }
-.smart-today-schedule-status i { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--text-muted); }
-.smart-today-schedule-status.is-active { color: var(--purple-700); }
-.smart-today-schedule-status.is-active i { background: var(--purple-600); }
+.smart-today-schedule-status { min-height: 28px; padding: 0 9px; border-radius: 999px; background: var(--surface-soft); }
+.smart-today-schedule-status svg { width: 13px; height: 13px; flex: none; }
+.smart-today-schedule-status.is-current { color: var(--purple-700); background: var(--purple-50); }
+.smart-today-schedule-status.is-next { color: var(--text-secondary); background: var(--surface-soft); }
+.smart-today-schedule-status.is-completed { color: var(--success); background: var(--success-soft); }
+.smart-today-schedule-status.is-pending { color: var(--text-muted); background: var(--surface-soft); }
 .smart-today-schedule-name { height: 2.7em; min-height: 0; display: -webkit-box; color: var(--text-primary); font-size: 14px; font-weight: 800; line-height: 1.35; overflow: hidden; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .smart-today-schedule-room { min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 0; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
 .smart-today-schedule-room svg { width: 15px; height: 15px; flex: none; }
@@ -387,6 +390,7 @@ html[data-theme="dark"] .academic-weather-empty {
   .smart-today-schedule-item { padding: 8px 12px; border-top: 0; border-inline-start: 1px solid var(--border); }
   .smart-today-schedule-item:first-child,
   .smart-today-schedule-item:nth-child(odd) { padding-inline-start: 0; border-inline-start: 0; }
+  .smart-today-schedule-item:first-child { padding-block-start: 8px; }
   .smart-today-schedule-item:nth-child(n + 3) { padding-top: 12px; border-top: 1px solid var(--border); }
   .smart-today-schedule-item:nth-child(even) { padding-inline-end: 0; }
 }

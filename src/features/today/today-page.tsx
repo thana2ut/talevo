@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
-import { ArrowRight, ArrowUpRight, CalendarDays, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
+import { Activity, ArrowRight, ArrowUpRight, CalendarDays, Circle, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
 import { Card, IconTile, TalevoMascot, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getTaskCourseLabel } from "@/lib/course-utils";
 import { formatHomeGreeting } from "@/lib/greeting";
@@ -73,11 +73,13 @@ function TodayScheduleCard({ classes, nowMinutes }: { classes: ClassSchedule[]; 
       const ended = timeToMinutes(item.endTime) <= nowMinutes;
       const isCurrent = index === currentIndex;
       const isNext = index === upcomingIndex && !isCurrent && !ended;
+      const StatusIcon = isCurrent ? Activity : isNext ? Clock3 : ended ? CircleCheck : Circle;
+      const statusTone = isCurrent ? "is-current" : isNext ? "is-next" : ended ? "is-completed" : "is-pending";
       const status = language === "th"
         ? isCurrent ? "กำลังเรียน" : isNext ? "คาบถัดไป" : ended ? "เรียนแล้ว" : "ยังไม่เริ่ม"
         : isCurrent ? "In progress" : isNext ? "Next class" : ended ? "Completed" : "Not started";
       return <article className={`smart-today-schedule-item${isCurrent || isNext ? " is-active" : ""}`} key={item.id}>
-        <div className="smart-today-schedule-meta"><span className={`smart-today-schedule-time${isCurrent || isNext ? " is-active" : ""}`}>{item.startTime}–{item.endTime}</span><span className={`smart-today-schedule-status${isCurrent || isNext ? " is-active" : ""}`}><i aria-hidden="true" />{status}</span></div>
+        <div className="smart-today-schedule-meta"><span className={`smart-today-schedule-time${isCurrent || isNext ? " is-active" : ""}`}>{item.startTime}–{item.endTime}</span><span className={`smart-today-schedule-status ${statusTone}`}><StatusIcon aria-hidden="true" />{status}</span></div>
         <strong className="smart-today-schedule-name">{getScheduleDisplayName(item)}</strong>
         <span className="smart-today-schedule-room"><MapPin aria-hidden="true" />{item.room || (language === "th" ? "ยังไม่ระบุห้อง" : "Room not set")}</span>
       </article>;
