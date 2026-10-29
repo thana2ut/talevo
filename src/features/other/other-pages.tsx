@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, Languages, Sparkles, Trash2 } from "lucide-react";
+import { Moon, Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, Languages, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BottomSheet, Card, PageHeader, Select } from "@/components/ui";
 import Link from "next/link";
@@ -132,6 +132,19 @@ const NOTIFICATION_GROUPS = [
 ] as const satisfies ReadonlyArray<{ titleKey: string; keys: ReadonlyArray<keyof NotificationPreferences> }>;
 
 export function SettingsPage() {
+  const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setDarkMode(document.documentElement.dataset.theme === "dark"));
+    const syncTheme = () => setDarkMode(document.documentElement.dataset.theme === "dark");
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
+  }, []);
+  const changeDarkMode = (enabled: boolean) => {
+    document.documentElement.dataset.theme = enabled ? "dark" : "light";
+    setDarkMode(enabled);
+    try { localStorage.setItem("talevo-theme", enabled ? "dark" : "light"); } catch { /* Keep the current session theme when storage is unavailable. */ }
+  };
   const { settings, updateSettings, updateNotificationPreferences, browserNotificationPermission, browserNotificationTestStatus, deviceNotificationsEnabled, pushRegistration, setBrowserNotificationsEnabled } = useAppState();
   const { language, setLanguage, t } = useLanguage();
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
@@ -145,7 +158,7 @@ export function SettingsPage() {
   const setGroup = (keys: ReadonlyArray<keyof NotificationPreferences>, value: boolean) =>
     updateNotificationPreferences(Object.fromEntries(keys.map((key) => [key, value])));
   return <div className="page settings-page"><PageHeader title={t("settings.title")} backHref="/profile" />
-    <section><div className="section-header"><h2>{t("settings.general")}</h2></div><Card className="settings-card"><button className="setting-row language-setting-row" type="button" onClick={() => setLanguagePickerOpen(true)} aria-label={languageRowLabel}><span className="setting-icon"><Languages /></span><span className="language-setting-copy"><strong>{t("settings.language")}</strong><small>{t("settings.languageDescription")}</small></span><span className="language-setting-trailing"><strong className="setting-value language-setting-value">{languageLabels[language]}</strong><ChevronRight className="setting-chevron" aria-hidden="true" /></span></button><SettingRow icon={<Clock3 />} title={t("settings.timeZone")}><strong className="setting-value">Asia/Bangkok</strong></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.dateFormat")}><Select aria-label={t("settings.dateFormat")} value={settings.dateFormat} onChange={(event) => updateSettings({dateFormat:event.target.value as typeof settings.dateFormat})}><option value="วัน/เดือน/ปี">{language === "th" ? "วัน/เดือน/ปี" : "Day / Month / Year"}</option><option value="เดือน/วัน/ปี">{language === "th" ? "เดือน/วัน/ปี" : "Month / Day / Year"}</option></Select></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.yearDisplay")}><Select aria-label={t("settings.yearDisplay")} value={settings.yearSystem} onChange={(event) => updateSettings({yearSystem:event.target.value as typeof settings.yearSystem})}><option>พ.ศ.</option><option>ค.ศ.</option></Select></SettingRow></Card></section>
+    <section><div className="section-header"><h2>{t("settings.general")}</h2></div><Card className="settings-card"><button className="setting-row language-setting-row" type="button" onClick={() => setLanguagePickerOpen(true)} aria-label={languageRowLabel}><span className="setting-icon"><Languages /></span><span className="language-setting-copy"><strong>{t("settings.language")}</strong><small>{t("settings.languageDescription")}</small></span><span className="language-setting-trailing"><strong className="setting-value language-setting-value">{languageLabels[language]}</strong><ChevronRight className="setting-chevron" aria-hidden="true" /></span></button><SettingRow icon={<Moon />} title="โหมดมืด" description="ปรับสีหน้าจอให้อ่านสบายในที่แสงน้อย"><Toggle label="โหมดมืด" checked={darkMode} onChange={changeDarkMode} /></SettingRow><SettingRow icon={<Clock3 />} title={t("settings.timeZone")}><strong className="setting-value">Asia/Bangkok</strong></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.dateFormat")}><Select aria-label={t("settings.dateFormat")} value={settings.dateFormat} onChange={(event) => updateSettings({dateFormat:event.target.value as typeof settings.dateFormat})}><option value="วัน/เดือน/ปี">{language === "th" ? "วัน/เดือน/ปี" : "Day / Month / Year"}</option><option value="เดือน/วัน/ปี">{language === "th" ? "เดือน/วัน/ปี" : "Month / Day / Year"}</option></Select></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.yearDisplay")}><Select aria-label={t("settings.yearDisplay")} value={settings.yearSystem} onChange={(event) => updateSettings({yearSystem:event.target.value as typeof settings.yearSystem})}><option>พ.ศ.</option><option>ค.ศ.</option></Select></SettingRow></Card></section>
     <section><div className="section-header"><h2>{t("settings.notifications")}</h2></div><Card className="settings-card notification-settings">
       <SettingRow icon={<Bell />} title={t("settings.smartAlerts")}><Toggle label={t("settings.smartAlerts")} checked={preferences.enabled} onChange={(value) => updateNotificationPreferences({ enabled: value })} /></SettingRow>
       {NOTIFICATION_GROUPS.map((group, index) => <div className={`setting-row notification-preference-row ${disabled ? "is-disabled" : ""}`} key={group.titleKey}><span className="setting-icon">{groupIcons[index]}</span><strong>{t(group.titleKey)}</strong><Toggle label={t(group.titleKey)} checked={isGroupOn(group.keys)} disabled={disabled} onChange={(value) => setGroup(group.keys, value)} /></div>)}

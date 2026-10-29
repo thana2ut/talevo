@@ -36,7 +36,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: "#6843ee",
-  colorScheme: "light",
+  colorScheme: "light dark",
 };
 
 const languageBootstrapScript = `try { const current = localStorage.getItem(${JSON.stringify(TALEVO_LANGUAGE_STORAGE_KEY)}); const legacy = current === null ? localStorage.getItem(${JSON.stringify(LEGACY_KERNOVA_LANGUAGE_STORAGE_KEY)}) : null; const language = current === "th" || current === "en" ? current : legacy === "th" || legacy === "en" ? legacy : "th"; if (current === null && (legacy === "th" || legacy === "en")) localStorage.setItem(${JSON.stringify(TALEVO_LANGUAGE_STORAGE_KEY)}, legacy); document.documentElement.lang = language; } catch { document.documentElement.lang = "th"; }`;
@@ -49,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${notoSansThai.variable} h-full antialiased`}
     >
-      <head><script dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} /></head>
+      <head><script dangerouslySetInnerHTML={{ __html: `try { document.documentElement.dataset.theme = localStorage.getItem("talevo-theme") === "dark" ? "dark" : "light"; } catch { document.documentElement.dataset.theme = "light"; }` }} /><script dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} /></head>
       <body className="min-h-full"><PwaRuntime /><LanguageProvider><SupabaseAuthProvider><AppStateProvider><AppShell>{children}</AppShell></AppStateProvider></SupabaseAuthProvider></LanguageProvider></body>
     </html>
   );
