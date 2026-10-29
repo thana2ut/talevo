@@ -20,3 +20,4 @@
  .exam-summary .exam-stats strong { font-size: 22px; }
  .exam-summary .exam-stats small { font-size: 11px; }
 }
+.exam-days button > .exam-date-today { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex: none; border-radius: 50%; color: #fff; background: linear-gradient(135deg,#8250ff,#6437ee); font-weight: 800; line-height: 1; box-shadow: 0 2px 6px rgba(111,59,244,.18); }
