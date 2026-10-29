@@ -693,3 +693,8 @@ html[data-theme="dark"] .ai-context-badge { background: #2b2244; color: #c4b5fd;
  .ai-context-panel .ai-panel-heading p,
  .ai-context-panel .ai-context-note { font-size: clamp(7px, 2.1cqi, 10px); }
 }
+/* Keep the context footer readable on one line at each panel width. */
+.ai-context-panel .ai-context-note { font-size: 10px; white-space: nowrap; letter-spacing: -.025em; }
+@supports (font-size: 1cqi) {
+ .ai-context-panel .ai-context-note { font-size: clamp(8px, 2.55cqi, 12px); }
+}
