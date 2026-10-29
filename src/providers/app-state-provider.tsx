@@ -78,6 +78,9 @@ import {
   persistAcademicTerm,
   persistAppSettings,
   persistDailyBudget,
+  persistNotifications,
+  deleteNotificationsFromCloud,
+  persistDismissedNotificationEvents,
 } from "@/lib/supabase/cloud-mutations";
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
@@ -581,10 +584,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const nextNotifications = [...generated, ...currentNotifications];
     notificationsRef.current = nextNotifications;
     setNotifications(nextNotifications);
+    // Store them on the account, or the next launch rehydrates an empty list
+    // over the top and the centre looks as if nothing ever arrived.
+    runCloudMutation((client, uid) => persistNotifications(client, uid, generated));
     if (deviceNotificationsEnabled && claimAlertDeliveryLeadership(window.localStorage, tabIdRef.current)) {
       void deliverNewBrowserNotifications(generated);
     }
-  }, [academicTerm, deviceNotificationsEnabled, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, schedules, settings.notificationPreferences, tasks])
+  }, [academicTerm, deviceNotificationsEnabled, dismissedNotificationEventKeys, exams, isCurrentScopeHydrated, language, now, profile, runCloudMutation, schedules, settings.notificationPreferences, tasks])
 
   // Queue the next week of reminders so they can be delivered while the app is
   // closed. Only the data the plan reads is in the dependencies: `now` is not,
@@ -1000,8 +1006,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setSchedules((current) => current.filter((item) => item.id !== id));
       runCloudMutation((client, uid) => deleteClassSchedule(client, uid, id));
     },
-    markNotificationRead: (id) => setNotifications((current) => current.map((item) => item.id === id && !item.readAt ? { ...item, readAt: new Date().toISOString() } : item)),
-    markAllNotificationsRead: () => setNotifications((current) => { const readAt = new Date().toISOString(); return current.map((item) => item.readAt ? item : { ...item, readAt }); }),
+    markNotificationRead: (id) => setNotifications((current) => {
+      const next = current.map((item) => item.id === id && !item.readAt ? { ...item, readAt: new Date().toISOString() } : item);
+      const changed = next.find((item, index) => item !== current[index]);
+      if (changed) runCloudMutation((client, uid) => persistNotifications(client, uid, [changed]));
+      return next;
+    }),
+    markAllNotificationsRead: () => setNotifications((current) => {
+      const readAt = new Date().toISOString();
+      const next = current.map((item) => item.readAt ? item : { ...item, readAt });
+      const changed = next.filter((item, index) => item !== current[index]);
+      if (changed.length) runCloudMutation((client, uid) => persistNotifications(client, uid, changed));
+      return next;
+    }),
     deleteNotification: (id) => {
       const result = removeReadNotification(notifications, id, dismissedNotificationEventKeys);
       if (!result.removed) return;
@@ -1009,14 +1026,21 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       dismissedNotificationEventKeysRef.current = result.dismissedEventKeys;
       setNotifications(result.notifications);
       setDismissedNotificationEventKeys(result.dismissedEventKeys);
+      // The tombstone goes up first: a delete that is only half applied should
+      // leave the alert suppressed rather than let it come straight back.
+      runCloudMutation((client, uid) => persistDismissedNotificationEvents(client, uid, result.dismissedEventKeys));
+      runCloudMutation((client, uid) => deleteNotificationsFromCloud(client, uid, [id]));
     },
     deleteReadNotifications: () => {
+      const removedIds = notifications.filter((item) => item.readAt).map((item) => item.id);
       const result = removeAllReadNotifications(notifications, dismissedNotificationEventKeys);
       if (!result.removed) return;
       notificationsRef.current = result.notifications;
       dismissedNotificationEventKeysRef.current = result.dismissedEventKeys;
       setNotifications(result.notifications);
       setDismissedNotificationEventKeys(result.dismissedEventKeys);
+      runCloudMutation((client, uid) => persistDismissedNotificationEvents(client, uid, result.dismissedEventKeys));
+      runCloudMutation((client, uid) => deleteNotificationsFromCloud(client, uid, removedIds));
     },
     sendChat: (content, selectedContext) => {
       const trimmed = content.trim();

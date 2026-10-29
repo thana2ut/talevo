@@ -72,7 +72,12 @@ async function verifyDeviceDelivery() {
   check(providerSource.includes("retryable") && providerSource.includes("attempt(remaining - 1"), "push registration must retry a transient failure instead of giving up for the session");
   check(pushClientSource.includes("matchesVapidKey") && pushClientSource.includes("getSubscription()"), "re-registering a device must reuse its push subscription instead of minting a new endpoint each launch");
   check(!pushClientSource.includes("ignoreDuplicates: true"), "a queued reminder must pick up edits to the class or task it belongs to");
+  check(pushClientSource.includes("inFlightRegistration"), "two callers registering at once must share one attempt, or the device collects a second endpoint and every reminder arrives twice");
   const mutationSource = fs.readFileSync(path.join(projectRoot, "src/lib/supabase/cloud-mutations.ts"), "utf8");
+  check(mutationSource.includes("persistNotifications") && mutationSource.includes("deleteNotificationsFromCloud") && mutationSource.includes("persistDismissedNotificationEvents"), "the notification centre must be stored on the account, not only on the device");
+  check(providerSource.includes("deleteNotificationsFromCloud(client, uid, [id])"), "deleting a notification must remove it from the account");
+  check(providerSource.includes("persistDismissedNotificationEvents(client, uid, result.dismissedEventKeys)"), "a dismissed alert must keep its tombstone on the account so it is not raised again");
+  check(providerSource.includes("persistNotifications(client, uid, generated)"), "a newly raised alert must be stored on the account");
   check(mutationSource.includes("persistAppSettings") && mutationSource.includes('from("app_settings")'), "notification preferences must be written back to Supabase");
   check(providerSource.includes("persistAppSettings(client, uid, updated)"), "changing a notification preference must persist it to the account");
   check(providerSource.includes("Promise.race<NotificationPermission>") && providerSource.includes("15_000") && providerSource.includes("10_000"), "permission and test delivery must recover instead of leaving the notification toggle stuck forever");

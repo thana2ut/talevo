@@ -56,7 +56,25 @@ export type PushRegistration =
  * Safe to call on every launch: it reuses the subscription the device already
  * holds and only re-registers it with the server.
  */
-export async function enablePushOnThisDevice(vapidPublicKey: string): Promise<PushRegistration> {
+/**
+ * One registration at a time.
+ *
+ * Flipping the switch and the launch effect both ask to register, within a
+ * frame of each other. Both found no subscription, both called subscribe(),
+ * and the push service handed out two endpoints - two rows for one browser,
+ * and every reminder arriving on that machine twice. Callers now share
+ * whichever attempt is already in flight.
+ */
+let inFlightRegistration: Promise<PushRegistration> | null = null;
+
+export function enablePushOnThisDevice(vapidPublicKey: string): Promise<PushRegistration> {
+  inFlightRegistration ??= registerPushOnThisDevice(vapidPublicKey).finally(() => {
+    inFlightRegistration = null;
+  });
+  return inFlightRegistration;
+}
+
+async function registerPushOnThisDevice(vapidPublicKey: string): Promise<PushRegistration> {
   if (!isPushSupported()) return { ok: false, reason: "unsupported" };
   if (!vapidPublicKey) return { ok: false, reason: "no_key" };
   if (window.Notification.permission !== "granted") return { ok: false, reason: "not_permitted" };

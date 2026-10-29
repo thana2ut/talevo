@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   AcademicTerm,
+  AppNotification,
   AppSettings,
   ClassSchedule,
   CourseGradePlan,
@@ -437,6 +438,82 @@ export async function persistAppSettings(
       weekly_radar: preferences.weeklyRadar,
       updated_at: new Date().toISOString(),
     });
+    return { error: error ? new Error(error.message) : null };
+  } catch (err) {
+    return { error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
+/**
+ * Persist the notification centre to Supabase.
+ *
+ * Nothing wrote these two tables at runtime, so every launch rehydrated an
+ * empty list over the one the device had built. A notification that had been
+ * read came back unread, and one that had been deleted came back at all: the
+ * tombstone that stops the alert engine re-raising it lived only in
+ * dismissed_notification_events, which was equally empty.
+ */
+export async function persistNotifications(
+  supabase: SupabaseClient,
+  userId: string,
+  notifications: AppNotification[],
+): Promise<{ error: Error | null }> {
+  if (!notifications.length) return { error: null };
+  try {
+    const { error } = await supabase.from("notifications").upsert(
+      notifications.map((notification) => ({
+        user_id: userId,
+        id: notification.id,
+        type: notification.type,
+        priority: notification.priority,
+        title: notification.title,
+        message: notification.message,
+        created_at: notification.createdAt,
+        read_at: notification.readAt ?? null,
+        href: notification.href ?? null,
+        event_key: notification.eventKey,
+        source_id: notification.sourceId ?? null,
+        metadata: notification.metadata ?? null,
+      })),
+      { onConflict: "user_id,id" },
+    );
+    return { error: error ? new Error(error.message) : null };
+  } catch (err) {
+    return { error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
+/** Removes notifications from the account, not just from the device reading it. */
+export async function deleteNotificationsFromCloud(
+  supabase: SupabaseClient,
+  userId: string,
+  ids: string[],
+): Promise<{ error: Error | null }> {
+  if (!ids.length) return { error: null };
+  try {
+    const { error } = await supabase.from("notifications").delete().eq("user_id", userId).in("id", ids);
+    return { error: error ? new Error(error.message) : null };
+  } catch (err) {
+    return { error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
+/**
+ * The tombstones that keep a dismissed alert dismissed. Without them the
+ * engine raises the same reminder again the moment it next runs, which is what
+ * made a deleted notification reappear.
+ */
+export async function persistDismissedNotificationEvents(
+  supabase: SupabaseClient,
+  userId: string,
+  eventKeys: string[],
+): Promise<{ error: Error | null }> {
+  if (!eventKeys.length) return { error: null };
+  try {
+    const { error } = await supabase.from("dismissed_notification_events").upsert(
+      eventKeys.map((eventKey) => ({ user_id: userId, event_key: eventKey })),
+      { onConflict: "user_id,event_key", ignoreDuplicates: true },
+    );
     return { error: error ? new Error(error.message) : null };
   } catch (err) {
     return { error: err instanceof Error ? err : new Error(String(err)) };
