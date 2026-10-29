@@ -669,172 +669,55 @@ html[data-theme="dark"] .academic-weather-empty {
   .smart-mascot-spark { animation: none; }
 }
 
-/* Today dashboard hero: real schedule/task details over the supplied Talevo art. */
-.smart-today-page {
-  max-width: 1480px;
-}
-.smart-today-hero .smart-recommendation-dashboard {
-  display: block;
-  min-height: 0;
-  overflow: hidden;
-  padding: clamp(24px, 3.2vw, 48px);
-  border: 1px solid rgba(198, 181, 255, .72);
-  border-radius: clamp(24px, 3vw, 40px);
-  background-color: #f6f2ff;
-  background-image: linear-gradient(90deg, rgba(251, 249, 255, .98) 0%, rgba(250, 248, 255, .94) 48%, rgba(249, 246, 255, .42) 100%), url("/assets/dashboard/study-room.webp");
-  background-size: cover;
-  background-position: center 56%;
-  box-shadow: 0 24px 60px rgba(88, 57, 160, .1);
-}
-.smart-recommendation-content {
+.smart-today-page { max-width: 1480px; }
+.smart-today-hero .smart-free-time-hero {
   display: grid;
-  position: relative;
-  z-index: 2;
-  width: min(100%, 1060px);
-  gap: 26px;
-}
-.smart-recommendation-main {
-  max-width: 800px;
-  padding-right: clamp(0px, 12vw, 190px);
-}
-.smart-recommendation-main > small {
-  display: block;
-  margin-top: 24px;
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 700;
-}
-.smart-recommendation-main h2 {
-  max-width: 850px;
-  margin: 8px 0 5px;
-  color: #24134f;
-  font-size: clamp(27px, 3.3vw, 46px);
-  font-weight: 850;
-  line-height: 1.22;
-  text-wrap: balance;
-}
-.smart-recommendation-main > strong { color: var(--purple-700); font-size: 17px; }
-.smart-recommendation-main > p { max-width: 720px; margin: 8px 0 16px; color: var(--text-secondary); font-size: 15px; }
-.smart-recommendation-main .smart-recommendation-action {
-  display: inline-flex;
-  min-height: 48px;
+  min-height: 190px;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
   align-items: center;
-  gap: 10px;
-  border-radius: 16px;
-  padding: 0 19px;
-  background: var(--purple-600);
-  color: #fff;
-  font-weight: 800;
-  box-shadow: 0 10px 22px rgba(104, 67, 238, .22);
+  gap: 22px;
+  border: 1px solid color-mix(in srgb, var(--purple-300) 58%, white);
+  border-radius: 28px;
+  padding: clamp(24px, 3vw, 38px);
+  background: radial-gradient(circle at 88% 20%, rgba(198,181,255,.24), transparent 32%), linear-gradient(125deg, rgba(255,255,255,.97), rgba(246,242,255,.95));
+  box-shadow: 0 18px 42px rgba(88,57,160,.08);
 }
-.smart-recommendation-main .smart-recommendation-action svg { width: 18px; height: 18px; }
-.smart-recommendation-facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  max-width: 930px;
-}
-.smart-recommendation-fact {
-  display: flex;
-  min-width: 0;
-  min-height: 78px;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid rgba(255,255,255,.82);
-  border-radius: 19px;
-  padding: 12px 14px;
-  background: rgba(255,255,255,.7);
-  backdrop-filter: blur(8px);
-}
-.smart-recommendation-fact > span { display: grid; width: 40px; height: 40px; flex: none; place-items: center; border-radius: 13px; background: var(--purple-50); color: var(--purple-600); }
-.smart-recommendation-fact svg { width: 20px; height: 20px; }
-.smart-recommendation-fact > div { display: grid; min-width: 0; gap: 2px; }
-.smart-recommendation-fact strong { overflow-wrap: anywhere; color: var(--text-primary); font-size: 14px; line-height: 1.4; }
-.smart-recommendation-fact small { color: var(--text-secondary); font-size: 12px; }
-.smart-recommendation-bottom { display: grid; grid-template-columns: minmax(230px, .8fr) minmax(0, 1.2fr); gap: 18px; max-width: 930px; }
-.smart-recommendation-progress,
-.smart-recommendation-tasks { min-width: 0; border: 1px solid rgba(255,255,255,.8); border-radius: 20px; background: rgba(255,255,255,.76); backdrop-filter: blur(8px); }
-.smart-recommendation-progress { display: flex; align-items: center; gap: 16px; padding: 15px 18px; }
-.smart-recommendation-ring { display: grid; width: 78px; height: 78px; flex: none; place-items: center; border-radius: 50%; }
-.smart-recommendation-ring > span { display: grid; width: 62px; height: 62px; align-content: center; justify-items: center; border-radius: 50%; background: #fff; color: #251251; line-height: 1.1; }
-.smart-recommendation-ring strong { font-size: 22px; }
-.smart-recommendation-ring strong small { font-size: 13px; }
-.smart-recommendation-ring > span > small { color: var(--text-secondary); font-size: 11px; }
-.smart-recommendation-progress > div { display: grid; gap: 3px; }
-.smart-recommendation-progress > div small,
-.smart-recommendation-progress > div span { color: var(--text-secondary); font-size: 12px; }
-.smart-recommendation-progress > div strong { color: #271652; font-size: 15px; }
-.smart-recommendation-tasks { padding: 14px 16px; }
-.smart-recommendation-tasks h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 7px; color: #271652; font-size: 14px; }
-.smart-recommendation-tasks h3 svg { width: 18px; height: 18px; color: var(--purple-600); }
-.smart-recommendation-tasks h3 span { display: grid; min-width: 22px; height: 22px; place-items: center; margin-left: auto; border-radius: 99px; background: var(--purple-50); color: var(--purple-700); font-size: 11px; }
-.smart-recommendation-tasks > a { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid rgba(114,86,246,.1); color: var(--text-primary); font-size: 12px; font-weight: 700; }
-.smart-recommendation-tasks > a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.smart-recommendation-tasks > a svg { width: 15px; height: 15px; flex: none; color: var(--purple-600); }
-.smart-recommendation-tasks > p { margin: 8px 0 2px; color: var(--text-secondary); font-size: 12px; }
-.smart-recommendation-dashboard .smart-recommendation-art {
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  right: 2%;
-  bottom: 0;
-  display: block;
-  width: min(30%, 390px);
-  min-width: 250px;
-  pointer-events: none;
-}
-.smart-recommendation-dashboard .smart-mascot-aura { top: 22%; right: 3%; bottom: auto; width: 100%; height: 70%; }
-.smart-recommendation-dashboard .smart-mascot-orbit { right: 10%; bottom: 8%; width: 82%; }
-.smart-recommendation-dashboard .smart-mascot-pedestal { right: 15%; bottom: 6%; width: 70%; }
-.smart-recommendation-mascot {
-  position: absolute;
-  right: 5%;
-  bottom: -2%;
-  width: 90%;
-  height: 94%;
-  background: url("/assets/dashboard/talevo-study-mascot.webp") center bottom / contain no-repeat;
-  filter: drop-shadow(0 14px 22px rgba(70, 36, 155, .2));
+.smart-free-time-hero-heading { display: flex; align-items: center; gap: 15px; }
+.smart-free-time-hero-heading .icon-tile { width: 54px; height: 54px; border-radius: 17px; }
+.smart-free-time-hero-heading .icon-tile svg { width: 26px; height: 26px; }
+.smart-free-time-hero-heading > div { display: grid; gap: 4px; }
+.smart-free-time-hero-heading strong { color: var(--text-primary); font-size: clamp(20px, 2vw, 27px); font-weight: 850; }
+.smart-free-time-hero-heading small { color: var(--text-secondary); font-size: 13px; }
+.smart-free-time-hero-detail { display: grid; justify-items: start; gap: 4px; border-inline-start: 1px solid color-mix(in srgb, var(--purple-300) 40%, transparent); padding-inline-start: clamp(20px, 3vw, 42px); }
+.smart-free-time-hero-detail > span { color: var(--text-secondary); font-size: 13px; }
+.smart-free-time-hero-detail > strong { color: var(--text-primary); font-size: clamp(28px, 3vw, 40px); font-weight: 900; letter-spacing: -.03em; line-height: 1.2; }
+.smart-free-time-hero-detail > small { color: var(--text-secondary); font-size: 13px; }
+.smart-today-primary-grid { grid-template-columns: minmax(0, 1fr); }
+.smart-today-primary-grid > .smart-today-schedule { grid-column: 1 / -1; }
+.smart-today-schedule-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 10px; }
+.smart-today-schedule-item,
+.smart-today-schedule-item:first-child,
+.smart-today-schedule-item:nth-child(odd),
+.smart-today-schedule-item:nth-child(even),
+.smart-today-schedule-item:nth-child(n + 3) { min-height: 130px; grid-template-rows: 30px auto 20px; gap: 7px; border: 1px solid var(--border); border-radius: 16px; padding: 13px 16px; }
+.smart-today-schedule-item .smart-today-schedule-name { height: auto; min-height: 2.7em; }
+.smart-today-schedule-item .smart-today-schedule-meta { gap: 6px; }
+.smart-today-schedule-item .smart-today-schedule-time { padding-inline: 9px; }
+@media (max-width: 767px) {
+  .smart-today-hero .smart-free-time-hero { min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 18px; border-radius: 22px; padding: 20px; }
+  .smart-free-time-hero-heading .icon-tile { width: 46px; height: 46px; border-radius: 14px; }
+  .smart-free-time-hero-heading strong { font-size: 19px; }
+  .smart-free-time-hero-detail { border-inline-start: 0; border-top: 1px solid color-mix(in srgb, var(--purple-300) 40%, transparent); padding: 15px 0 0; }
+  .smart-free-time-hero-detail > strong { font-size: clamp(27px, 8vw, 34px); }
+  .smart-today-schedule-list { grid-template-columns: minmax(0, 1fr); }
+  .smart-today-schedule-item,
+  .smart-today-schedule-item:first-child,
+  .smart-today-schedule-item:nth-child(odd),
+  .smart-today-schedule-item:nth-child(even),
+  .smart-today-schedule-item:nth-child(n + 3) { min-height: 112px; border: 1px solid var(--border); padding: 12px 14px; }
 }
 
-@media (min-width: 1200px) {
-  .smart-today-page { max-width: 1480px; }
-  .smart-today-hero .smart-recommendation-dashboard { min-height: 520px; }
-}
-@media (min-width: 700px) and (max-width: 1199px) {
-  .smart-today-hero .smart-recommendation-dashboard { min-height: 490px; }
-  .smart-recommendation-dashboard .smart-recommendation-art { right: 0; width: 29%; min-width: 210px; }
-  .smart-recommendation-content { width: 100%; padding-right: 170px; }
-  .smart-recommendation-main { padding-right: 0; }
-  .smart-recommendation-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 699px) {
-  .smart-today-page { padding-inline: 12px; }
-  .smart-today-hero .smart-recommendation-dashboard { min-height: 0; padding: 20px 16px 17px; border-radius: 24px; background-image: linear-gradient(180deg, rgba(251,249,255,.96) 0%, rgba(251,249,255,.94) 47%, rgba(249,246,255,.79) 100%), url("/assets/dashboard/study-room.webp"); background-position: 68% center; }
-  .smart-recommendation-content { width: 100%; gap: 17px; }
-  .smart-recommendation-main { padding: 0 82px 0 0; }
-  .smart-recommendation-main > small { margin-top: 17px; font-size: 12px; }
-  .smart-recommendation-main h2 { margin-top: 6px; font-size: clamp(21px, 6vw, 28px); line-height: 1.28; }
-  .smart-recommendation-main > strong { font-size: 14px; }
-  .smart-recommendation-main > p { margin: 6px 0 12px; font-size: 12px; line-height: 1.5; }
-  .smart-recommendation-main .smart-recommendation-action { min-height: 42px; border-radius: 14px; padding-inline: 14px; font-size: 13px; }
-  .smart-recommendation-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .smart-recommendation-fact { min-height: 66px; gap: 8px; border-radius: 15px; padding: 9px; }
-  .smart-recommendation-fact > span { width: 32px; height: 32px; border-radius: 10px; }
-  .smart-recommendation-fact svg { width: 17px; height: 17px; }
-  .smart-recommendation-fact strong { font-size: 11px; }
-  .smart-recommendation-fact small { font-size: 10px; }
-  .smart-recommendation-fact:last-child { grid-column: 1 / -1; }
-  .smart-recommendation-bottom { grid-template-columns: minmax(0, 1fr); gap: 9px; }
-  .smart-recommendation-progress { gap: 12px; padding: 11px 13px; }
-  .smart-recommendation-ring { width: 62px; height: 62px; }
-  .smart-recommendation-ring > span { width: 50px; height: 50px; }
-  .smart-recommendation-ring strong { font-size: 18px; }
-  .smart-recommendation-progress > div strong { font-size: 13px; }
-  .smart-recommendation-tasks { padding: 11px 13px; }
-  .smart-recommendation-dashboard .smart-recommendation-art { top: 10px; right: -5px; bottom: auto; width: 118px; min-width: 0; height: 150px; }
-  .smart-recommendation-dashboard .smart-mascot-aura { top: 8%; right: 0; width: 100%; height: 84%; }
-  .smart-recommendation-dashboard .smart-mascot-orbit,
-  .smart-recommendation-dashboard .smart-mascot-pedestal,
-  .smart-recommendation-dashboard .smart-mascot-spark { display: none; }
-  .smart-recommendation-mascot { right: 0; bottom: 0; width: 100%; height: 100%; }
+html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
+  border-color: color-mix(in srgb, var(--purple-400) 35%, var(--border));
+  background: radial-gradient(circle at 88% 20%, rgba(118,86,246,.16), transparent 32%), linear-gradient(125deg, var(--surface), var(--surface-soft));
 }

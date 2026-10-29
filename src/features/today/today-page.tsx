@@ -2,19 +2,17 @@
 
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
-import { Activity, ArrowRight, ArrowUpRight, CalendarDays, Circle, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
+import { Activity, ArrowRight, CalendarDays, Circle, CircleCheck, ClipboardCheck, Clock3, MapPin } from "lucide-react";
 import { Card, IconTile, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getTaskCourseLabel } from "@/lib/course-utils";
 import { formatHomeGreeting } from "@/lib/greeting";
 import { mondayIndex } from "@/lib/schedule-date";
 import { getScheduleDisplayName, timeToMinutes } from "@/lib/schedule-utils";
 import { calculateTaskProgress, getCompletedSubtaskCount, hasTaskProgress } from "@/lib/task-progress";
-import { formatTodayTaskDeadline, getPendingTasksForToday, getTaskDueState, getTasksDueToday, parseLocalTaskDate } from "@/lib/task-utils";
+import { formatTodayTaskDeadline, getPendingTasksForToday, getTaskDueState, getTasksDueToday } from "@/lib/task-utils";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ClassSchedule, Task } from "@/types";
-import { calculateDeadlineRisk, type DeadlineRiskAssessment } from "@/lib/alerts/deadline-risk";
-
 const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
 type FreeGap = { start: number; end: number };
@@ -144,81 +142,16 @@ function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; sched
   );
 }
 
-function RecommendationCard({ task, risk, gap, nextClass, classes, pendingTasks, now, nowMinutes }: { task?: Task; risk?: DeadlineRiskAssessment; gap?: FreeGap; nextClass?: ClassSchedule; classes: ClassSchedule[]; pendingTasks: Task[]; now: Date; nowMinutes: number }) {
+function TodayFreeTimeCard({ gap, nowMinutes }: { gap?: FreeGap; nowMinutes: number }) {
   const { t } = useLanguage();
-  const featuredClass = nextClass ?? classes.find((item) => timeToMinutes(item.endTime) > nowMinutes) ?? classes[classes.length - 1];
-  const completedClasses = classes.filter((item) => timeToMinutes(item.endTime) <= nowMinutes).length;
-  const classProgress = classes.length ? Math.round((completedClasses / classes.length) * 100) : 0;
-  const dateLabel = new Intl.DateTimeFormat("th-TH", { weekday: "long", day: "numeric", month: "short", year: "numeric" }).format(now);
-  let eyebrow = "เริ่มต้นพื้นที่เรียนของคุณ";
-  let title = "เพิ่มตารางเรียนแรกเพื่อให้ TALEVO ช่วยวางแผน";
-  let metadata = "ยังไม่มีตารางเรียนหรืองาน";
-  let detail = "เมื่อเริ่มบันทึกข้อมูล ภาพรวมวันนี้และคำแนะนำจะปรากฏตรงนี้";
-  let href = "/schedule/new";
-  let action = "เพิ่มตารางเรียน";
+  const gapIsActive = gap !== undefined && nowMinutes >= gap.start;
+  const remainingMinutes = gap ? gap.end - Math.max(nowMinutes, gap.start) : 0;
+  const timeLabel = gap ? gapIsActive ? `ถึง ${formatMinutes(gap.end)}` : `${formatMinutes(gap.start)}–${formatMinutes(gap.end)}` : "ยังไม่มีช่วงว่าง";
 
-  if (task && risk?.level === "at_risk") {
-    eyebrow = "เสี่ยงส่งไม่ทัน";
-    title = task.title;
-    metadata = `เหลืองานประมาณ ${formatDuration(risk.remainingEstimatedMinutes)}`;
-    detail = `ก่อนกำหนดส่งมีเวลาว่างประมาณ ${formatDuration(risk.availableFreeMinutes)} ควรเริ่มในช่วงว่างถัดไป`;
-    href = `/tasks/${task.id}`;
-    action = "จัดการงานนี้";
-  } else if (task) {
-    const due = parseLocalTaskDate(task.dueDate);
-    const dueState = getTaskDueState(task, now);
-    const total = task.subtasks?.length ?? 0;
-    const remaining = total - getCompletedSubtaskCount(task);
-    eyebrow = dueState === "overdue" ? "งานที่ควรจัดการก่อน" : gap ? "ช่วงนี้เหมาะกับการทำงาน" : "งานที่ควรทำก่อน";
-    title = task.title;
-    metadata = dueState === "overdue" ? "เลยกำหนดแล้ว" : due ? `ส่งวันนี้ ${formatMinutes(due.getHours() * 60 + due.getMinutes())}` : task.dueLabel;
-    detail = gap ? `ลองใช้ช่วง ${formatMinutes(gap.start)}–${formatMinutes(gap.end)}${remaining > 0 ? ` เพื่อทำอีก ${remaining} ขั้นตอน` : " เพื่อเริ่มทำก่อนพัก"}` : remaining > 0 ? `เหลือ ${remaining} จาก ${total} ขั้นตอน` : "เริ่มทำก่อนจบวันเพื่อให้ตามแผนได้ทัน";
-    href = `/tasks/${task.id}`;
-    action = "ทำงานต่อ";
-  } else if (nextClass) {
-    eyebrow = "เตรียมตัวสำหรับคาบถัดไป";
-    title = getScheduleDisplayName(nextClass);
-    metadata = `${nextClass.startTime} · ${nextClass.room}`;
-    detail = "ดูรายละเอียดคาบเรียนและเตรียมสิ่งที่ต้องใช้ล่วงหน้า";
-    href = "/schedule";
-    action = "ดูคาบเรียน";
-  } else if (classes.length > 0) {
-    eyebrow = "ตารางเรียนวันนี้ครบแล้ว";
-    title = "วันนี้ไม่มีคาบเรียนถัดไป";
-    metadata = `${classes.length} คาบเรียนวันนี้`;
-    detail = "ตรวจดูตารางวันถัดไปหรือใช้ช่วงเวลาที่เหลือพักและทบทวนบทเรียน";
-    href = "/schedule";
-    action = "ดูตารางเรียน";
-  }
-
-  return <section className="smart-recommendation smart-recommendation-dashboard">
-    <div className="smart-recommendation-copy smart-recommendation-content">
-      <div className="smart-recommendation-main">
-        <span className="smart-recommendation-label"><Sparkles /> {t("today.suggests")}</span>
-        <small>{eyebrow}</small>
-        <h2>{title}</h2>
-        <strong>{metadata}</strong>
-        <p>{detail}</p>
-        <Link href={href} className="smart-recommendation-action">{action} <ArrowUpRight /></Link>
-      </div>
-      <div className="smart-recommendation-facts" aria-label="ข้อมูลคาบเรียนวันนี้">
-        <div className="smart-recommendation-fact"><span><Clock3 aria-hidden="true" /></span><div><strong>{featuredClass ? `${featuredClass.startTime}–${featuredClass.endTime}` : "ไม่มีคาบเรียน"}</strong><small>{featuredClass ? nextClass ? "คาบถัดไป" : "คาบเรียนวันนี้" : "เวลาเรียน"}</small></div></div>
-        <div className="smart-recommendation-fact"><span><MapPin aria-hidden="true" /></span><div><strong>{featuredClass?.room || "ไม่มีห้องเรียน"}</strong><small>ห้องเรียน</small></div></div>
-        <div className="smart-recommendation-fact"><span><CalendarDays aria-hidden="true" /></span><div><strong>{dateLabel}</strong><small>วันที่เรียน</small></div></div>
-      </div>
-      <div className="smart-recommendation-bottom">
-        <div className="smart-recommendation-progress">
-          <span className="smart-recommendation-ring" style={{ background: `conic-gradient(var(--purple-600) ${classProgress}%, var(--purple-100) ${classProgress}% 100%)` }} aria-label={`เรียนแล้ว ${completedClasses} จาก ${classes.length} คาบ`}><span><strong>{completedClasses}<small>/{classes.length}</small></strong><small>คาบ</small></span></span>
-          <div><small>วันนี้เรียนไปแล้ว</small><strong>{completedClasses} จาก {classes.length} คาบ</strong><span>{Math.max(0, classes.length - completedClasses)} คาบที่เหลือ</span></div>
-        </div>
-        <div className="smart-recommendation-tasks">
-          <h3><ClipboardCheck aria-hidden="true" /> งานที่ต้องทำ <span>{pendingTasks.length}</span></h3>
-          {pendingTasks.length ? pendingTasks.slice(0, 2).map((item) => <Link href={`/tasks/${item.id}`} key={item.id}><span>{item.title}</span><ArrowRight aria-hidden="true" /></Link>) : <p>ไม่มีงานค้างในวันนี้</p>}
-        </div>
-      </div>
-    </div>
-    <div className="smart-mascot-stage smart-recommendation-art" aria-hidden="true"><span className="smart-mascot-aura" /><span className="smart-mascot-orbit" /><span className="smart-mascot-spark smart-mascot-spark-one" /><span className="smart-mascot-spark smart-mascot-spark-two" /><span className="smart-mascot-spark smart-mascot-spark-three" /><span className="smart-recommendation-mascot" /><span className="smart-mascot-pedestal" /></div>
-  </section>;
+  return <Card className="smart-free-time smart-free-time-hero">
+    <div className="smart-free-time-hero-heading"><IconTile tone="purple"><Clock3 aria-hidden="true" /></IconTile><div><strong>{t("today.freeTime")}</strong><small>{gapIsActive ? "เวลาว่างตอนนี้" : gap ? "ช่วงว่างถัดไป" : "ภาพรวมเวลาว่างวันนี้"}</small></div></div>
+    <div className="smart-free-time-hero-detail"><span>{gapIsActive ? "คุณมีเวลาว่าง" : gap ? "ช่วงเวลาที่จัดไว้ได้" : "วันนี้"}</span><strong>{timeLabel}</strong><small>{gap ? `เหลือ ${formatDuration(remainingMinutes)}` : "ไม่มีช่วงว่างต่อเนื่องอย่างน้อย 30 นาที"}</small></div>
+  </Card>;
 }
 
 export function TodayPage() {
@@ -233,21 +166,18 @@ export function TodayPage() {
     const nowMinutes = referenceDate.getHours() * 60 + referenceDate.getMinutes();
     const gaps = getFreeGaps(classes);
     const usefulGap = gaps.find((gap) => gap.end > nowMinutes);
-    const nextClass = classes.find((item) => timeToMinutes(item.startTime) > nowMinutes);
-    const risks = tasks.map((task) => ({ task, assessment: calculateDeadlineRisk(task, schedules, referenceDate) })).filter((item) => item.assessment?.level === "at_risk");
-    return { classes, pendingTasks, dueTodayTasks, nowMinutes, gaps, usefulGap, nextClass, atRisk: risks[0] };
+    return { classes, pendingTasks, dueTodayTasks, nowMinutes, usefulGap };
   }, [referenceDate, schedules, tasks]);
   const isLoadingProfile = isAuthLoading || !isHydrated || !clientReady;
   const greeting = formatHomeGreeting(profile.displayName, isLoadingProfile);
 
   return <div className="page today-page smart-today-page">
     <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><OverviewSentence classes={view.classes.length} pendingCount={view.pendingTasks.length} dueTodayCount={view.dueTodayTasks.length} /></div><NotificationBell /></header>
-    <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.pendingTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} classes={view.classes} pendingTasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} /></section>
+    <section className="smart-today-hero"><TodayFreeTimeCard gap={view.usefulGap} nowMinutes={view.nowMinutes} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
-      <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
       <TodayTaskCard task={view.pendingTasks[0]} now={referenceDate} schedules={schedules} />
-      <Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong></header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card>
+      <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
     </div>
     </section>
   </div>;
