@@ -536,42 +536,90 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-context-trigger { width:36px; height:40px; border-radius:13px; color:var(--text-secondary); }
 }
 
-/* Phone AI: the page holds still, only the thread moves.
-   The composer sat in the page flow with the tab-bar padding below it, so it
-   floated above a strip of empty page and the whole screen scrolled - the
-   thread and the page both moving at once. The page is the viewport now, the
-   card takes whatever the header leaves, and the thread is the only thing
-   with anywhere to scroll. */
+/* Phone AI: the page is the viewport, the thread is the only thing that moves.
+   Three things went wrong at once. .app-main pads for the status bar and the
+   tab bar, so a 100dvh page inside it ran past the bottom of the screen and
+   the composer was pushed behind the bar. The thread kept overflow:visible
+   from the <=1023px block, so it had nowhere to scroll and simply spilled out
+   of the clipped page - the conversation could not be scrolled at all. And the
+   context count hung off the trigger's top corner, outside the composer frame.
+   The page carries the insets itself now, the card takes whatever the header
+   leaves, and the thread is the single scroll container. */
 @media (max-width: 699px) {
+  html .app-main.app-main-ai { padding: 0; }
+
   html .ai-premium-page {
     display: flex;
     flex-direction: column;
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
+    padding: calc(8px + max(env(safe-area-inset-top), 22px)) 14px
+      calc(var(--mobile-nav-bar) + 8px + env(safe-area-inset-bottom));
   }
+
+  html .ai-premium-page .ai-premium-header { flex: none; margin-bottom: 12px; }
 
   html .ai-premium-page > .ai-workbench {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
+    gap: 10px;
     min-height: 0;
   }
+
+  html .ai-premium-page .ai-mobile-summary { flex: none; }
 
   html .ai-premium-page .ai-conversation-card {
+    display: flex;
     flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
     height: auto;
     min-height: 0;
+    overflow: hidden;
   }
 
+  /* The only element on the page with anywhere to scroll. The bar itself is
+     hidden: it would otherwise sit over the bubbles on a transparent card. */
   html .ai-premium-page .ai-conversation-scroll {
+    flex: 1 1 auto;
     min-height: 0;
-    padding-bottom: 16px;
+    padding: 0 0 4px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
+
+  html .ai-premium-page .ai-conversation-scroll::-webkit-scrollbar { width: 0; height: 0; }
 
   /* Sitting in the card's own bottom row, it needs no offset of its own. */
   html .ai-premium-page .ai-premium-composer {
     position: static;
-    border-radius: 0 0 24px 24px;
+    flex: none;
+  }
+
+  /* Inline, so the count sits inside the composer's frame instead of hanging
+     off the trigger's corner and across its rounded edge. */
+  html .ai-context-trigger {
+    width: auto;
+    min-width: 0;
+    height: 40px;
+    gap: 6px;
+    padding-inline: 11px;
+  }
+
+  html .ai-context-trigger span { display: inline; font-size: 11px; font-weight: 750; }
+
+  html .ai-context-trigger b {
+    position: static;
+    display: grid;
+    min-width: 17px;
+    height: 17px;
+    border: 0;
+    place-items: center;
+    font-size: 10px;
   }
 }
