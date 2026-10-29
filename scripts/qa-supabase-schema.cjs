@@ -16,6 +16,10 @@ const qaAllowlistContract = fs.readFileSync(path.join(root, "supabase/tests/tale
 const qaAllowlistSetup = fs.readFileSync(path.join(root, "supabase/runbooks/talevo_qa_allowlist_setup.sql"), "utf8");
 const push = fs.readFileSync(path.join(root, "supabase/migrations/20261029000000_talevo_push_notifications.sql"), "utf8");
 const pushGrants = fs.readFileSync(path.join(root, "supabase/migrations/20261029010000_talevo_push_grants.sql"), "utf8");
+const classDetails = fs.readFileSync(path.join(root, "supabase/migrations/20261029020000_talevo_class_schedule_details.sql"), "utf8");
+const cloudMutations = fs.readFileSync(path.join(root, "src/lib/supabase/cloud-mutations.ts"), "utf8");
+const cloudHydration = fs.readFileSync(path.join(root, "src/lib/supabase/cloud-hydration.ts"), "utf8");
+const cloudRepository = fs.readFileSync(path.join(root, "src/lib/supabase/cloud-v8-repository.ts"), "utf8");
 
 const contentTables = [
   "profiles", "academic_terms", "class_schedules", "tasks", "task_subtasks",
@@ -121,6 +125,20 @@ assert(
   "the browser must be able to write the reminder queue it plans",
 );
 assert(pushGrants.includes("revoke all on table public.push_subscriptions from authenticated"), "endpoints are server-only; the browser must not reach push_subscriptions");
+
+// The form collected a course code, a section and credits while the table had
+// no column for any of them, so they reached the device and went no further.
+// Every layer that carries a class has to name them or the round trip loses
+// them again.
+for (const column of ["course_code", "section", "credits"]) {
+  assert(classDetails.includes(column), `Class detail migration must add ${column}`);
+  assert(cloudRepository.includes(column), `Class schedule reads must select ${column}`);
+  assert(cloudMutations.includes(column), `Class schedule writes must persist ${column}`);
+}
+assert(cloudHydration.includes("courseCode: optionalString(row, \"course_code\")"), "Hydration must map the course code back onto the class");
+assert(cloudMutations.includes("function toClassScheduleRow"), "Both class writers must share one row shape so a new field cannot be added to only one");
+assert(classDetails.includes("class_schedules_credits_range"), "Credits must be bounded rather than accepting any number");
+assert(classDetails.includes("source_row.course_code"), "The one-time local-to-cloud import must carry the class detail columns too");
 
 assert(trigger.includes("security definer"), "Auth trigger must be security definer");
 assert(trigger.includes("set search_path = ''"), "Auth trigger must use an empty search_path");
