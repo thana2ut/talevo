@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
-import { Activity, ArrowRight, CalendarDays, Circle, CircleCheck, ClipboardCheck, Clock3, MapPin } from "lucide-react";
+import { Activity, ArrowRight, BookOpen, CalendarDays, Circle, CircleAlert, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
 import { Card, IconTile, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getTaskCourseLabel } from "@/lib/course-utils";
 import { formatHomeGreeting } from "@/lib/greeting";
@@ -131,6 +131,32 @@ function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; sched
   );
 }
 
+function StudyHero({ classes, tasks, now, nowMinutes }: { classes: ClassSchedule[]; tasks: Task[]; now: Date; nowMinutes: number }) {
+  const current = classes.find((item) => timeToMinutes(item.startTime) <= nowMinutes && timeToMinutes(item.endTime) > nowMinutes);
+  const next = classes.find((item) => timeToMinutes(item.startTime) > nowMinutes);
+  const lesson = next ?? current;
+  const completed = classes.filter((item) => timeToMinutes(item.endTime) <= nowMinutes).length;
+  const percent = classes.length ? completed / classes.length : 0;
+  const date = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric" }).format(now);
+  return <section className="study-hero" aria-label="TALEVO แนะนำ">
+    <div className="study-hero-content">
+      <span className="study-hero-label"><Sparkles aria-hidden="true" /> TALEVO แนะนำ</span>
+      <p className="study-hero-eyebrow">{next ? "เตรียมตัวสำหรับคาบถัดไป" : current ? "คาบเรียนที่กำลังเรียน" : "ภาพรวมการเรียนวันนี้"}</p>
+      <h2>{lesson ? getScheduleDisplayName(lesson) : classes.length ? "เรียนครบทุกคาบของวันนี้แล้ว" : "วันนี้ไม่มีคาบเรียน"}</h2>
+      <div className="study-hero-facts">
+        <div><Clock3 aria-hidden="true" /><span><strong>{lesson ? `${lesson.startTime} – ${lesson.endTime} น.` : "ไม่มีคาบถัดไป"}</strong><small>เวลาเรียน</small></span></div>
+        <div><MapPin aria-hidden="true" /><span><strong>{lesson?.room || "ยังไม่ระบุห้อง"}</strong><small>ห้องเรียน</small></span></div>
+        <div><CalendarDays aria-hidden="true" /><span><strong>{date}</strong><small>วันที่เรียน</small></span></div>
+      </div>
+      <div className="study-hero-summary">
+        <div className="study-hero-progress"><div className="study-hero-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" /><circle cx="60" cy="60" r="50" pathLength="100" strokeDasharray={`${percent * 100} 100`} /></svg><span><strong>{completed}<small>/{classes.length}</small></strong><small>คาบ</small></span></div><div><span>วันนี้เรียนไปแล้ว</span><strong>{completed} คาบ</strong><small>เหลืออีก {classes.length - completed} คาบ</small></div></div>
+        <div className="study-hero-tasks"><h3><ClipboardCheck aria-hidden="true" /> งานค้าง <span>{tasks.length} รายการ</span></h3>{tasks.length ? tasks.slice(0, 2).map((task) => { const overdue = getTaskDueState(task, now) === "overdue"; const StatusIcon = overdue ? CircleAlert : Circle; return <Link className={overdue ? "is-overdue" : ""} href={`/tasks/${task.id}`} key={task.id}><StatusIcon aria-hidden="true" /><span><strong>{task.title}</strong><small>{formatTodayTaskDeadline(task, now)}</small></span><ArrowRight aria-hidden="true" /></Link>; }) : <p><CircleCheck aria-hidden="true" /> ไม่มีงานค้างในวันนี้</p>}</div>
+      </div>
+    </div>
+    <div className="study-hero-visual"><div className="study-hero-speech">{lesson ? "สู้ ๆ นะ! พร้อมเรียนรู้ไปด้วยกัน" : "เก่งมาก! อย่าลืมพักผ่อนด้วยนะ"}<Sparkles aria-hidden="true" /></div><span className="study-hero-mascot" aria-hidden="true" /><Link href="/schedule" className="study-hero-action"><BookOpen aria-hidden="true" /> ดูคาบเรียน <ArrowRight aria-hidden="true" /></Link></div>
+  </section>;
+}
+
 function TodayFreeTimeCard({ gap, nowMinutes }: { gap?: FreeGap; nowMinutes: number }) {
   const { t } = useLanguage();
   const gapIsActive = gap !== undefined && nowMinutes >= gap.start;
@@ -162,10 +188,11 @@ export function TodayPage() {
 
   return <div className="page today-page smart-today-page">
     <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1></div><NotificationBell /></header>
-    <section className="smart-today-hero"><TodayFreeTimeCard gap={view.usefulGap} nowMinutes={view.nowMinutes} /></section>
+    <section className="smart-today-hero"><StudyHero classes={view.classes} tasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
       <TodayTaskCard task={view.pendingTasks[0]} now={referenceDate} schedules={schedules} />
+      <TodayFreeTimeCard gap={view.usefulGap} nowMinutes={view.nowMinutes} />
       <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
     </div>
     </section>
