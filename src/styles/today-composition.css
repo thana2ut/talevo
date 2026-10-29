@@ -833,3 +833,12 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 .today-tagline { margin: 7px 0 0; color: var(--text-secondary); font-size: clamp(14px, 1.5vw, 18px); line-height: 1.5; }
 .study-hero-ready-art { display: block; align-self: stretch; width: 100%; aspect-ratio: 1613 / 975; margin: auto 0 16px; border-radius: 20px; background: url('/assets/dashboard/study-ready.webp') center / contain no-repeat; }
 @media (max-width: 699px) { .study-hero-ready-art { max-width: 440px; align-self: center; } }
+/* A continuous illustrated study scene, without an inset image frame. */
+.study-hero { background-image: linear-gradient(90deg, rgba(252,250,255,.99) 0%, rgba(252,250,255,.97) 49%, rgba(252,250,255,.72) 66%, rgba(252,250,255,0) 84%), url('/assets/dashboard/study-scene-v2.webp'); background-position: center, right center; background-size: cover, auto 110%; }
+.study-hero .study-hero-mascot { display: none; }
+.study-hero .study-hero-speech { top: 12px; left: 0; max-width: 175px; background: rgba(255,255,255,.91); }
+@media (max-width: 699px) {
+ .study-hero { background-image: linear-gradient(180deg, rgba(252,250,255,.99) 0%, rgba(252,250,255,.97) 55%, rgba(252,250,255,.05) 76%), url('/assets/dashboard/study-scene-v2.webp'); background-position: center, right bottom; background-size: cover, auto 330px; }
+ .study-hero .study-hero-visual { min-height: 280px; }
+ .study-hero .study-hero-speech { top: 0; left: 0; max-width: 155px; font-size: 12px; }
+}
