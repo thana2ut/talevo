@@ -456,7 +456,11 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-suggestion-grid button svg { width:19px; height:19px; flex:none; }
  html .ai-premium-message { gap:8px; margin-block:13px; }
  html .ai-premium-bubble { border-radius:18px; padding:12px; font-size:13px; line-height:1.7; overflow-wrap:anywhere; }
- html .ai-premium-message.user .ai-premium-bubble { background:#eee6ff; border-bottom-right-radius:5px; }
+ /* The phone override replaced the purple gradient with pale lavender but left
+    the white text that goes with the gradient, so your own question came out
+    white on near-white. The gradient is back. */
+ html .ai-premium-message.user .ai-premium-bubble { background:linear-gradient(135deg,#7957fa,#5d35dd); color:#fff; border-color:transparent; border-bottom-right-radius:5px; box-shadow:0 9px 24px #5b36d52e; }
+ html .ai-premium-message.user .ai-premium-bubble > small { color:#ffffffc4; }
  html .ai-premium-message.assistant .ai-premium-bubble { background:var(--surface); border-bottom-left-radius:5px; }
  html .ai-premium-composer { padding:7px; border:1px solid white; border-radius:23px; background:var(--surface); box-shadow:0 6px 24px #7553bb12; }
  html .ai-composer-row { align-items:center; gap:7px; }
