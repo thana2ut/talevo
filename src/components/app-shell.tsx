@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bot, GraduationCap, CalendarDays, ChevronLeft, ClipboardList, Home, Menu, MoreHorizontal, Plus, Settings, UserRound } from "lucide-react";
+import { Bot, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, GraduationCap, Home, Menu, MoreHorizontal, Plus, Settings, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BottomSheet, TalevoBrand, NotificationBell } from "@/components/ui";
 import { useAppState } from "@/providers/app-state-provider";
@@ -206,6 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <strong>{label}</strong>
                 <small>{description}</small>
               </div>
+              <ChevronRight className="quick-option-chevron" aria-hidden="true" />
             </Link>
           ))}
         </div>

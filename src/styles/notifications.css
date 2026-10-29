@@ -115,9 +115,10 @@ html[data-theme="dark"] .notification-empty-unified-card {
 .notification-card {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) auto;
-  /* The badge lines up with the title, the way a sender's avatar does, rather
-     than floating against the middle of a message that runs to three lines. */
-  align-items: start;
+  /* Badge, copy and trailing actions share one centre line. Top-aligning the
+     badge left it hanging between the title and the message, and a row with a
+     longer message put it somewhere different again, so no two rows agreed. */
+  align-items: center;
   gap: 14px;
   min-height: 0;
   padding: 16px;
@@ -136,7 +137,7 @@ html[data-theme="dark"] .notification-empty-unified-card {
 .notification-card.notification-orange.is-unread { border-left-color: var(--orange); }
 .notification-card.notification-green.is-unread { border-left-color: var(--success); }
 
-.notification-card .notification-icon { width: 44px; height: 44px; border-radius: 14px; align-self: start; }
+.notification-card .notification-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 14px; align-self: center; }
 .notification-card .notification-icon svg { width: 20px; height: 20px; }
 
 .notification-copy { display: grid; gap: 3px; min-width: 0; }
@@ -153,7 +154,7 @@ html[data-theme="dark"] .notification-empty-unified-card {
 .notification-card-with-delete .notification-card-main {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
   gap: 14px;
   min-height: 0;
   padding: 16px 4px 16px 16px;

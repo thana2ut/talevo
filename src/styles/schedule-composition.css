@@ -524,35 +524,24 @@ html[data-theme="dark"] .schedule-event-card.schedule-custom {
 
 
 /* ==========================================================================
-   Day timeline alignment
+   Day timeline
    --------------------------------------------------------------------------
-   The row is time | rail | card, and the free-time block between two classes
-   was positioned with a margin of its own: 74px against the row's 84px, and
-   86px against 94px once the wider breakpoint moved the columns. It therefore
-   sat a few pixels to the left of every card it was supposed to line up with.
-   Both now read the same two numbers, so they cannot drift apart again.
+   Every row - a class or a free hour - is the same three columns, so the hour
+   gutter, the rail and the card edge line up by construction rather than by a
+   margin kept in step with them by hand. The free-time block used to carry
+   margin: -6px 0 8px 74px against a row indent of 84px: it sat two pixels over
+   the card above and a few pixels to its left, and drifted again whenever a
+   breakpoint moved the columns.
    ========================================================================== */
 .schedule-timeline {
   --timeline-time: 46px;
   --timeline-rail: 18px;
   --timeline-gap: 10px;
-  /* Where every card's left edge falls. */
-  --timeline-indent: calc(var(--timeline-time) + var(--timeline-rail) + var(--timeline-gap) * 2);
 }
 
 .schedule-timeline .timeline-item {
   grid-template-columns: var(--timeline-time) var(--timeline-rail) minmax(0, 1fr);
   gap: var(--timeline-gap);
-}
-
-/* The free-time block carried margin: -6px 0 8px, which pulled it up over the
-   card above - a 2px overlap that clipped that card's bottom corner - and left
-   2px above it against 12px below. Zeroing its own margins lets the list's one
-   gap set an even rhythm on both sides. */
-.schedule-timeline { gap: 10px; }
-
-.schedule-timeline .free-time-gap {
-  margin: 0 0 0 var(--timeline-indent);
 }
 
 /* The hour sits on the card's first line rather than floating above it. */

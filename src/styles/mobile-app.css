@@ -302,9 +302,16 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
 }
 
 /* Reference layouts are restricted to phone screens. */
-.phone-task-totals,.phone-next-lesson { display:none; }
+.phone-task-totals,.phone-next-lesson,.phone-free-time { display:none; }
 @media(max-width:699px) {
- html .page { padding-inline:18px; padding-bottom:110px; }
+ /* One reservation for the tab bar, not two. .app-main already kept
+    66 + 10 + 24px clear and .page added 110 on top, so every phone screen
+    ended roughly 210px above a bar that is 66px tall. The page holds the
+    whole reservation now - the AI screen sizes itself to the viewport and
+    needs the room inside its own box - and .app-main adds nothing further. */
+ html .page { padding-inline:18px; padding-bottom:calc(var(--mobile-nav-bar) + 18px + env(safe-area-inset-bottom)); }
+ html .app-main,
+ html .app-main.app-main-ai { padding-bottom:0; }
  html .smart-today-header h1 { font-size:clamp(28px,8vw,38px); line-height:1.25; }
  html .smart-today-header { margin-bottom:20px; }
  html .smart-today-page .study-hero { grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr); gap:12px; }
@@ -326,14 +333,20 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .phone-task-totals svg:last-child { width:12px; color:var(--text-muted); }
  html .phone-task-totals strong { font-size:23px; }
  html .phone-task-totals span { font-size:11px; color:var(--text-secondary); }
- html .phone-next-lesson { display:block; grid-area:8 / 1 / 9 / -1; margin-top:5px; }
- html .phone-next-lesson header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:12px; }
- html .phone-next-lesson h3 { font-size:20px; font-weight:800; }
- html .phone-next-lesson header a { color:var(--purple-600); font-size:13px; }
+ html .phone-next-lesson { display:block; grid-area:8 / 1 / 9 / -1; margin-top:14px; }
  html .phone-next-lesson-card { display:flex; gap:14px; align-items:center; padding:19px 16px; border:1px solid white; border-radius:22px; background:linear-gradient(120deg,#fff,#ede6ff); }
  html .phone-next-lesson-card > svg { width:36px; height:36px; color:var(--purple-600); flex:none; }
  html .phone-next-lesson-card span { display:grid; gap:5px; }
  html .phone-next-lesson-card small { color:var(--text-secondary); font-size:12px; }
+ /* The glance row that answers "when am I free today" is hidden on phones, so
+    the question had no answer here at all. Same row shape as the next lesson
+    above it, so the two read as a pair. */
+ html .phone-free-time { display:block; grid-area:9 / 1 / 10 / -1; margin-top:10px; }
+ html .phone-free-time-card { display:flex; gap:14px; align-items:center; padding:19px 16px; border:1px solid white; border-radius:22px; background:linear-gradient(120deg,#fff,#ede6ff); }
+ html .phone-free-time-card > svg { width:36px; height:36px; color:var(--purple-600); flex:none; }
+ html .phone-free-time-card span { display:grid; gap:5px; min-width:0; }
+ html .phone-free-time-card strong { font-size:15px; line-height:1.35; }
+ html .phone-free-time-card small { color:var(--text-secondary); font-size:12px; }
  html .smart-today-glance { display:none; }
  html .schedule-heading { display:block; margin-bottom:20px; }
  html .schedule-heading .page-intro::before,html .exam-header::before { content:'TALEVO'; display:block; font-weight:850; color:var(--purple-600); font-size:15px; margin-bottom:8px; }
@@ -443,7 +456,11 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-suggestion-grid button svg { width:19px; height:19px; flex:none; }
  html .ai-premium-message { gap:8px; margin-block:13px; }
  html .ai-premium-bubble { border-radius:18px; padding:12px; font-size:13px; line-height:1.7; overflow-wrap:anywhere; }
- html .ai-premium-message.user .ai-premium-bubble { background:#eee6ff; border-bottom-right-radius:5px; }
+ /* The phone override replaced the purple gradient with pale lavender but left
+    the white text that goes with the gradient, so your own question came out
+    white on near-white. The gradient is back. */
+ html .ai-premium-message.user .ai-premium-bubble { background:linear-gradient(135deg,#7957fa,#5d35dd); color:#fff; border-color:transparent; border-bottom-right-radius:5px; box-shadow:0 9px 24px #5b36d52e; }
+ html .ai-premium-message.user .ai-premium-bubble > small { color:#ffffffc4; }
  html .ai-premium-message.assistant .ai-premium-bubble { background:var(--surface); border-bottom-left-radius:5px; }
  html .ai-premium-composer { padding:7px; border:1px solid white; border-radius:23px; background:var(--surface); box-shadow:0 6px 24px #7553bb12; }
  html .ai-composer-row { align-items:center; gap:7px; }
@@ -499,8 +516,9 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .month-days > button.selected { border-radius:12px; background:#eee7ff; outline:0; }
  html .quick-add-sheet .quick-options > a { min-height:86px; padding:14px; box-shadow:0 9px 22px #8454e511; }
  html .quick-add-sheet .quick-options > a > span { position:relative; width:58px; height:58px; background:linear-gradient(135deg,#f0e8ff,#e4d8ff); }
- html .quick-add-sheet .quick-options > a > span::after { content:'+'; position:absolute; bottom:-1px; right:-2px; width:21px; height:21px; display:grid; place-items:center; border:2px solid white; border-radius:50%; background:#7441ff; color:white; font-size:18px; }
- html .quick-add-sheet .quick-options > a::after { width:31px; height:31px; text-align:center; line-height:26px; border:1px solid white; border-radius:50%; }
+ html .quick-add-sheet .quick-options > a > span::after { content:''; position:absolute; bottom:-1px; right:-2px; width:21px; height:21px; border:2px solid white; border-radius:50%; background:linear-gradient(#fff,#fff) center/9px 2.5px no-repeat,linear-gradient(#fff,#fff) center/2.5px 9px no-repeat,#7441ff; }
+ html .quick-add-sheet .quick-options > a::after { content:none; }
+ html .quick-add-sheet .quick-options > a > .quick-option-chevron { display:block; flex:none; margin-left:auto; width:31px; height:31px; padding:6px; border:1px solid white; border-radius:50%; background:#ffffffb8; color:#7642ff; }
  html .quick-add-sheet > header,html .more-navigation-sheet > header { margin-bottom:18px; }
  html .quick-add-sheet > header .icon-button,html .more-navigation-sheet > header .icon-button { width:42px; height:42px; border-radius:15px; background:var(--surface); }
  html .more-navigation-options > a { min-height:68px; }
@@ -520,4 +538,113 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-premium-bubble table { display:block; max-width:100%; overflow-x:auto; }
  html .ai-premium-bubble pre { max-width:100%; overflow-x:auto; }
  html .ai-context-trigger { width:36px; height:40px; border-radius:13px; color:var(--text-secondary); }
+}
+
+/* Phone AI: the page is the viewport, the thread is the only thing that moves.
+   Three things went wrong at once. .app-main pads for the status bar and the
+   tab bar, so a 100dvh page inside it ran past the bottom of the screen and
+   the composer was pushed behind the bar. The thread kept overflow:visible
+   from the <=1023px block, so it had nowhere to scroll and simply spilled out
+   of the clipped page - the conversation could not be scrolled at all. And the
+   context count hung off the trigger's top corner, outside the composer frame.
+   The page carries the insets itself now, the card takes whatever the header
+   leaves, and the thread is the single scroll container. */
+@media (max-width: 699px) {
+  html .app-main.app-main-ai { padding: 0; }
+
+  html .ai-premium-page {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding: calc(8px + max(env(safe-area-inset-top), 22px)) 14px
+      calc(var(--mobile-nav-bar) + 8px + env(safe-area-inset-bottom));
+  }
+
+  html .ai-premium-page .ai-premium-header { flex: none; margin-bottom: 12px; }
+
+  html .ai-premium-page > .ai-workbench {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  html .ai-premium-page .ai-mobile-summary { flex: none; }
+
+  html .ai-premium-page .ai-conversation-card {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* The only element on the page with anywhere to scroll. The bar itself is
+     hidden: it would otherwise sit over the bubbles on a transparent card. */
+  html .ai-premium-page .ai-conversation-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 0 4px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html .ai-premium-page .ai-conversation-scroll::-webkit-scrollbar { width: 0; height: 0; }
+
+  /* Sitting in the card's own bottom row, it needs no offset of its own. */
+  html .ai-premium-page .ai-premium-composer {
+    position: static;
+    flex: none;
+  }
+
+  /* Inline, so the count sits inside the composer's frame instead of hanging
+     off the trigger's corner and across its rounded edge. */
+  html .ai-context-trigger {
+    width: auto;
+    min-width: 0;
+    height: 40px;
+    gap: 6px;
+    padding-inline: 11px;
+  }
+
+  html .ai-context-trigger span { display: inline; font-size: 11px; font-weight: 750; }
+
+  html .ai-context-trigger b {
+    position: static;
+    display: grid;
+    min-width: 17px;
+    height: 17px;
+    border: 0;
+    place-items: center;
+    font-size: 10px;
+  }
+}
+
+/* iPad: give the home page its notification bell back.
+   The bell lives in .desktop-topbar, which is display:none below 1200px, and
+   the Today page's own bell is switched off by default and only turned back on
+   at <=699px. Between those two a tablet had no way in to notifications at all.
+   Only the home page carries one, exactly as it does on a phone. */
+@media (min-width: 700px) and (max-width: 1199px) {
+  html .smart-today-header { position: relative; align-items: flex-start; }
+
+  html .smart-today-header > .notification-bell {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 16px;
+    background: var(--surface-elevated);
+    box-shadow: 0 10px 26px rgba(80, 55, 160, .1);
+  }
+
+  html .smart-today-header > .notification-bell svg { width: 21px; height: 21px; }
 }

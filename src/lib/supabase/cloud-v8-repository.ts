@@ -45,7 +45,7 @@ export type CloudMigrationMarker = {
 const SELECT_COLUMNS: Record<LocalV8TableName, string> = {
   profiles: "user_id,display_name,major,university",
   academic_terms: "user_id,level,term,academic_year,label",
-  class_schedules: "user_id,id,course_id,name,teacher,room,color,day,start_time,end_time,note",
+  class_schedules: "user_id,id,course_id,name,course_code,teacher,room,color,day,start_time,end_time,note,section,credits",
   tasks: "user_id,id,title,course_id,description,due_label,due_date,estimate,status,color,attachment_label,completed_at",
   task_subtasks: "user_id,task_id,id,title,completed,completed_at,position",
   task_attachments: "user_id,task_id,id,name,mime_type,size_bytes,kind,created_at",

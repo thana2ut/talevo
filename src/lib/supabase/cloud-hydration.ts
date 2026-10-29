@@ -117,6 +117,11 @@ export function hydrateCloudAccountToAppState(
     startTime: timeValue(row, "start_time", "09:00"),
     endTime: timeValue(row, "end_time", "10:00"),
     ...(optionalString(row, "note") ? { note: optionalString(row, "note") } : {}),
+    ...(optionalString(row, "course_code") ? { courseCode: optionalString(row, "course_code") } : {}),
+    ...(optionalString(row, "section") ? { section: optionalString(row, "section") } : {}),
+    ...(typeof row.credits === "number" || (typeof row.credits === "string" && row.credits !== "")
+      ? { credits: Number(row.credits) }
+      : {}),
   }));
 
   const tasks: Task[] = (tables.tasks ?? []).map((row) => {

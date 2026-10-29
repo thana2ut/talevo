@@ -21,6 +21,37 @@ function toCloudTimestamp(value: string | null | undefined): string | null {
 }
 
 /**
+ * One row shape for both writers.
+ *
+ * The course code, section and credits were missing from both of them while
+ * the form collected all three, so they reached the device and went no
+ * further: the next launch rehydrates from the cloud and handed back a class
+ * with the code blank again. Having a single definition is what stops the two
+ * writers drifting apart the next time a field is added.
+ */
+function toClassScheduleRow(userId: string, schedule: ClassSchedule) {
+  const credits = typeof schedule.credits === "number" && Number.isFinite(schedule.credits)
+    ? schedule.credits
+    : null;
+  return {
+    user_id: userId,
+    id: schedule.id,
+    course_id: schedule.courseId,
+    name: schedule.name,
+    course_code: schedule.courseCode?.trim() || null,
+    teacher: schedule.teacher ?? "",
+    room: schedule.room ?? "",
+    color: schedule.color,
+    day: schedule.day,
+    start_time: schedule.startTime,
+    end_time: schedule.endTime,
+    note: schedule.note ?? null,
+    section: schedule.section?.trim() || null,
+    credits,
+  };
+}
+
+/**
  * Persist (insert/upsert) a single class schedule record to Supabase.
  */
 export async function persistClassSchedule(
@@ -29,19 +60,7 @@ export async function persistClassSchedule(
   schedule: ClassSchedule,
 ): Promise<{ error: Error | null }> {
   try {
-    const { error } = await supabase.from("class_schedules").upsert({
-      user_id: userId,
-      id: schedule.id,
-      course_id: schedule.courseId,
-      name: schedule.name,
-      teacher: schedule.teacher ?? "",
-      room: schedule.room ?? "",
-      color: schedule.color,
-      day: schedule.day,
-      start_time: schedule.startTime,
-      end_time: schedule.endTime,
-      note: schedule.note ?? null,
-    });
+    const { error } = await supabase.from("class_schedules").upsert(toClassScheduleRow(userId, schedule));
     return { error: error ? new Error(error.message) : null };
   } catch (err) {
     return { error: err instanceof Error ? err : new Error(String(err)) };
@@ -58,19 +77,7 @@ export async function persistClassSchedulesBatch(
 ): Promise<{ error: Error | null }> {
   if (!schedules.length) return { error: null };
   try {
-    const rows = schedules.map((schedule) => ({
-      user_id: userId,
-      id: schedule.id,
-      course_id: schedule.courseId,
-      name: schedule.name,
-      teacher: schedule.teacher ?? "",
-      room: schedule.room ?? "",
-      color: schedule.color,
-      day: schedule.day,
-      start_time: schedule.startTime,
-      end_time: schedule.endTime,
-      note: schedule.note ?? null,
-    }));
+    const rows = schedules.map((schedule) => toClassScheduleRow(userId, schedule));
     const { error } = await supabase.from("class_schedules").upsert(rows);
     return { error: error ? new Error(error.message) : null };
   } catch (err) {

@@ -79,7 +79,11 @@ const appStateProvider = fs.readFileSync(path.join(projectRoot, "src/providers/a
 check(appStateProvider.includes("pendingCloudMutationsRef"), "AppStateProvider must track in-flight mutations");
 check(appStateProvider.includes("runCloudMutation"), "AppStateProvider must define runCloudMutation helper");
 check(appStateProvider.includes("persistClassSchedule(client, uid, sched)"), "addSchedule must call persistClassSchedule");
-check(appStateProvider.includes("persistClassSchedulesBatch(client, uid, list)"), "updateSchedule must call persistClassSchedulesBatch");
+check(appStateProvider.includes("persistClassSchedule(client, uid, schedule)"), "updateSchedule must persist the one class it edited");
+// Editing a class used to write the name and colour across every class
+// sharing a courseId, so renaming one silently renamed another.
+check(!appStateProvider.includes("item.courseId === previous.courseId"), "editing a class must not rewrite the other classes that share its course");
+check(appStateProvider.includes("persistClassSchedulesBatch(client, uid, importedSchedulesList)"), "syllabus import must still persist its classes in one batch");
 check(appStateProvider.includes("deleteClassSchedule(client, uid, id)"), "deleteSchedule must call deleteClassSchedule");
 check(appStateProvider.includes("persistTask(client, uid, newTask)"), "addTask must call persistTask");
 check(appStateProvider.includes("deleteTaskFromCloud(client, uid, id)"), "deleteTask must call deleteTaskFromCloud");
