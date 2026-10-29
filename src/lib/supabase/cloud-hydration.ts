@@ -8,6 +8,8 @@ import type { CloudRow, CloudTables } from "@/lib/supabase/cloud-v8-repository";
 import type {
   AppNotification,
   ChatMessage,
+  Exam,
+  ExamType,
   NotificationPriority,
   NotificationType,
   Task,
@@ -151,6 +153,34 @@ export function hydrateCloudAccountToAppState(
     };
   });
 
+  const validExamTypes: ExamType[] = ["quiz", "midterm", "final", "practical", "presentation", "other"];
+  const timestampFallback = options.now?.toISOString() ?? new Date().toISOString();
+  const exams: Exam[] = (tables.exams ?? []).map((row) => {
+    const examId = stringValue(row, "id");
+    const rawType = stringValue(row, "type");
+    return {
+      id: examId,
+      courseId: stringValue(row, "course_id"),
+      title: stringValue(row, "title"),
+      type: validExamTypes.includes(rawType as ExamType) ? (rawType as ExamType) : "other",
+      startAt: stringValue(row, "start_at"),
+      ...(optionalString(row, "end_at") ? { endAt: optionalString(row, "end_at") } : {}),
+      ...(optionalString(row, "room") ? { room: optionalString(row, "room") } : {}),
+      ...(optionalString(row, "note") ? { note: optionalString(row, "note") } : {}),
+      topics: (topicsByExam.get(examId) ?? [])
+        .sort((a, b) => position(a) - position(b))
+        .map((topic) => ({
+          id: stringValue(topic, "id"),
+          title: stringValue(topic, "title"),
+          completed: booleanValue(topic, "completed"),
+          ...(optionalString(topic, "completed_at") ? { completedAt: optionalString(topic, "completed_at") } : {}),
+        })),
+      ...(optionalString(row, "completed_at") ? { completedAt: optionalString(row, "completed_at") } : {}),
+      createdAt: stringValue(row, "created_at", timestampFallback),
+      updatedAt: stringValue(row, "updated_at", timestampFallback),
+    };
+  });
+
   const taskCompletionHistory = (tables.task_completion_history ?? []).map((row) => ({
     id: stringValue(row, "id"),
     originalTaskId: stringValue(row, "original_task_id"),
@@ -243,7 +273,7 @@ export function hydrateCloudAccountToAppState(
       schedules,
       tasks,
       taskCompletionHistory,
-      exams: [],
+      exams,
       gradePlans: [],
       financeCategories: [],
       financeTransactions: [],
