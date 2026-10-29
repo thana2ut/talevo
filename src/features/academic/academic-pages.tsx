@@ -145,7 +145,7 @@ export function ExamFormPage() {
           <Field label="วันที่และเวลาเริ่ม *"><Input required type="datetime-local" value={form.startAt} onChange={event=>{setForm({...form,startAt:event.target.value});setError("");}}/></Field>
           <Field label="วันที่และเวลาสิ้นสุด"><Input type="datetime-local" value={form.endAt} onChange={event=>setForm({...form,endAt:event.target.value})}/></Field>
         </div>
-        <div className="exam-editor-status"><span>สถานะการสอบ</span><strong>{source?.completedAt || (form.endAt && new Date(form.endAt) < new Date()) ? "สอบแล้ว" : "กำลังเตรียมตัวสอบ"}</strong><small>อ้างอิงจากกำหนดการสอบของคุณ</small></div>
+        <div className="exam-editor-status"><span>สถานะการสอบ</span><strong>{source?.completedAt || (form.endAt && new Date(form.endAt) < new Date()) ? "สอบแล้ว" : "กำลังเตรียมตัวสอบ"}</strong></div>
       </Card>
       <div className="exam-editor-columns">
         <Card className="exam-editor-card"><header><span><BookOpen aria-hidden="true"/></span><div><h2>หัวข้อที่ต้องอ่าน</h2><p>จัดการหัวข้อและติดตามการเตรียมตัวสอบ</p></div></header>
