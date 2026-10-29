@@ -245,12 +245,12 @@
 }
 
 .timetable-day-header.is-selected::before {
-  background: color-mix(in srgb, var(--purple-500) 11%, var(--surface-elevated));
+  background: transparent;
   border-color: transparent;
 }
 
 .timetable-day-header.is-today::before {
-  background: color-mix(in srgb, var(--purple-500) 11%, var(--surface-elevated));
+  background: transparent;
   border-color: transparent;
 }
 
