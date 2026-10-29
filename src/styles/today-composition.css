@@ -724,6 +724,7 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 
 .study-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr); gap: 20px; overflow: hidden; isolation: isolate; border: 1px solid rgba(255,255,255,.94); border-radius: 30px; padding: 26px; background-color: #f3edff; background-image: linear-gradient(90deg, rgba(252,250,255,.98) 0%, rgba(252,250,255,.94) 47%, rgba(252,250,255,.35) 78%), url('/assets/dashboard/room.webp'); background-position: center, right center; background-size: cover, auto 100%; background-repeat: no-repeat; box-shadow: 0 14px 40px rgba(99,62,187,.13); }
 .study-hero-content { position: relative; z-index: 2; min-width: 0; }
+.study-hero { background-position: center, right -24px center; background-size: cover, auto calc(100% + 48px); }
 .study-hero-label { display: inline-flex; align-items: center; gap: 7px; border-radius: 99px; padding: 6px 12px; color: #6034f4; background: #ece5ff; font-size: 13px; font-weight: 850; }
 .study-hero-label svg { width: 18px; height: 18px; }
 .study-hero-eyebrow { margin: 14px 0 4px; color: #828299; font-size: 14px; font-weight: 750; }
