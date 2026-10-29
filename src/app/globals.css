@@ -562,10 +562,8 @@ svg { width: 20px; height: 20px; stroke-width: 1.9; }
     box-sizing: border-box;
     padding: 16px 24px 0;
     margin: 0;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: var(--bg);
+    position: relative;
+    background: transparent;
   }
 
   .desktop-topbar-right {
