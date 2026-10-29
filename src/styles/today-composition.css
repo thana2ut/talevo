@@ -364,19 +364,6 @@ html[data-theme="dark"] .academic-weather-empty {
 .smart-due-card .smart-due-copy { gap: 5px; }
 .smart-empty-card > div { gap: 5px; }
 .smart-free-time, .smart-finance { min-height: 128px; }
-.smart-free-time > header > span.smart-free-time-more {
-  width: auto;
-  height: auto;
-  padding: 0;
-  border-radius: 0;
-  color: var(--purple-700);
-  background: transparent;
-  font-size: 13px;
-  font-weight: 750;
-  white-space: nowrap;
-  display: block;
-  place-items: initial;
-}
 .smart-finance header { display: flex; align-items: center; justify-content: space-between; }
 .smart-finance-action { font-size: 13px; font-weight: 750; color: var(--purple-700); background: transparent; border: 0; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: background-color .15s ease; }
 .smart-finance-action:hover { background: var(--purple-50); }
