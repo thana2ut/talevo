@@ -769,9 +769,9 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 .study-hero-action { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px; padding: 12px; border-radius: 18px; background: linear-gradient(110deg, #7544ff, #5f32f2); color: #fff; font-size: 22px; box-shadow: 0 8px 20px #7140ff40; }
 .study-hero-action svg { width: 28px; height: 28px; }
 .study-hero-action:focus-visible, .study-hero-tasks a:focus-visible { outline: 3px solid #9c79ff; outline-offset: 3px; }
-.smart-free-time-hero { padding: 22px; }
-.smart-free-time-hero .smart-free-time-hero-detail { border: 0; padding: 14px 0 0; }
-.smart-free-time-hero .smart-free-time-hero-detail > strong { font-size: 28px; }
+.smart-free-time-hero { display: flex; flex-direction: column; justify-content: center; gap: 18px; min-height: 230px; padding: 22px; border: 1px solid color-mix(in srgb, var(--purple-300) 48%, var(--border)); border-radius: 22px; background: linear-gradient(140deg, var(--surface-elevated), var(--surface-soft)); }
+.smart-free-time-hero .smart-free-time-hero-detail { border: 0; border-top: 1px solid color-mix(in srgb, var(--purple-300) 36%, transparent); padding: 15px 0 0; }
+.smart-free-time-hero .smart-free-time-hero-detail > strong { font-size: clamp(25px, 2.4vw, 34px); }
 @media (min-width: 768px) { .smart-today-primary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 1099px) { .study-hero { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); padding: 20px; gap: 14px; } .study-hero-summary { grid-template-columns: minmax(0,1fr); gap: 10px; } .study-hero-progress { border-inline-end: 0; border-bottom: 1px solid #ddd0ff; padding-bottom: 10px; } .study-hero-ring { width: 78px; height: 78px; } .study-hero-facts { grid-template-columns: repeat(2,minmax(0,1fr)); } .study-hero-facts > div:last-child { grid-column: 1 / -1; } .study-hero-speech { top: 8px; } }
 @media (max-width: 699px) { .study-hero { grid-template-columns: minmax(0,1fr); border-radius: 24px; padding: 18px; background-position: 65% center; } .study-hero h2 { font-size: 24px; } .study-hero-facts { gap: 7px; } .study-hero-facts > div { padding: 10px; } .study-hero-summary { grid-template-columns: minmax(0,1fr); } .study-hero-visual { min-height: 235px; } .study-hero-mascot { inset: -15px 0 48px; } .study-hero-speech { left: 0; top: 10px; max-width: 130px; } .study-hero-action { min-height: 52px; font-size: 20px; } }
