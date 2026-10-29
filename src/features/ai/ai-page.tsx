@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, CalendarDays, Check, ChevronLeft, Info, ListTodo, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, WifiOff, X, type LucideIcon } from "lucide-react";
+import { AlertCircle, GraduationCap, CalendarDays, Check, ChevronLeft, Info, ListTodo, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, WifiOff, X, type LucideIcon } from "lucide-react";
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { BottomSheet, TalevoMascotAvatar } from "@/components/ui";
 import { getPendingTasks } from "@/lib/local-ai";
@@ -17,6 +17,7 @@ const LOCAL_MODE_AVAILABLE = true;
 const CONTEXT_OPTIONS: Array<{ key: AIContextKey; label: string; description: string; icon: LucideIcon }> = [
   { key: "schedule", label: "ตารางเรียน", description: "ชื่อวิชา วัน และเวลา", icon: CalendarDays },
   { key: "tasks", label: "งาน", description: "ชื่อ กำหนดส่ง และสถานะ", icon: ListTodo },
+  { key: "exams", label: "การสอบ", description: "วิชา วันสอบ เวลา และห้องสอบ", icon: GraduationCap },
 ];
 
 const SUGGESTIONS = [
