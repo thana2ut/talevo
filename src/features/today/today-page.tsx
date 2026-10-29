@@ -198,7 +198,7 @@ export function TodayPage() {
   const greeting = formatHomeGreeting(profile.displayName, isLoadingProfile);
 
   return <div className="page today-page smart-today-page">
-    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1></div><NotificationBell /></header>
+    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><p className="today-tagline">ทุกเรื่องเรียนของคุณ จัดการได้ง่าย ๆ ในที่เดียว</p></div><NotificationBell /></header>
     <section className="smart-today-hero"><StudyHero classes={view.classes} tasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
