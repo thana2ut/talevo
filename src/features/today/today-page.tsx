@@ -81,7 +81,7 @@ function TodayScheduleCard({ classes, nowMinutes }: { classes: ClassSchedule[]; 
       return <article className={`smart-today-schedule-item${isCurrent || isNext ? " is-active" : ""}`} key={item.id}>
         <div className="smart-today-schedule-meta"><span className={`smart-today-schedule-time${isCurrent || isNext ? " is-active" : ""}`}>{item.startTime}–{item.endTime}</span><span className={`smart-today-schedule-status ${statusTone}`}><StatusIcon aria-hidden="true" />{status}</span></div>
         <strong className="smart-today-schedule-name">{getScheduleDisplayName(item)}</strong>
-        <span className="smart-today-schedule-room"><MapPin aria-hidden="true" />{item.room || (language === "th" ? "ยังไม่ระบุห้อง" : "Room not set")}</span>
+        <span className="smart-today-schedule-room"><MapPin aria-hidden="true" /><span>{item.room || (language === "th" ? "ยังไม่ระบุห้อง" : "Room not set")}</span></span>
       </article>;
     })}</div> : <p className="smart-today-schedule-empty">{language === "th" ? "วันนี้ไม่มีคาบเรียน" : "No classes today"}</p>}
   </section>;
