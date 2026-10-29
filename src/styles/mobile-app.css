@@ -454,3 +454,70 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-context-sheet .ai-context-panel { padding:14px; }
  html .ai-context-sheet .ai-context-note,html .ai-context-sheet .ai-panel-heading p { white-space:normal; font-size:12px; }
 }
+
+/* Final phone reference detailing; larger layouts retain their existing rules. */
+.phone-lesson-clock,.phone-class-room,.ai-phone-welcome { display:none; }
+@media(max-width:699px) {
+ html .schedule-heading .page-intro { position:relative; isolation:isolate; }
+ html .schedule-page-วัน .page-intro::after { content:''; position:absolute; z-index:-1; right:-16px; top:-8px; width:46%; height:128px; background:url('/assets/dashboard/phone-calendar.svg') right center / contain no-repeat; opacity:.8; pointer-events:none; }
+ html .schedule-page-วัน .page-intro h1 { max-width:70%; }
+ html .schedule-heading .page-intro > p { font-size:clamp(12px,3.4vw,15px); }
+ html .schedule-heading-actions > :first-child { border:1px solid #b69aff; background:var(--surface); font-weight:800; font-size:15px; min-height:49px; }
+ html .schedule-view-switcher { margin-top:18px; background:#eee7fa; }
+ html .schedule-date-strip button.today { background:linear-gradient(135deg,#9874ff,#6223f4); color:white; border:0; box-shadow:0 6px 16px #8156e92b; }
+ html .schedule-date-strip button.today strong,html .schedule-date-strip button.today span { color:white; background:none; }
+ html .schedule-date-strip button.selected:not(.today) { background:#eee7ff; border:0; box-shadow:none; }
+ html .timeline-item { align-items:stretch; }
+ html .schedule-timeline .timeline-item > time { padding-top:14px; font-weight:700; }
+ html .timeline-line { position:relative; border-radius:9px; }
+ html .timeline-line::before { content:''; position:absolute; top:16px; left:50%; transform:translateX(-50%); width:9px; height:9px; border:2px solid white; border-radius:50%; background:var(--course-color,var(--purple-400)); }
+ html .schedule-event-copy > small { display:flex; align-items:center; gap:5px; line-height:1.5; }
+ html .schedule-event-copy .phone-lesson-clock { display:inline-block; width:15px; height:15px; flex:none; }
+ html .schedule-event-card { min-height:112px; align-items:center; }
+ html .schedule-event-copy > strong { font-weight:800; }
+ html .schedule-timeline .free-time-gap { margin-block:12px; }
+ html .free-time-copy > span { gap:8px; }
+ html .free-time-copy > span > svg { width:25px; height:25px; padding:4px; box-sizing:content-box; background:#eee7ff; border-radius:50%; }
+ html .free-time-copy > small { padding-left:41px; margin-top:-7px; font-size:11px; }
+ html .schedule-week-controls { display:grid; grid-template-columns:38px minmax(0,1fr) 38px; text-align:center; margin:15px 0; }
+ html .schedule-week-controls > strong { font-size:14px; }
+ html .schedule-week-controls > button { width:38px; height:40px; border-radius:13px; }
+ html .schedule-week-controls > .schedule-today-button { grid-column:2; width:auto; justify-self:center; padding:5px 13px; }
+ html .schedule-week-controls > small { grid-column:1 / -1; font-size:12px; color:var(--text-secondary); }
+ html .academic-timetable { min-width:1100px; }
+ html .timetable-day-row { min-height:86px; }
+ html .timetable-day-header,html .timetable-corner-cell { width:73px; flex-basis:73px; min-width:73px; }
+ html .timetable-day-header .day-name { font-size:11px; }
+ html .timetable-day-header .day-date { font-size:17px; }
+ html .timetable-class-block { border-radius:11px; padding:8px 10px; }
+ html .class-block-title { font-size:13px; font-weight:800; }
+ html .class-block-meta { font-size:11px; }
+ html .class-block-meta > small { display:none; }
+ html .phone-class-room { display:flex; gap:5px; align-items:center; margin-top:3px; font-size:11px; color:var(--text-secondary); }
+ html .phone-class-room svg { width:13px; height:13px; flex:none; }
+ html .month-days > button { min-height:65px; }
+ html .month-days > button.selected { border-radius:12px; background:#eee7ff; outline:0; }
+ html .quick-add-sheet .quick-options > a { min-height:86px; padding:14px; box-shadow:0 9px 22px #8454e511; }
+ html .quick-add-sheet .quick-options > a > span { position:relative; width:58px; height:58px; background:linear-gradient(135deg,#f0e8ff,#e4d8ff); }
+ html .quick-add-sheet .quick-options > a > span::after { content:'+'; position:absolute; bottom:-1px; right:-2px; width:21px; height:21px; display:grid; place-items:center; border:2px solid white; border-radius:50%; background:#7441ff; color:white; font-size:18px; }
+ html .quick-add-sheet .quick-options > a::after { width:31px; height:31px; text-align:center; line-height:26px; border:1px solid white; border-radius:50%; }
+ html .quick-add-sheet > header,html .more-navigation-sheet > header { margin-bottom:18px; }
+ html .quick-add-sheet > header .icon-button,html .more-navigation-sheet > header .icon-button { width:42px; height:42px; border-radius:15px; background:var(--surface); }
+ html .more-navigation-options > a { min-height:68px; }
+ html .exam-header { isolation:isolate; min-height:136px; padding-bottom:16px; }
+ html .exam-header::after { content:''; position:absolute; z-index:-1; right:-18px; bottom:0; width:48%; height:110px; background:url('/assets/dashboard/phone-calendar.svg') center / contain no-repeat; opacity:.5; pointer-events:none; }
+ html .exam-header .exam-motto { position:relative; display:inline; background:linear-gradient(90deg,var(--bg),transparent); line-height:1.7; }
+ html .exam-days button.selected { outline:0; box-shadow:inset 0 0 0 2px #bea6ff; }
+ html .exam-days .exam-date-today { width:34px; height:34px; background:linear-gradient(135deg,#8b56ff,#6021f8); color:white; border-radius:50%; display:grid; place-items:center; font-weight:800; box-shadow:0 3px 9px #7441ff33; }
+ html .exam-summary .exam-stats { min-height:114px; align-items:center; }
+ html .exam-legend { background:linear-gradient(130deg,#faf8ff,#eee8ff66); }
+ html .ai-phone-welcome { display:block; }
+ html .ai-welcome-name { color:#6330e5; }
+ html .ai-empty-state { margin-bottom:18px; background:radial-gradient(ellipse at 15% 45%,#eae0ff88,transparent 50%),radial-gradient(ellipse at 95% 30%,#eae0ff77,transparent 45%),var(--surface); }
+ html .ai-empty-orbit { border:1px dashed #d8c7ff; border-radius:50%; padding:8px; width:112px; height:112px; display:grid; place-items:center; }
+ html .ai-empty-orbit > * { max-width:94px; max-height:94px; }
+ html .ai-suggestion-grid button::after { content:'›'; margin-left:auto; color:#ac8af3; font-size:20px; }
+ html .ai-premium-bubble table { display:block; max-width:100%; overflow-x:auto; }
+ html .ai-premium-bubble pre { max-width:100%; overflow-x:auto; }
+ html .ai-context-trigger { width:36px; height:40px; border-radius:13px; color:var(--text-secondary); }
+}

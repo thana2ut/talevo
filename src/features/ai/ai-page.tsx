@@ -773,15 +773,15 @@ export function AIPage() {
 
         <section className="ai-conversation-card" aria-label="การสนทนากับ TALEVO AI">
           <div ref={chatScrollRef} className="ai-conversation-scroll" aria-live="polite">
-            {chat.length === 0 && !pendingMessage && (
-              <div className="ai-empty-state">
+            {(
+              <div className={`ai-empty-state${chat.length > 0 || pendingMessage ? " ai-phone-welcome" : ""}`}>
                 <div className="ai-empty-orbit">
                   <TalevoMascotAvatar size="lg" priority showSparkle />
                 </div>
-                <h2>วันนี้อยากให้ TALEVO ช่วยอะไร?</h2>
+                <h2>วันนี้อยากให้ <span className="ai-welcome-name">TALEVO</span> ช่วยอะไร?</h2>
                 <p>สรุปบทเรียน วางแผนอ่านหนังสือ จัดลำดับงาน หรือเตรียมสอบได้จากตรงนี้</p>
                 <p className="sr-only">ประวัติการสนทนายังว่างอยู่</p>
-                <small>ประวัติการสนทนายังว่างอยู่ · เลือกข้อมูล TALEVO ได้ก่อนส่งคำถาม</small>
+                <small>{chat.length === 0 ? "ประวัติการสนทนายังว่างอยู่ · " : ""}เลือกข้อมูล TALEVO ได้ก่อนส่งคำถาม</small>
                 <div className="ai-suggestion-grid">
                   {SUGGESTIONS.map((suggestion) => (
                     <button

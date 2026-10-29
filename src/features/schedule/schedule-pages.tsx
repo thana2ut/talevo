@@ -80,7 +80,7 @@ function DateStrip({ selectedDate, onSelect }: { selectedDate: Date; onSelect: (
 
 function EventCard({ item, onClick, compact = false, current = false }: { item: ClassSchedule; onClick: () => void; compact?: boolean; current?: boolean }) {
   return <button type="button" className={`schedule-event-card schedule-custom ${compact ? "compact" : ""} ${current ? "is-current" : ""}`} onClick={onClick} style={courseColorStyle(item.color)}>
-    <SubjectIcon color={item.color}><GraduationCap /></SubjectIcon><span className="schedule-event-copy"><strong>{getScheduleDisplayName(item)}</strong><small>{item.startTime} – {item.endTime}</small><small><MapPin />{item.room}</small>{current && <em>กำลังเรียน</em>}</span>{!compact && <ChevronRight className="schedule-event-arrow" />}
+    <SubjectIcon color={item.color}><GraduationCap /></SubjectIcon><span className="schedule-event-copy"><strong>{getScheduleDisplayName(item)}</strong><small><Clock3 className="phone-lesson-clock" aria-hidden="true" />{item.startTime} – {item.endTime}</small><small><MapPin />{item.room}</small>{current && <em>กำลังเรียน</em>}</span>{!compact && <ChevronRight className="schedule-event-arrow" />}
   </button>;
 }
 
@@ -248,6 +248,7 @@ function ScheduleWeekView({ selectedDate, schedules, onSelectDate, onSelectItem 
                               <span>{item.startTime}–{item.endTime}</span>
                               {item.room && !compact && <small>· {item.room}</small>}
                             </div>
+                            {item.room && <span className="phone-class-room"><MapPin aria-hidden="true" />{item.room}</span>}
                             {isCurrent && <span className="class-block-badge">กำลังเรียน</span>}
                           </div>
                         </button>
