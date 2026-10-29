@@ -343,19 +343,22 @@ html[data-theme="dark"] .academic-weather-empty {
 }
 .smart-today-schedule-item {
   min-width: 0;
+  display: grid;
+  grid-template-rows: 30px 2.7em auto;
+  align-content: start;
   padding: 11px 0;
   border-top: 1px solid var(--border);
 }
 .smart-today-schedule-item:first-child { padding-top: 2px; border-top: 0; }
-.smart-today-schedule-meta { min-height: 30px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 7px; }
+.smart-today-schedule-meta { height: 30px; display: flex; align-items: center; flex-wrap: nowrap; gap: 6px 10px; overflow: hidden; }
 .smart-today-schedule-time { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 999px; color: var(--text-secondary); background: var(--surface-soft); font-size: 12px; font-weight: 800; white-space: nowrap; }
 .smart-today-schedule-time.is-active { color: var(--purple-700); background: var(--purple-50); }
 .smart-today-schedule-status { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 12px; font-weight: 750; white-space: nowrap; }
 .smart-today-schedule-status i { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--text-muted); }
 .smart-today-schedule-status.is-active { color: var(--purple-700); }
 .smart-today-schedule-status.is-active i { background: var(--purple-600); }
-.smart-today-schedule-name { min-height: 2.7em; display: block; color: var(--text-primary); font-size: 14px; font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; }
-.smart-today-schedule-room { display: flex; align-items: center; gap: 6px; margin-top: 5px; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.smart-today-schedule-name { height: 2.7em; min-height: 0; display: -webkit-box; color: var(--text-primary); font-size: 14px; font-weight: 800; line-height: 1.35; overflow: hidden; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.smart-today-schedule-room { min-width: 0; display: flex; align-items: center; gap: 6px; margin-top: 0; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
 .smart-today-schedule-room svg { width: 15px; height: 15px; flex: none; }
 .smart-today-schedule-empty { margin: 0; padding: 6px 0 0; color: var(--text-secondary); font-size: 13px; }
 .smart-due-card .smart-due-copy { gap: 5px; }
