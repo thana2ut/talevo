@@ -1075,3 +1075,27 @@ html[data-theme="dark"] .ai-usage-top strong { color: #bb9cff; }
 html[data-theme="dark"] .ai-context-trigger { background: #372b54; color: #d1bcff; }
 html[data-theme="dark"] .ai-premium-composer { border-color: var(--border); }
 html[data-theme="dark"] .ai-empty-orbit { overflow: visible; }
+
+/* Exam calendar: restrained dark surfaces with readable status colours. */
+html[data-theme="dark"] .exam-dashboard .exam-legend {
+  background: linear-gradient(135deg, #252137, #1c1b2a);
+  border: 1px solid #423654;
+  box-shadow: 0 12px 30px #00000020;
+  color: var(--text-primary);
+}
+html[data-theme="dark"] .exam-dashboard .exam-legend::before { color: #f0eaff; }
+html[data-theme="dark"] .exam-dashboard .exam-legend > div { color: #d0c9df; line-height: 1.6; }
+html[data-theme="dark"] .exam-days button.past { background: #42232f; color: #ffabbc; }
+html[data-theme="dark"] .exam-days button.soon { background: #352650; color: #d0b4ff; }
+html[data-theme="dark"] .exam-days button.today { background: #203c32; color: #85e7b2; }
+html[data-theme="dark"] .exam-days button.future { background: #20344a; color: #9cd5ff; }
+html[data-theme="dark"] .exam-days button:hover { box-shadow: inset 0 0 0 1px #ab8bff; }
+html[data-theme="dark"] .exam-days button.selected { outline-color: #b18cff; background-color: #35294e; }
+html[data-theme="dark"] .exam-summary .exam-stats strong { color: #bc9aff; }
+html[data-theme="dark"] .exam-summary .exam-stats .exam-countdown { color: #ff7795; }
+html[data-theme="dark"] .exam-summary .exam-stats svg,
+html[data-theme="dark"] .exam-term svg,
+html[data-theme="dark"] .exam-list h2 svg { color: #bb9aff; }
+html[data-theme="dark"] .exam-calendar { border-color: #393347; }
+html[data-theme="dark"] .exam-days button { border-color: #ffffff0d; }
+html[data-theme="dark"] .exam-days button.outside { color: #8e879f; }
