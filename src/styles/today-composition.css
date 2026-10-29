@@ -299,11 +299,11 @@ html[data-theme="dark"] .academic-weather-empty {
 }
 .smart-today-primary-grid > .card, .smart-today-primary-grid > .smart-next-class { min-height: 148px; }
 .smart-today-schedule {
-  grid-column: 1 / -1;
   min-width: 0;
-  padding: clamp(20px, 3vw, 32px);
+  min-height: 148px;
+  padding: 18px 20px;
   border: 1px solid color-mix(in srgb, var(--purple-300) 42%, var(--border));
-  border-radius: 28px;
+  border-radius: 22px;
   background: color-mix(in srgb, var(--surface) 94%, var(--purple-50));
   box-shadow: var(--shadow-small);
 }
@@ -311,52 +311,53 @@ html[data-theme="dark"] .academic-weather-empty {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 26px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
-.smart-today-schedule-header h2 { margin: 0; color: var(--text-primary); font-size: clamp(19px, 2.4vw, 28px); font-weight: 850; line-height: 1.2; }
-.smart-today-schedule-header p { margin: 4px 0 0; color: var(--text-secondary); font-size: clamp(14px, 1.8vw, 19px); }
+.smart-today-schedule-header .icon-tile { width: 42px; height: 42px; border-radius: 13px; }
+.smart-today-schedule-header .icon-tile svg { width: 20px; height: 20px; }
+.smart-today-schedule-header h2 { margin: 0; color: var(--text-primary); font-size: 18px; font-weight: 820; line-height: 1.25; }
+.smart-today-schedule-header p { margin: 3px 0 0; color: var(--text-secondary); font-size: 13px; }
 .smart-today-schedule-link {
-  min-height: 52px;
-  padding: 0 18px;
-  border-radius: 16px;
+  min-height: 40px;
+  padding: 4px 2px 4px 8px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
   color: var(--purple-700);
-  background: var(--purple-50);
-  font-size: 15px;
+  background: transparent;
+  font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
-  transition: background-color .15s ease, transform .15s ease;
+  transition: color .15s ease, transform .15s ease;
 }
-.smart-today-schedule-link:hover { background: color-mix(in srgb, var(--purple-100) 75%, var(--purple-50)); transform: translateX(2px); }
-.smart-today-schedule-link svg { width: 19px; height: 19px; }
+.smart-today-schedule-link:hover { color: var(--purple-600); transform: translateX(2px); }
+.smart-today-schedule-link svg { width: 17px; height: 17px; }
 .smart-today-schedule-link:focus-visible { outline: 3px solid var(--purple-400); outline-offset: 3px; }
 .smart-today-schedule-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
 }
 .smart-today-schedule-item {
   min-width: 0;
-  padding: 4px clamp(14px, 2.6vw, 30px);
-  border-inline-start: 1px solid var(--border);
+  padding: 11px 0;
+  border-top: 1px solid var(--border);
 }
-.smart-today-schedule-item:first-child { padding-inline-start: 0; border-inline-start: 0; }
-.smart-today-schedule-item:last-child { padding-inline-end: 0; }
-.smart-today-schedule-meta { min-height: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 12px; }
-.smart-today-schedule-time { display: inline-flex; align-items: center; min-height: 36px; padding: 0 13px; border-radius: 999px; color: var(--text-secondary); background: var(--surface-soft); font-size: 15px; font-weight: 800; white-space: nowrap; }
+.smart-today-schedule-item:first-child { padding-top: 2px; border-top: 0; }
+.smart-today-schedule-meta { min-height: 30px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 7px; }
+.smart-today-schedule-time { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 999px; color: var(--text-secondary); background: var(--surface-soft); font-size: 12px; font-weight: 800; white-space: nowrap; }
 .smart-today-schedule-time.is-active { color: var(--purple-700); background: var(--purple-50); }
-.smart-today-schedule-status { display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 14px; font-weight: 750; white-space: nowrap; }
-.smart-today-schedule-status i { width: 9px; height: 9px; flex: none; border-radius: 50%; background: var(--text-muted); }
+.smart-today-schedule-status { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 12px; font-weight: 750; white-space: nowrap; }
+.smart-today-schedule-status i { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--text-muted); }
 .smart-today-schedule-status.is-active { color: var(--purple-700); }
 .smart-today-schedule-status.is-active i { background: var(--purple-600); }
-.smart-today-schedule-name { min-height: 2.8em; display: block; color: var(--text-primary); font-size: clamp(16px, 1.8vw, 20px); font-weight: 850; line-height: 1.4; overflow-wrap: anywhere; }
-.smart-today-schedule-room { display: flex; align-items: center; gap: 8px; margin-top: 9px; color: var(--text-secondary); font-size: 15px; overflow-wrap: anywhere; }
-.smart-today-schedule-room svg { width: 18px; height: 18px; flex: none; }
-.smart-today-schedule-empty { margin: 0; padding: 14px 0 2px; color: var(--text-secondary); }
+.smart-today-schedule-name { min-height: 2.7em; display: block; color: var(--text-primary); font-size: 14px; font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; }
+.smart-today-schedule-room { display: flex; align-items: center; gap: 6px; margin-top: 5px; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.smart-today-schedule-room svg { width: 15px; height: 15px; flex: none; }
+.smart-today-schedule-empty { margin: 0; padding: 6px 0 0; color: var(--text-secondary); font-size: 13px; }
 .smart-due-card .smart-due-copy { gap: 5px; }
 .smart-empty-card > div { gap: 5px; }
 .smart-free-time, .smart-finance { min-height: 128px; }
@@ -378,24 +379,26 @@ html[data-theme="dark"] .academic-weather-empty {
 .smart-finance-action:hover { background: var(--purple-50); }
 
 @media (max-width: 767px) {
-  .smart-today-schedule { padding: 20px; border-radius: 23px; }
-  .smart-today-schedule-header { gap: 11px; margin-bottom: 18px; }
-  .smart-today-schedule-header .icon-tile { width: 46px; height: 46px; }
-  .smart-today-schedule-link { min-height: 44px; padding-inline: 12px; gap: 6px; border-radius: 13px; font-size: 13px; }
-  .smart-today-schedule-list { grid-template-columns: minmax(0, 1fr); }
-  .smart-today-schedule-item,
-  .smart-today-schedule-item:first-child,
-  .smart-today-schedule-item:last-child { padding: 15px 0; border-inline-start: 0; border-top: 1px solid var(--border); }
-  .smart-today-schedule-item:first-child { padding-top: 0; border-top: 0; }
-  .smart-today-schedule-item:last-child { padding-bottom: 0; }
-  .smart-today-schedule-meta { margin-bottom: 7px; }
+  .smart-today-schedule { padding: 17px; border-radius: 20px; }
+  .smart-today-schedule-header { gap: 9px; margin-bottom: 10px; }
+  .smart-today-schedule-header .icon-tile { width: 38px; height: 38px; }
+  .smart-today-schedule-header h2 { font-size: 16px; }
+  .smart-today-schedule-header p { font-size: 12px; }
+  .smart-today-schedule-link { min-height: 38px; padding-inline: 2px; gap: 4px; font-size: 12px; }
   .smart-today-schedule-name { min-height: auto; }
 }
 
 @media (min-width: 768px) and (max-width: 1099px) {
-  .smart-today-schedule-list { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 22px; }
+  .smart-today-schedule { padding: 16px; }
+}
+
+@media (min-width: 1200px) {
+  .smart-today-schedule-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .smart-today-schedule-item { padding: 8px 12px; border-top: 0; border-inline-start: 1px solid var(--border); }
+  .smart-today-schedule-item:first-child,
   .smart-today-schedule-item:nth-child(odd) { padding-inline-start: 0; border-inline-start: 0; }
-  .smart-today-schedule-item:nth-child(n + 3) { padding-top: 18px; border-top: 1px solid var(--border); }
+  .smart-today-schedule-item:nth-child(n + 3) { padding-top: 12px; border-top: 1px solid var(--border); }
+  .smart-today-schedule-item:nth-child(even) { padding-inline-end: 0; }
 }
 
 /* Smart Today Task Card (Single Priority Card) */
