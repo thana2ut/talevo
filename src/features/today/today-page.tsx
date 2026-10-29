@@ -176,7 +176,7 @@ function TodayFreeTimeCard({ gap, nowMinutes }: { gap?: FreeGap; nowMinutes: num
 
   return <Card className="smart-free-time smart-free-time-hero">
     <div className="smart-free-time-hero-heading"><IconTile tone="purple"><Clock3 aria-hidden="true" /></IconTile><div><strong>{t("today.freeTime")}</strong><small>{gapIsActive ? "เวลาว่างตอนนี้" : gap ? "ช่วงว่างถัดไป" : "ภาพรวมเวลาว่างวันนี้"}</small></div></div>
-    <div className="smart-free-time-hero-detail"><span>{gapIsActive ? "คุณมีเวลาว่าง" : gap ? "ช่วงเวลาที่จัดไว้ได้" : "วันนี้"}</span><strong>{timeLabel}</strong><small>{gap ? `เหลือ ${formatDuration(remainingMinutes)}` : "ไม่มีช่วงว่างต่อเนื่องอย่างน้อย 30 นาที"}</small></div>
+    <div className="smart-free-time-hero-detail"><span>{gapIsActive ? "คุณมีเวลาว่าง" : gap ? "ช่วงว่างถัดไป" : "วันนี้"}</span><strong>{timeLabel}</strong><small>{gap ? `เหลือ ${formatDuration(remainingMinutes)}` : "ไม่มีช่วงว่างต่อเนื่องอย่างน้อย 30 นาที"}</small></div>
   </Card>;
 }
 

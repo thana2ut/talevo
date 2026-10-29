@@ -819,3 +819,14 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
   .study-hero-speech { left: 0; top: 20px; max-width: 140px; }
 }
 @media (max-width: 1099px) { .study-hero-action { align-self: center; width: 100%; max-width: 300px; min-height: 50px; font-size: 18px; padding: 10px 12px; } .study-hero-action svg { width: 24px; height: 24px; } }
+
+/* Compact, matched cards for the daily overview. */
+.smart-today-primary-grid > .smart-due-card,
+.smart-today-primary-grid > .smart-free-time-hero { min-height: 176px; height: auto; padding: 20px 24px; }
+.smart-today-primary-grid > .smart-free-time-hero { justify-content: center; align-items: stretch; gap: 12px; }
+.smart-today-primary-grid .smart-free-time-hero-heading { display: flex; flex-direction: row; align-items: center; gap: 11px; }
+.smart-today-primary-grid .smart-free-time-hero-heading .icon-tile { width: 44px; height: 44px; border-radius: 14px; }
+.smart-today-primary-grid .smart-free-time-hero-heading strong { font-size: 20px; }
+.smart-today-primary-grid .smart-free-time-hero-heading small { display: none; }
+.smart-today-primary-grid .smart-free-time-hero-detail { border: 0; padding: 0; gap: 4px; }
+.smart-today-primary-grid .smart-free-time-hero-detail > strong { font-size: 26px; }
