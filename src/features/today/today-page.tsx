@@ -164,7 +164,7 @@ function StudyHero({ classes, tasks, now, nowMinutes }: { classes: ClassSchedule
         <div className="study-hero-tasks"><h3><ClipboardCheck aria-hidden="true" /> งานค้าง <span className={tasks.length === 0 ? "is-clear" : undefined}>{tasks.length} รายการ</span></h3>{tasks.length ? tasks.slice(0, 2).map((task) => { const overdue = getTaskDueState(task, now) === "overdue"; const StatusIcon = overdue ? CircleAlert : Circle; return <Link className={overdue ? "is-overdue" : ""} href={`/tasks/${task.id}`} key={task.id}><StatusIcon aria-hidden="true" /><span><strong>{task.title}</strong><small>{formatTodayTaskDeadline(task, now)}</small></span><ArrowRight aria-hidden="true" /></Link>; }) : <p><CircleCheck aria-hidden="true" /> ไม่มีงานค้างในวันนี้</p>}</div>
       </div>
     </div>
-    <div className="study-hero-visual"><div className="study-hero-speech">{lesson ? "สู้ ๆ นะ! พร้อมเรียนรู้ไปด้วยกัน" : "เก่งมาก! อย่าลืมพักผ่อนด้วยนะ"}<Sparkles aria-hidden="true" /></div><span className="study-hero-mascot" aria-hidden="true" /><Link href="/schedule" className="study-hero-action"><BookOpen aria-hidden="true" /> ดูคาบเรียน <ArrowRight aria-hidden="true" /></Link></div>
+    <div className="study-hero-visual"><span className="study-hero-ready-art" role="img" aria-label="เตรียมตัวให้พร้อม! วันนี้เราไปเรียนกันเลย" /><Link href="/schedule" className="study-hero-action"><BookOpen aria-hidden="true" /> ดูคาบเรียน <ArrowRight aria-hidden="true" /></Link></div>
   </section>;
 }
 

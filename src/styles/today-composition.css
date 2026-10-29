@@ -831,3 +831,5 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 .smart-today-primary-grid .smart-free-time-hero-detail { border: 0; padding: 0; gap: 4px; }
 .smart-today-primary-grid .smart-free-time-hero-detail > strong { font-size: 26px; }
 .today-tagline { margin: 7px 0 0; color: var(--text-secondary); font-size: clamp(14px, 1.5vw, 18px); line-height: 1.5; }
+.study-hero-ready-art { display: block; align-self: stretch; width: 100%; aspect-ratio: 1613 / 975; margin: auto 0 16px; border-radius: 20px; background: url('/assets/dashboard/study-ready.webp') center / contain no-repeat; }
+@media (max-width: 699px) { .study-hero-ready-art { max-width: 440px; align-self: center; } }
