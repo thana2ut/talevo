@@ -131,7 +131,7 @@ function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; sched
   );
 }
 
-function StudyHero({ classes, tasks, now, nowMinutes }: { classes: ClassSchedule[]; tasks: Task[]; now: Date; nowMinutes: number }) {
+function StudyHero({ classes, tasks, now, nowMinutes, gap }: { classes: ClassSchedule[]; tasks: Task[]; now: Date; nowMinutes: number; gap?: FreeGap }) {
   const { tasks: allTasks } = useAppState();
   const [liveTime, setLiveTime] = useState(now);
   useEffect(() => {
@@ -171,6 +171,7 @@ function StudyHero({ classes, tasks, now, nowMinutes }: { classes: ClassSchedule
       <Link href="/tasks"><Clock3/><strong>{getTasksDueToday(allTasks, now).length}</strong><span>งานใกล้ครบกำหนด</span><ArrowRight/></Link>
     </div>
     <section className="phone-next-lesson"><header><h3>คาบเรียนถัดไป</h3><Link href="/schedule">ดูทั้งหมด →</Link></header><Link href="/schedule" className="phone-next-lesson-card"><CalendarDays/><span><strong>{next ? getScheduleDisplayName(next) : "ไม่มีคาบเรียนถัดไป"}</strong><small>{next ? `${next.startTime}–${next.endTime} · ${next.room || "ยังไม่ระบุห้อง"}` : "ขอให้พักผ่อนให้เต็มที่นะ 🎉"}</small></span></Link></section>
+    <section className="phone-free-time"><header><h3>เวลาว่างวันนี้</h3><Link href="/schedule">ดูตาราง →</Link></header><div className="phone-free-time-card"><Clock3 aria-hidden="true" /><span><strong>{gap ? (nowMinutes >= gap.start ? `ว่างถึง ${formatMinutes(gap.end)}` : `${formatMinutes(gap.start)}–${formatMinutes(gap.end)}`) : "วันนี้ไม่มีช่วงว่าง"}</strong><small>{gap ? `${nowMinutes >= gap.start ? "เหลือ" : "ว่าง"} ${formatDuration(gap.end - Math.max(nowMinutes, gap.start))}` : "ไม่มีช่วงว่างต่อเนื่องอย่างน้อย 30 นาที"}</small></span></div></section>
     <div className="study-hero-visual"><div className="study-hero-speech study-hero-speech-glass"><span className="study-speech-bulb" aria-hidden="true">💡</span><strong>เตรียมตัวให้พร้อม!</strong><span className="study-speech-message">วันนี้เราไปเรียนกันเลย</span><span className="study-speech-stars" aria-hidden="true"><i /><i /><i /></span></div><span className="study-hero-mascot" aria-hidden="true" /><Link href="/schedule" className="study-hero-action"><BookOpen aria-hidden="true" /> ดูคาบเรียน <ArrowRight aria-hidden="true" /></Link></div>
   </section>;
 }
@@ -206,7 +207,7 @@ export function TodayPage() {
 
   return <div className="page today-page smart-today-page">
     <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><p className="today-tagline">ทุกเรื่องเรียนของคุณ จัดการได้ง่าย ๆ ในที่เดียว</p></div><NotificationBell /></header>
-    <section className="smart-today-hero"><StudyHero classes={view.classes} tasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} /></section>
+    <section className="smart-today-hero"><StudyHero classes={view.classes} tasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} gap={view.usefulGap} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
       <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />

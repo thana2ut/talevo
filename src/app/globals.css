@@ -403,6 +403,8 @@ svg { width: 20px; height: 20px; stroke-width: 1.9; }
 .quick-options a:focus-visible, .quick-options button:focus-visible, .quick-add-button:focus-visible { outline: 3px solid var(--purple-400); outline-offset: 3px; }
 .quick-options > * > span { display: grid; width: 46px; height: 46px; flex: none; place-items: center; border-radius: 15px; background: var(--surface-elevated); color: var(--purple-600); }
 .quick-options > * > span svg { width: 21px; height: 21px; }
+/* The phone sheet shows this trailing chevron; the desktop list does not. */
+.quick-option-chevron { display: none; }
 .quick-options div { display: grid; min-width: 0; }
 .quick-options strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .quick-options small { color: var(--text-muted); font-size: 12px; font-weight: 450; }

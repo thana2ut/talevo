@@ -302,7 +302,7 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
 }
 
 /* Reference layouts are restricted to phone screens. */
-.phone-task-totals,.phone-next-lesson { display:none; }
+.phone-task-totals,.phone-next-lesson,.phone-free-time { display:none; }
 @media(max-width:699px) {
  html .page { padding-inline:18px; padding-bottom:110px; }
  html .smart-today-header h1 { font-size:clamp(28px,8vw,38px); line-height:1.25; }
@@ -334,6 +334,18 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .phone-next-lesson-card > svg { width:36px; height:36px; color:var(--purple-600); flex:none; }
  html .phone-next-lesson-card span { display:grid; gap:5px; }
  html .phone-next-lesson-card small { color:var(--text-secondary); font-size:12px; }
+ /* The glance row that answers "when am I free today" is hidden on phones, so
+    the question had no answer here at all. Same row shape as the next lesson
+    above it, so the two read as a pair. */
+ html .phone-free-time { display:block; grid-area:9 / 1 / 10 / -1; margin-top:18px; }
+ html .phone-free-time header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:12px; }
+ html .phone-free-time h3 { font-size:20px; font-weight:800; }
+ html .phone-free-time header a { color:var(--purple-600); font-size:13px; }
+ html .phone-free-time-card { display:flex; gap:14px; align-items:center; padding:19px 16px; border:1px solid white; border-radius:22px; background:linear-gradient(120deg,#fff,#ede6ff); }
+ html .phone-free-time-card > svg { width:36px; height:36px; color:var(--purple-600); flex:none; }
+ html .phone-free-time-card span { display:grid; gap:5px; min-width:0; }
+ html .phone-free-time-card strong { font-size:15px; line-height:1.35; }
+ html .phone-free-time-card small { color:var(--text-secondary); font-size:12px; }
  html .smart-today-glance { display:none; }
  html .schedule-heading { display:block; margin-bottom:20px; }
  html .schedule-heading .page-intro::before,html .exam-header::before { content:'TALEVO'; display:block; font-weight:850; color:var(--purple-600); font-size:15px; margin-bottom:8px; }
@@ -499,8 +511,9 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .month-days > button.selected { border-radius:12px; background:#eee7ff; outline:0; }
  html .quick-add-sheet .quick-options > a { min-height:86px; padding:14px; box-shadow:0 9px 22px #8454e511; }
  html .quick-add-sheet .quick-options > a > span { position:relative; width:58px; height:58px; background:linear-gradient(135deg,#f0e8ff,#e4d8ff); }
- html .quick-add-sheet .quick-options > a > span::after { content:'+'; position:absolute; bottom:-1px; right:-2px; width:21px; height:21px; display:grid; place-items:center; border:2px solid white; border-radius:50%; background:#7441ff; color:white; font-size:18px; }
- html .quick-add-sheet .quick-options > a::after { width:31px; height:31px; text-align:center; line-height:26px; border:1px solid white; border-radius:50%; }
+ html .quick-add-sheet .quick-options > a > span::after { content:''; position:absolute; bottom:-1px; right:-2px; width:21px; height:21px; border:2px solid white; border-radius:50%; background:linear-gradient(#fff,#fff) center/9px 2.5px no-repeat,linear-gradient(#fff,#fff) center/2.5px 9px no-repeat,#7441ff; }
+ html .quick-add-sheet .quick-options > a::after { content:none; }
+ html .quick-add-sheet .quick-options > a > .quick-option-chevron { display:block; flex:none; margin-left:auto; width:31px; height:31px; padding:6px; border:1px solid white; border-radius:50%; background:#ffffffb8; color:#7642ff; }
  html .quick-add-sheet > header,html .more-navigation-sheet > header { margin-bottom:18px; }
  html .quick-add-sheet > header .icon-button,html .more-navigation-sheet > header .icon-button { width:42px; height:42px; border-radius:15px; background:var(--surface); }
  html .more-navigation-options > a { min-height:68px; }
@@ -520,4 +533,44 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-premium-bubble table { display:block; max-width:100%; overflow-x:auto; }
  html .ai-premium-bubble pre { max-width:100%; overflow-x:auto; }
  html .ai-context-trigger { width:36px; height:40px; border-radius:13px; color:var(--text-secondary); }
+}
+
+/* Phone AI: the page holds still, only the thread moves.
+   The composer sat in the page flow with the tab-bar padding below it, so it
+   floated above a strip of empty page and the whole screen scrolled - the
+   thread and the page both moving at once. The page is the viewport now, the
+   card takes whatever the header leaves, and the thread is the only thing
+   with anywhere to scroll. */
+@media (max-width: 699px) {
+  html .ai-premium-page {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html .ai-premium-page > .ai-workbench {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  html .ai-premium-page .ai-conversation-card {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  html .ai-premium-page .ai-conversation-scroll {
+    min-height: 0;
+    padding-bottom: 16px;
+  }
+
+  /* Sitting in the card's own bottom row, it needs no offset of its own. */
+  html .ai-premium-page .ai-premium-composer {
+    position: static;
+    border-radius: 0 0 24px 24px;
+  }
 }
