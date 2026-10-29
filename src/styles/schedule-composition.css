@@ -246,7 +246,7 @@
 
 .timetable-day-header.is-selected:not(.is-today)::before {
   background: color-mix(in srgb, var(--purple-500) 10%, var(--surface-elevated));
-  border-color: color-mix(in srgb, var(--purple-400) 30%, transparent);
+  border-color: transparent;
 }
 
 .timetable-day-header.is-today::before {
@@ -258,18 +258,27 @@
 .schedule-date-strip button.selected:not(.today) {
   color: var(--text-primary);
   background: color-mix(in srgb, var(--purple-500) 10%, var(--surface-elevated));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--purple-400) 30%, transparent);
+  box-shadow: none;
 }
 
 .schedule-date-strip button.selected:not(.today) span { color: var(--text-muted); }
 .schedule-date-strip button.selected:not(.today) strong { color: var(--text-primary); }
-.schedule-date-strip button.today:not(.selected) {
-  color: #fff;
-  background: linear-gradient(145deg, var(--purple-500), var(--purple-700));
-  box-shadow: 0 8px 16px #6843ee38;
+.schedule-date-strip button.today {
+  color: var(--text-primary);
+  background: transparent;
+  box-shadow: none;
 }
-.schedule-date-strip button.today:not(.selected) span { color: #ffffffc2; }
-.schedule-date-strip button.today:not(.selected) strong { color: #fff; }
+.schedule-date-strip button.today span { color: var(--purple-700); font-weight: 800; }
+.schedule-date-strip button.today strong {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--purple-600);
+  color: #fff;
+  line-height: 1;
+}
 
 .timetable-day-header .day-name {
   font-size: 12px;
