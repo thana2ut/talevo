@@ -132,6 +132,7 @@ function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; sched
 }
 
 function StudyHero({ classes, tasks, now, nowMinutes }: { classes: ClassSchedule[]; tasks: Task[]; now: Date; nowMinutes: number }) {
+  const { tasks: allTasks } = useAppState();
   const [liveTime, setLiveTime] = useState(now);
   useEffect(() => {
     const timer = window.setInterval(() => setLiveTime(new Date()), 1000);
@@ -164,6 +165,12 @@ function StudyHero({ classes, tasks, now, nowMinutes }: { classes: ClassSchedule
         <div className="study-hero-tasks"><h3><ClipboardCheck aria-hidden="true" /> งานค้าง <span className={tasks.length === 0 ? "is-clear" : undefined}>{tasks.length} รายการ</span></h3>{tasks.length ? tasks.slice(0, 2).map((task) => { const overdue = getTaskDueState(task, now) === "overdue"; const StatusIcon = overdue ? CircleAlert : Circle; return <Link className={overdue ? "is-overdue" : ""} href={`/tasks/${task.id}`} key={task.id}><StatusIcon aria-hidden="true" /><span><strong>{task.title}</strong><small>{formatTodayTaskDeadline(task, now)}</small></span><ArrowRight aria-hidden="true" /></Link>; }) : <p><CircleCheck aria-hidden="true" /> ไม่มีงานค้างในวันนี้</p>}</div>
       </div>
     </div>
+    <div className="phone-task-totals">
+      <Link href="/tasks"><CircleCheck/><strong>{allTasks.filter(task => task.status === "completed" || task.completedAt != null).length}</strong><span>งานที่เสร็จแล้ว</span><ArrowRight/></Link>
+      <Link href="/tasks"><ClipboardCheck/><strong>{tasks.length}</strong><span>งานที่ต้องทำ</span><ArrowRight/></Link>
+      <Link href="/tasks"><Clock3/><strong>{getTasksDueToday(allTasks, now).length}</strong><span>งานใกล้ครบกำหนด</span><ArrowRight/></Link>
+    </div>
+    <section className="phone-next-lesson"><header><h3>คาบเรียนถัดไป</h3><Link href="/schedule">ดูทั้งหมด →</Link></header><Link href="/schedule" className="phone-next-lesson-card"><CalendarDays/><span><strong>{next ? getScheduleDisplayName(next) : "ไม่มีคาบเรียนถัดไป"}</strong><small>{next ? `${next.startTime}–${next.endTime} · ${next.room || "ยังไม่ระบุห้อง"}` : "ขอให้พักผ่อนให้เต็มที่นะ 🎉"}</small></span></Link></section>
     <div className="study-hero-visual"><div className="study-hero-speech study-hero-speech-glass"><span className="study-speech-bulb" aria-hidden="true">💡</span><strong>เตรียมตัวให้พร้อม!</strong><span className="study-speech-message">วันนี้เราไปเรียนกันเลย</span><span className="study-speech-stars" aria-hidden="true"><i /><i /><i /></span></div><span className="study-hero-mascot" aria-hidden="true" /><Link href="/schedule" className="study-hero-action"><BookOpen aria-hidden="true" /> ดูคาบเรียน <ArrowRight aria-hidden="true" /></Link></div>
   </section>;
 }
