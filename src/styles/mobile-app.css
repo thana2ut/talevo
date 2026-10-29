@@ -623,3 +623,24 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
     font-size: 10px;
   }
 }
+
+/* iPad: give the home page its notification bell back.
+   The bell lives in .desktop-topbar, which is display:none below 1200px, and
+   the Today page's own bell is switched off by default and only turned back on
+   at <=699px. Between those two a tablet had no way in to notifications at all.
+   Only the home page carries one, exactly as it does on a phone. */
+@media (min-width: 700px) and (max-width: 1199px) {
+  html .smart-today-header { position: relative; align-items: flex-start; }
+
+  html .smart-today-header > .notification-bell {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 16px;
+    background: var(--surface-elevated);
+    box-shadow: 0 10px 26px rgba(80, 55, 160, .1);
+  }
+
+  html .smart-today-header > .notification-bell svg { width: 21px; height: 21px; }
+}
