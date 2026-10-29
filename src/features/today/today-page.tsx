@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Activity, ArrowRight, BookOpen, CalendarDays, Circle, CircleAlert, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
 import { Card, IconTile, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getTaskCourseLabel } from "@/lib/course-utils";
@@ -132,11 +132,22 @@ function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; sched
 }
 
 function StudyHero({ classes, tasks, now, nowMinutes }: { classes: ClassSchedule[]; tasks: Task[]; now: Date; nowMinutes: number }) {
+  const [liveTime, setLiveTime] = useState(now);
+  useEffect(() => {
+    const timer = window.setInterval(() => setLiveTime(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const clock = liveTime > now ? liveTime : now;
+  const elapsedMinutes = clock.getHours() * 60 + clock.getMinutes() + clock.getSeconds() / 60;
   const current = classes.find((item) => timeToMinutes(item.startTime) <= nowMinutes && timeToMinutes(item.endTime) > nowMinutes);
   const next = classes.find((item) => timeToMinutes(item.startTime) > nowMinutes);
   const lesson = next ?? current;
-  const completed = classes.filter((item) => timeToMinutes(item.endTime) <= nowMinutes).length;
-  const percent = classes.length ? completed / classes.length : 0;
+  const completed = classes.filter((item) => timeToMinutes(item.endTime) <= elapsedMinutes).length;
+  const percent = classes.length ? classes.reduce((total, item) => {
+    const start = timeToMinutes(item.startTime);
+    const duration = timeToMinutes(item.endTime) - start;
+    return total + (duration > 0 ? Math.min(1, Math.max(0, (elapsedMinutes - start) / duration)) : elapsedMinutes >= start ? 1 : 0);
+  }, 0) / classes.length : 0;
   const date = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric" }).format(now);
   return <section className="study-hero" aria-label="TALEVO แนะนำ">
     <div className="study-hero-content">
