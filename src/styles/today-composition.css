@@ -752,6 +752,7 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 .study-hero-tasks h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 7px; color: #24164d; font-size: 13px; font-weight: 800; }
 .study-hero-tasks h3 > svg { width: 20px; height: 20px; color: #7140ff; }
 .study-hero-tasks h3 > span { padding: 2px 8px; border-radius: 99px; background: #ff686f; color: white; font-size: 10px; }
+.study-hero-tasks h3 > span.is-clear { background: #16865e; }
 .study-hero-tasks > a { display: flex; align-items: center; gap: 8px; min-height: 43px; padding: 6px 9px; margin-top: 5px; border-radius: 12px; background: #f8f5ff; color: #302451; }
 .study-hero-tasks > a.is-overdue { color: #ed343b; background: #ffebef; }
 .study-hero-tasks > a > svg { width: 17px; height: 17px; flex: none; color: #bea9f8; }
