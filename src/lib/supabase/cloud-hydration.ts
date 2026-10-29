@@ -160,7 +160,7 @@ export function hydrateCloudAccountToAppState(
     const rawType = stringValue(row, "type");
     return {
       id: examId,
-      courseId: stringValue(row, "course_id"),
+      courseId: schedules.find(schedule => schedule.id === stringValue(row, "course_id"))?.courseId ?? stringValue(row, "course_id"),
       title: stringValue(row, "title"),
       type: validExamTypes.includes(rawType as ExamType) ? (rawType as ExamType) : "other",
       startAt: stringValue(row, "start_at"),

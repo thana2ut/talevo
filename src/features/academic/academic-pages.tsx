@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Calculator, Check, ChevronDown, CircleAlert, CircleCheck, GraduationCap, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
+import { BookOpen, CalendarDays, Clock3, MapPin, Calculator, Check, ChevronDown, CircleAlert, CircleCheck, GraduationCap, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { BottomSheet, Card, EmptyState, Field, Input, PageHeader, ProgressBar, Select, StatusPill, Textarea } from "@/components/ui";
-import { calculateGradePlan, formatExamDateTime, getExamCountdown, getExamDate, getExamReadiness, getGradePlanSummary, hasEarnedScore, isGradeComponentUsed, validateGradePlan } from "@/lib/academic-utils";
+import { calculateGradePlan, formatExamDate, formatExamTimeRange, formatExamDateTime, getExamCountdown, getExamDate, getExamReadiness, getGradePlanSummary, hasEarnedScore, isGradeComponentUsed, validateGradePlan } from "@/lib/academic-utils";
 import { getCourseById, getCurrentTermCourses } from "@/lib/course-utils";
 import { toLocalDateKey } from "@/lib/finance-utils";
 import { normalizeTalevoColor } from "@/lib/talevo-color-utils";
@@ -17,6 +17,10 @@ const examTypes: ExamType[] = ["quiz", "midterm", "final", "practical", "present
 const thaiExamTypes: Record<ExamType, string> = { quiz: "สอบย่อย", midterm: "กลางภาค", final: "ปลายภาค", practical: "ปฏิบัติ", presentation: "นำเสนอ", other: "อื่น ๆ" };
 const defaultThresholds: GradeThreshold[] = [{ label: "A", minimumPercent: 80 }, { label: "B+", minimumPercent: 75 }, { label: "B", minimumPercent: 70 }, { label: "C+", minimumPercent: 65 }, { label: "C", minimumPercent: 60 }, { label: "D+", minimumPercent: 55 }, { label: "D", minimumPercent: 50 }, { label: "F", minimumPercent: 0 }];
 const dateNow = () => toLocalDateKey(new Date());
+const examInputTime = (value: string) => {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toLocaleString("sv-SE", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).replace(" ", "T") : value;
+};
 
 function CourseSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) { const { schedules } = useAppState(); const courses = getCurrentTermCourses(schedules); return <Select value={value} onChange={(event) => onChange(event.target.value)}><option value="">เลือกวิชา</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.name}</option>)}</Select>; }
 function courseName(courseId: string, schedules: ReturnType<typeof useAppState>["schedules"]) { return getCourseById(schedules, courseId)?.name ?? "วิชาที่ถูกนำออกจากตารางเรียน"; }
@@ -122,7 +126,7 @@ export function ExamFormPage() {
   const { exams, addExam, updateExam } = useAppState();
   const editId = params.get("edit");
   const source = editId ? exams.find((exam) => exam.id === editId) : undefined;
-  const [form,setForm] = useState<NewExamInput>(() => source ? { courseId: source.courseId, title: source.title, type: source.type, startAt: source.startAt, endAt: source.endAt ?? "", room: source.room ?? "", note: source.note ?? "", topics: source.topics.map((topic) => ({ ...topic })) } : {courseId:"",title:"",type:"quiz",startAt:`${dateNow()}T09:00`,endAt:"",room:"",note:"",topics:[]});
+  const [form,setForm] = useState<NewExamInput>(() => source ? { courseId: source.courseId, title: source.title, type: source.type, startAt: examInputTime(source.startAt), endAt: source.endAt ? examInputTime(source.endAt) : "", room: source.room ?? "", note: source.note ?? "", topics: source.topics.map((topic) => ({ ...topic })) } : {courseId:"",title:"",type:"quiz",startAt:`${dateNow()}T09:00`,endAt:"",room:"",note:"",topics:[]});
   const [topic,setTopic] = useState("");
   const [error,setError] = useState("");
   if (editId && !source) return <div className="page"><PageHeader title="แก้ไขการสอบ" backHref="/exams"/><EmptyState title="ไม่พบการสอบ" description="รายการอาจถูกลบแล้ว"/></div>;
@@ -130,7 +134,39 @@ export function ExamFormPage() {
   const editing = Boolean(editId);
   return <div className="page form-page"><PageHeader title={editing ? "แก้ไขการสอบ" : "เพิ่มการสอบ"} backHref={editing ? `/exams/${editId}` : "/exams"} /><Card className="form-card"><form className="form-grid" onSubmit={save}><Field label="วิชา"><CourseSelect value={form.courseId} onChange={(courseId)=>{setForm({...form,courseId});setError("");}}/></Field><Field label="ประเภทการสอบ"><Select value={form.type} onChange={(event)=>setForm({...form,type:event.target.value as ExamType})}>{examTypes.map((type)=><option key={type} value={type}>{thaiExamTypes[type]}</option>)}</Select></Field><Field label="ชื่อการสอบ"><Input required value={form.title} onChange={(event)=>{setForm({...form,title:event.target.value});setError("");}}/></Field><Field label="วันที่และเวลาเริ่ม"><Input required type="datetime-local" value={form.startAt} onChange={(event)=>{setForm({...form,startAt:event.target.value});setError("");}}/></Field><Field label="เวลาสิ้นสุด (ไม่บังคับ)"><Input type="datetime-local" value={form.endAt} onChange={(event)=>{setForm({...form,endAt:event.target.value});setError("");}}/></Field><Field label="ห้องสอบ"><Input value={form.room} onChange={(event)=>setForm({...form,room:event.target.value})}/></Field><Field label="หมายเหตุ"><Textarea value={form.note} onChange={(event)=>setForm({...form,note:event.target.value})}/></Field><Field label="หัวข้อที่ต้องอ่าน"><div className="inline-input"><Input value={topic} onChange={(event)=>setTopic(event.target.value)} /><button type="button" className="secondary-button" disabled={!topic.trim()} onClick={()=>{if(topic.trim()){setForm({...form,topics:[...form.topics,{id:`topic-${Date.now()}`,title:topic.trim(),completed:false}]});setTopic("");}}}>เพิ่ม</button></div>{form.topics.map((item)=><div className="draft-chip" key={item.id}>{item.title}<button type="button" aria-label={`ลบหัวข้อ ${item.title}`} onClick={()=>setForm({...form,topics:form.topics.filter((topicItem)=>topicItem.id!==item.id)})}>×</button></div>)}</Field>{error&&<p className="form-error" role="alert">{error}</p>}<button className="primary-button button-block" type="submit">{editing ? "บันทึกการแก้ไข" : "บันทึกการสอบ"}</button></form></Card></div>;
 }
-export function ExamDetailPage() { const { id } = useParams<{id:string}>(); const router=useRouter(); const {exams,schedules,toggleExamTopic,deleteExam}=useAppState(); const { language } = useLanguage(); const [deleteOpen,setDeleteOpen]=useState(false); const exam=exams.find((item)=>item.id===id); if(!exam)return <div className="page"><PageHeader title="การสอบ" backHref="/exams"/><EmptyState title="ไม่พบการสอบ" description="รายการอาจถูกลบแล้ว"/></div>; const readiness=getExamReadiness(exam); return <div className="page academic-page"><PageHeader title="รายละเอียดการสอบ" backHref="/exams"/><Card className="academic-detail"><span>{courseName(exam.courseId,schedules)}</span><h1>{exam.title}</h1><p>{thaiExamTypes[exam.type]} · {formatExamDateTime(exam, language)}</p>{exam.note&&<p>{exam.note}</p>}<strong>{getExamCountdown(exam, new Date(), language)}</strong></Card><section className="academic-list-section"><h2>หัวข้อที่ต้องอ่าน</h2>{readiness&&<ProgressBar value={readiness.percent} color="purple"/>}{exam.topics.length?exam.topics.map((topic)=><button className={`check-row ${topic.completed?"done":""}`} key={topic.id} type="button" onClick={()=>toggleExamTopic(exam.id,topic.id)}><Check/>{topic.title}</button>):<p>ยังไม่มีหัวข้อที่ต้องอ่าน</p>}</section><div className="dialog-actions"><Link className="secondary-button" href={`/exams/new?edit=${exam.id}`}><Pencil/>แก้ไขการสอบ</Link><button className="text-danger-button" type="button" onClick={()=>setDeleteOpen(true)}><Trash2/>ลบการสอบ</button></div><BottomSheet open={deleteOpen} title="ลบการสอบ" onClose={()=>setDeleteOpen(false)}><div className="task-delete-dialog"><p>ต้องการลบ “{exam.title}” ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้</p><div className="dialog-actions"><button className="secondary-button" type="button" onClick={()=>setDeleteOpen(false)}>ยกเลิก</button><button className="danger-button" type="button" onClick={()=>{deleteExam(exam.id);router.push("/exams");}}><Trash2/>ลบการสอบ</button></div></div></BottomSheet></div>; }
+export function ExamDetailPage() {
+  const { id } = useParams<{id:string}>();
+  const router = useRouter();
+  const { exams, schedules, now, toggleExamTopic, deleteExam } = useAppState();
+  const { language } = useLanguage();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const exam = exams.find((item) => item.id === id);
+  if (!exam) return <div className="page"><PageHeader title="การสอบ" backHref="/exams"/><EmptyState title="ไม่พบการสอบ" description="รายการอาจถูกลบแล้ว"/></div>;
+  const readiness = getExamReadiness(exam);
+  const finished = Boolean(exam.completedAt) || new Date(exam.endAt ?? exam.startAt) < now;
+  const editHref = `/exams/new?edit=${encodeURIComponent(exam.id)}`;
+  return <div className="page exam-detail-page">
+    <PageHeader title="รายละเอียดการสอบ" backHref="/exams"/>
+    <Card className="exam-detail-hero">
+      <div className="exam-detail-eyebrow"><span><GraduationCap aria-hidden="true"/>การสอบของคุณ</span><span className={`exam-detail-status ${finished ? "is-finished" : ""}`}>{finished ? "สอบแล้ว" : getExamCountdown(exam, now, language)}</span></div>
+      <h1>{courseName(exam.courseId,schedules)}</h1>
+      <p className="exam-detail-subtitle">{exam.title} · {thaiExamTypes[exam.type]}</p>
+      <div className="exam-detail-facts">
+        <div><CalendarDays aria-hidden="true"/><span><small>วันที่สอบ</small><strong>{formatExamDate(exam, language)}</strong></span></div>
+        <div><Clock3 aria-hidden="true"/><span><small>เวลาสอบ</small><strong>{formatExamTimeRange(exam, language) || "ยังไม่ระบุ"}</strong></span></div>
+        <div><MapPin aria-hidden="true"/><span><small>ห้องสอบ</small><strong>{exam.room || "ยังไม่ระบุห้องสอบ"}</strong></span></div>
+      </div>
+    </Card>
+    <div className="exam-detail-columns">
+      <Card className="exam-detail-topics"><header><span className="exam-detail-section-icon"><BookOpen aria-hidden="true"/></span><div><h2>หัวข้อที่ต้องอ่าน</h2><p>{exam.topics.length ? `อ่านแล้ว ${exam.topics.filter(topic => topic.completed).length} จาก ${exam.topics.length} หัวข้อ` : "วางแผนอ่านหนังสือให้พร้อมก่อนวันสอบ"}</p></div></header>
+        {readiness && <ProgressBar value={readiness.percent} color="purple"/>}
+        {exam.topics.length ? exam.topics.map(topic => <button className={`check-row ${topic.completed ? "done" : ""}`} key={topic.id} type="button" aria-pressed={topic.completed} onClick={()=>toggleExamTopic(exam.id,topic.id)}><Check aria-hidden="true"/>{topic.title}</button>) : <div className="exam-detail-empty"><BookOpen aria-hidden="true"/><strong>ยังไม่มีหัวข้ออ่านสอบ</strong><p>เพิ่มหัวข้อเพื่อแบ่งการเตรียมตัวเป็นขั้นตอนเล็ก ๆ</p><Link href={editHref}>เพิ่มหัวข้ออ่านสอบ <Plus aria-hidden="true"/></Link></div>}
+      </Card>
+      <Card className="exam-detail-notes"><h2>หมายเหตุการสอบ</h2><p>{exam.note || "ยังไม่มีหมายเหตุเพิ่มเติม"}</p><div className="exam-detail-manage"><Link className="primary-button" href={editHref}><Pencil aria-hidden="true"/>แก้ไขข้อมูลการสอบ</Link><button className="text-danger-button" type="button" onClick={()=>setDeleteOpen(true)}><Trash2 aria-hidden="true"/>ลบการสอบ</button></div></Card>
+    </div>
+    <BottomSheet open={deleteOpen} title="ลบการสอบ" onClose={()=>setDeleteOpen(false)}><div className="task-delete-dialog"><p>ต้องการลบ “{exam.title}” ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้</p><div className="dialog-actions"><button className="secondary-button" type="button" onClick={()=>setDeleteOpen(false)}>ยกเลิก</button><button className="danger-button" type="button" onClick={()=>{deleteExam(exam.id);router.push("/exams");}}><Trash2/>ลบการสอบ</button></div></div></BottomSheet>
+  </div>;
+}
 
 
 
