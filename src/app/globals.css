@@ -1131,3 +1131,25 @@ html[data-theme="dark"] .study-hero-speech-glass::after { background: #30273f; b
     box-shadow: 0 14px 32px #00000033;
   }
 }
+
+/* Schedule month view uses the same quiet night palette on every screen. */
+html[data-theme="dark"] .schedule-month-grid { background: #1d1b2b; border-color: #3b344c; }
+html[data-theme="dark"] .month-days { border-color: #ffffff10; }
+html[data-theme="dark"] .month-days > button { border-color: #ffffff0b; }
+html[data-theme="dark"] .month-days > button:nth-child(7n-1),
+html[data-theme="dark"] .month-days > button:nth-child(7n) { background: #252133; }
+html[data-theme="dark"] .schedule-month-grid .month-days > button.selected { background: #382c50; }
+html[data-theme="dark"] .schedule-month-grid .month-days > button.today .month-date-number { background: #8050ef; color: white; box-shadow: 0 3px 12px #8050ef33; }
+html[data-theme="dark"] .month-days > button:focus-visible { outline: 2px solid #bd9cff; outline-offset: -3px; }
+html[data-theme="dark"] .month-weekdays span { color: #b9afcb; }
+html[data-theme="dark"] .month-days > button.outside-month { opacity: .48; }
+html[data-theme="dark"] .subject-filter-button,
+html[data-theme="dark"] .subject-filter-list button { background: #282139; border-color: #5b4678; color: #d9c5ff; }
+html[data-theme="dark"] .subject-filter-list button.selected { background: #44305f; color: #fff; }
+html[data-theme="dark"] .selected-date-agenda header { color: var(--text-primary); }
+html[data-theme="dark"] .selected-date-agenda .schedule-event-card { border-color: color-mix(in srgb, var(--course-color, #a080ef) 45%, #30283d); }
+@media(max-width:699px) {
+  html .selected-date-agenda .schedule-event-card { align-items:center; }
+  html .selected-date-agenda .schedule-event-copy { min-width:0; }
+  html .selected-date-agenda .schedule-event-copy h3 { white-space:normal; overflow-wrap:anywhere; }
+}
