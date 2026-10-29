@@ -466,3 +466,44 @@ html[data-theme="dark"] .schedule-event-card.schedule-custom {
 .schedule-day-view,
 .schedule-week-view,
 .selected-date-agenda { max-width: none; }
+
+
+/* ==========================================================================
+   Day timeline alignment
+   --------------------------------------------------------------------------
+   The row is time | rail | card, and the free-time block between two classes
+   was positioned with a margin of its own: 74px against the row's 84px, and
+   86px against 94px once the wider breakpoint moved the columns. It therefore
+   sat a few pixels to the left of every card it was supposed to line up with.
+   Both now read the same two numbers, so they cannot drift apart again.
+   ========================================================================== */
+.schedule-timeline {
+  --timeline-time: 46px;
+  --timeline-rail: 18px;
+  --timeline-gap: 10px;
+  /* Where every card's left edge falls. */
+  --timeline-indent: calc(var(--timeline-time) + var(--timeline-rail) + var(--timeline-gap) * 2);
+}
+
+.schedule-timeline .timeline-item {
+  grid-template-columns: var(--timeline-time) var(--timeline-rail) minmax(0, 1fr);
+  gap: var(--timeline-gap);
+}
+
+.schedule-timeline .free-time-gap {
+  margin-left: var(--timeline-indent);
+  margin-right: 0;
+}
+
+/* The hour sits on the card's first line rather than floating above it. */
+.schedule-timeline .timeline-item > time {
+  align-self: start;
+  padding-top: 26px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 520px) {
+  .schedule-timeline { --timeline-time: 40px; --timeline-rail: 14px; --timeline-gap: 8px; }
+  .schedule-timeline .timeline-item > time { padding-top: 22px; font-size: 11px; }
+}

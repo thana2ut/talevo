@@ -209,3 +209,19 @@ html[data-theme="dark"] .notification-card.is-unread { background: var(--surface
 .smart-notification-section .mini-notifications a > div { min-width: 0; gap: 2px; }
 .smart-notification-section .mini-notifications a > div > span { overflow: hidden; color: var(--text-secondary); font-size: 12px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
 .smart-notification-section .mini-notifications a i { flex: none; margin-left: 8px; }
+
+/* The alert opened to read in full. */
+.notification-detail { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.notification-detail-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; background: var(--purple-50); color: var(--purple-600); }
+.notification-detail-icon svg { width: 26px; height: 26px; }
+.notification-detail-icon.notification-red { background: var(--danger-soft); color: var(--danger); }
+.notification-detail-icon.notification-orange { background: var(--warning-soft); color: var(--orange); }
+.notification-detail-icon.notification-green { background: var(--success-soft); color: var(--success); }
+.notification-detail h3 { margin: 2px 0 0; font-size: 18px; font-weight: 800; line-height: 1.35; color: var(--text-primary); }
+.notification-detail > p { margin: 0; max-width: 46ch; font-size: 14.5px; line-height: 1.65; color: var(--text-secondary); }
+.notification-detail > small { color: var(--text-muted); font-size: 12px; }
+.notification-detail-actions { display: grid; gap: 10px; width: 100%; margin-top: 8px; }
+.notification-detail-actions > * { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; width: 100%; }
+@media (min-width: 560px) {
+  .notification-detail-actions { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+}

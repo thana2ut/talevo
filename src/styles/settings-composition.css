@@ -69,3 +69,4 @@
   .settings-page .settings-card { box-shadow: var(--shadow-small); }
   .notification-permission { padding-left: 69px; }
 }
+.notification-permission.is-warning { color: #9a4c09; }

@@ -51,27 +51,33 @@ export function NotificationIcon({ type }: { type: AppNotification["type"] }) {
   return <Bell aria-hidden="true" />;
 }
 
-export function NotificationCard({ item, onClick, onDelete, deleteLabel }: { item: AppNotification; onClick: () => void; onDelete?: () => void; deleteLabel?: string }) {
+/**
+ * `onOpen` turns the row into a button that opens the alert to read in full
+ * instead of jumping straight to the page it refers to. A reminder is a piece
+ * of writing in its own right - which class, which room, how long is left -
+ * and following the link threw that away before it could be read.
+ */
+export function NotificationCard({ item, onClick, onOpen, onDelete, deleteLabel }: { item: AppNotification; onClick: () => void; onOpen?: () => void; onDelete?: () => void; deleteLabel?: string }) {
   const { language } = useLanguage();
   const tone = getNotificationTone(item);
   // The unread dot and the chevron share one trailing cell. Loose in the grid
   // they each claimed a column, which is what pushed the chevron to the top
   // corner and left the row looking lopsided.
-  const content = <><span className="notification-icon"><NotificationIcon type={item.type} /></span><span className="notification-copy"><strong>{item.title}</strong><span>{item.message}</span><small>{formatNotificationTime(item.createdAt, language)}</small></span><span className="notification-trailing">{!item.readAt && <i aria-label={language === "th" ? "ยังไม่อ่าน" : "Unread"} />}{item.href && <ChevronRight className="notification-chevron" aria-hidden="true" />}</span></>;
+  const content = <><span className="notification-icon"><NotificationIcon type={item.type} /></span><span className="notification-copy"><strong>{item.title}</strong><span>{item.message}</span><small>{formatNotificationTime(item.createdAt, language)}</small></span><span className="notification-trailing">{!item.readAt && <i aria-label={language === "th" ? "ยังไม่อ่าน" : "Unread"} />}{(onOpen || item.href) && <ChevronRight className="notification-chevron" aria-hidden="true" />}</span></>;
   const className = `notification-card notification-${tone} ${item.readAt ? "is-read" : "is-unread"}`;
+  const openLabel = language === "th" ? "เปิดอ่านการแจ้งเตือน" : "Open notification";
+  const renderMain = (mainClassName: string) => {
+    if (onOpen) return <button className={mainClassName} type="button" onClick={onOpen} aria-label={`${openLabel}: ${item.title}`}>{content}</button>;
+    if (item.href) return <Link href={item.href} className={mainClassName} onClick={onClick}>{content}</Link>;
+    return <button className={mainClassName} type="button" onClick={onClick}>{content}</button>;
+  };
   if (onDelete) {
     const deleteNotification = (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
       event.stopPropagation();
       onDelete();
     };
-    const main = item.href
-      ? <Link href={item.href} className="notification-card-main" onClick={onClick}>{content}</Link>
-      : <button className="notification-card-main" type="button" onClick={onClick}>{content}</button>;
-    return <article className={`${className} notification-card-with-delete`}>{main}<button className="notification-delete-button" type="button" onClick={deleteNotification} aria-label={deleteLabel ?? (language === "th" ? "ลบการแจ้งเตือน" : "Delete notification")}><Trash2 aria-hidden="true" /></button></article>;
+    return <article className={`${className} notification-card-with-delete`}>{renderMain("notification-card-main")}<button className="notification-delete-button" type="button" onClick={deleteNotification} aria-label={deleteLabel ?? (language === "th" ? "ลบการแจ้งเตือน" : "Delete notification")}><Trash2 aria-hidden="true" /></button></article>;
   }
-  if (item.href) return <Link href={item.href} className={className} onClick={onClick}>{content}</Link>;
-  return (
-    <button className={className} type="button" onClick={onClick}>{content}</button>
-  );
+  return renderMain(className);
 }

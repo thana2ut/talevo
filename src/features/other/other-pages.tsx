@@ -3,18 +3,20 @@
 import { Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, Languages, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BottomSheet, Card, PageHeader, Select } from "@/components/ui";
-import { NotificationCard } from "@/components/domain";
+import Link from "next/link";
+import { NotificationCard, NotificationIcon } from "@/components/domain";
 import { AccountManagement } from "@/components/account-actions";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { languageLabels } from "@/lib/i18n";
-import { getUnreadNotificationCount, groupNotifications, type NotificationGroupKey } from "@/lib/alerts/notification-utils";
-import type { NotificationPreferences } from "@/types";
+import { formatNotificationTime, getNotificationTone, getUnreadNotificationCount, groupNotifications, type NotificationGroupKey } from "@/lib/alerts/notification-utils";
+import type { AppNotification, NotificationPreferences } from "@/types";
 
 export function NotificationsPage() {
   const { notifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteReadNotifications } = useAppState();
   const { language, t } = useLanguage();
   const [deleteReadDialogOpen, setDeleteReadDialogOpen] = useState(false);
+  const [openedNotification, setOpenedNotification] = useState<AppNotification | null>(null);
   const [notice, setNotice] = useState("");
   const unread = getUnreadNotificationCount(notifications);
   const readCount = notifications.length - unread;
@@ -28,6 +30,10 @@ export function NotificationsPage() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
+  const openNotification = (item: AppNotification) => {
+    markNotificationRead(item.id);
+    setOpenedNotification(item);
+  };
   const handleDeleteNotification = (id: string) => {
     deleteNotification(id);
     setNotice(t("notifications.deleted"));
@@ -65,7 +71,7 @@ export function NotificationsPage() {
               <h2 id={`notification-group-${group}`}>{t(`notifications.groups.${group}`)}</h2>
               <div className="notification-list">
                 {groups[group].map((item) => (
-                  <NotificationCard key={item.id} item={item} onClick={() => markNotificationRead(item.id)} onDelete={item.readAt ? () => handleDeleteNotification(item.id) : undefined} deleteLabel={t("notifications.deleteOne")} />
+                  <NotificationCard key={item.id} item={item} onClick={() => markNotificationRead(item.id)} onOpen={() => openNotification(item)} onDelete={item.readAt ? () => handleDeleteNotification(item.id) : undefined} deleteLabel={t("notifications.deleteOne")} />
                 ))}
               </div>
             </section>
@@ -91,6 +97,18 @@ export function NotificationsPage() {
         </div>
       </Card>
     )}
+    <BottomSheet open={Boolean(openedNotification)} title={t("notifications.detailTitle")} onClose={() => setOpenedNotification(null)} closeLabel={t("common.close")} className="notification-detail-sheet">
+      {openedNotification && <div className="notification-detail">
+        <span className={`notification-detail-icon notification-${getNotificationTone(openedNotification)}`}><NotificationIcon type={openedNotification.type} /></span>
+        <h3>{openedNotification.title}</h3>
+        <p>{openedNotification.message}</p>
+        <small>{formatNotificationTime(openedNotification.createdAt, language)}</small>
+        <div className="notification-detail-actions">
+          {openedNotification.href && <Link className="primary-button" href={openedNotification.href} onClick={() => setOpenedNotification(null)}>{t("notifications.openRelated")}</Link>}
+          <button className="secondary-button" type="button" onClick={() => setOpenedNotification(null)}>{t("common.close")}</button>
+        </div>
+      </div>}
+    </BottomSheet>
     <BottomSheet open={deleteReadDialogOpen} title={t("notifications.deleteReadTitle")} onClose={() => setDeleteReadDialogOpen(false)} closeLabel={t("common.close")} className="notification-delete-dialog"><p>{t("notifications.deleteReadConfirm")}</p><div className="notification-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDeleteReadDialogOpen(false)}>{t("common.cancel")}</button><button className="notification-delete-confirm-button" type="button" onClick={handleDeleteRead}>{t("notifications.deleteRead")}</button></div></BottomSheet>
   </div>;
 }
@@ -114,7 +132,7 @@ const NOTIFICATION_GROUPS = [
 ] as const satisfies ReadonlyArray<{ titleKey: string; keys: ReadonlyArray<keyof NotificationPreferences> }>;
 
 export function SettingsPage() {
-  const { settings, updateSettings, updateNotificationPreferences, browserNotificationPermission, browserNotificationTestStatus, deviceNotificationsEnabled, setBrowserNotificationsEnabled } = useAppState();
+  const { settings, updateSettings, updateNotificationPreferences, browserNotificationPermission, browserNotificationTestStatus, deviceNotificationsEnabled, pushRegistration, setBrowserNotificationsEnabled } = useAppState();
   const { language, setLanguage, t } = useLanguage();
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
   const languageRowLabel = language === "th" ? `ภาษา ภาษาปัจจุบัน ${languageLabels[language]}` : `Language Current language ${languageLabels[language]}`;
@@ -132,7 +150,7 @@ export function SettingsPage() {
       <SettingRow icon={<Bell />} title={t("settings.smartAlerts")}><Toggle label={t("settings.smartAlerts")} checked={preferences.enabled} onChange={(value) => updateNotificationPreferences({ enabled: value })} /></SettingRow>
       {NOTIFICATION_GROUPS.map((group, index) => <div className={`setting-row notification-preference-row ${disabled ? "is-disabled" : ""}`} key={group.titleKey}><span className="setting-icon">{groupIcons[index]}</span><strong>{t(group.titleKey)}</strong><Toggle label={t(group.titleKey)} checked={isGroupOn(group.keys)} disabled={disabled} onChange={(value) => setGroup(group.keys, value)} /></div>)}
       <div className="setting-row notification-preference-row device-notification-row"><span className="setting-icon"><Bell /></span><strong>{t("settings.browserNotifications")}</strong><Toggle label={t("settings.browserNotifications")} checked={deviceNotificationsEnabled} disabled={browserNotificationPermission === "unsupported" || browserNotificationTestStatus === "sending"} onChange={(value) => void setBrowserNotificationsEnabled(value)} /></div>
-      <p className={`notification-permission permission-${browserNotificationPermission}`} role="status">{browserNotificationTestStatus === "sending" ? t("settings.notificationTestSending") : browserNotificationPermission === "unsupported" ? t("settings.permissionUnsupported") : browserNotificationPermission === "denied" ? t("settings.permissionDenied") : !deviceNotificationsEnabled ? t("settings.permissionDefault") : browserNotificationTestStatus === "sent" ? t("settings.notificationTestSent") : browserNotificationTestStatus === "failed" ? t("settings.notificationTestFailed") : t("settings.deviceNotificationsOn")}</p>
+      <p className={`notification-permission permission-${browserNotificationPermission} ${pushRegistration && !pushRegistration.ok ? "is-warning" : ""}`} role="status">{browserNotificationTestStatus === "sending" ? t("settings.notificationTestSending") : browserNotificationPermission === "unsupported" ? t("settings.permissionUnsupported") : browserNotificationPermission === "denied" ? t("settings.permissionDenied") : !deviceNotificationsEnabled ? t("settings.permissionDefault") : pushRegistration && !pushRegistration.ok ? t(`settings.push_${pushRegistration.reason}`) : pushRegistration?.ok ? t("settings.pushReady") : t("settings.deviceNotificationsOn")}</p>
     </Card></section>
     <AccountManagement /><BottomSheet className="language-selector-sheet" open={languagePickerOpen} title={t("settings.chooseLanguage")} onClose={() => setLanguagePickerOpen(false)}><div className="language-selector-intro">{t("settings.chooseLanguageDescription")}</div><div className="language-options" role="radiogroup" aria-label={t("settings.chooseLanguage")}>{(["th", "en"] as const).map((option) => <button type="button" role="radio" aria-checked={language === option} className={language === option ? "selected" : ""} key={option} onClick={() => { setLanguage(option); setLanguagePickerOpen(false); }}><span><strong>{languageLabels[option]}</strong><small>{option === "th" ? "Thai" : "English"}</small></span>{language === option && <Check className="language-option-check" aria-hidden="true" />}</button>)}</div></BottomSheet></div>;
 }

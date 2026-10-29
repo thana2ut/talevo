@@ -59,7 +59,17 @@ async function verifyDeviceDelivery() {
   const hydrationSource = fs.readFileSync(path.join(projectRoot, "src/lib/supabase/cloud-hydration.ts"), "utf8");
   check(!hydrationSource.includes("browserNotifications"), "cloud hydration must not overwrite the device notification switch");
   check(hydrationSource.includes('booleanValue(appSettingsRow, "daily_0700"'), "cloud hydration must read the daily brief from its real column");
+  const devicePreferenceSource = fs.readFileSync(path.join(projectRoot, "src/lib/push/device-preference.ts"), "utf8");
+  check(devicePreferenceSource.includes('Notification.permission === "granted"'), "a device that already granted permission must count as opted in, not be silently switched off");
+  check(devicePreferenceSource.includes('stored === "off"'), "an explicit off must still win over a granted permission");
+  const otherPagesSource = fs.readFileSync(path.join(projectRoot, "src/features/other/other-pages.tsx"), "utf8");
+  check(otherPagesSource.includes("openNotification") && otherPagesSource.includes("notifications.detailTitle"), "a notification must open to be read in full");
+  check(!otherPagesSource.includes("notification-device-strip"), "the device strip must stay out of the notification centre");
+  const domainSource = fs.readFileSync(path.join(projectRoot, "src/components/domain.tsx"), "utf8");
+  check(domainSource.includes("onOpen"), "the notification row must be able to open a reading view instead of following its link");
   const pushClientSource = fs.readFileSync(path.join(projectRoot, "src/lib/push/client.ts"), "utf8");
+  check(pushClientSource.includes('reason: response.status === 401 ? "signed_out"'), "a cold-start 401 must be reported as retryable rather than swallowed");
+  check(providerSource.includes("retryable") && providerSource.includes("attempt(remaining - 1"), "push registration must retry a transient failure instead of giving up for the session");
   check(pushClientSource.includes("matchesVapidKey") && pushClientSource.includes("getSubscription()"), "re-registering a device must reuse its push subscription instead of minting a new endpoint each launch");
   check(!pushClientSource.includes("ignoreDuplicates: true"), "a queued reminder must pick up edits to the class or task it belongs to");
   const mutationSource = fs.readFileSync(path.join(projectRoot, "src/lib/supabase/cloud-mutations.ts"), "utf8");

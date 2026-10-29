@@ -35,7 +35,7 @@ import type { SyllabusImportPayload } from "@/lib/syllabus-import";
 import { createTaskCompletionHistory, getExpiredCompletedTasks } from "@/lib/task-retention";
 import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
 import { removeAllReadNotifications, removeReadNotification } from "@/lib/alerts/notification-deletion";
-import { disablePushOnThisDevice, enablePushOnThisDevice, syncScheduledPush } from "@/lib/push/client";
+import { disablePushOnThisDevice, enablePushOnThisDevice, syncScheduledPush, type PushRegistration } from "@/lib/push/client";
 import { readDeviceNotificationPreference, writeDeviceNotificationPreference } from "@/lib/push/device-preference";
 import { buildPushSchedule } from "@/lib/push/schedule-plan";
 
@@ -104,6 +104,7 @@ interface AppStateValue {
   browserNotificationPermission: NotificationPermission | "unsupported";
   browserNotificationTestStatus: "idle" | "sending" | "sent" | "failed";
   deviceNotificationsEnabled: boolean;
+  pushRegistration: PushRegistration | null;
   goals: LearningGoals;
   academicTerm: AcademicTerm;
   financeTransactions: FinanceTransaction[];
@@ -238,6 +239,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // What this install was asked to do, read back from the device on every
   // launch. The effective switch below is this AND a granted permission.
   const [deviceNotificationIntent, setDeviceNotificationIntent] = useState(false);
+  // Whether this install is actually reachable by push, and why not when it is
+  // not. Without it the switch said "on" while the device was registered
+  // nowhere and no reminder could ever arrive.
+  const [pushRegistration, setPushRegistration] = useState<PushRegistration | null>(null);
   const pushRegistrationRef = useRef<string | null>(null);
   const [goals, setGoals] = useState<LearningGoals>(defaultAppState.goals);
   const [academicTerm, setAcademicTerm] = useState<AcademicTerm>(defaultAppState.academicTerm);
@@ -519,14 +524,42 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // push service has retired. Registering again on each launch is cheap, keeps
   // one row per device, and means a person who turned alerts on once on their
   // phone stays reachable there without opening settings again.
+  //
+  // It retries, because the first attempt after a cold start races the session
+  // cookie: the page is interactive before /api/push/subscribe can read it back
+  // and the call comes home 401. The previous version marked the attempt done
+  // before making it and only cleared that on a thrown error, which this never
+  // throws, so one unlucky launch left the device registered nowhere and
+  // silent until it was next opened.
   useEffect(() => {
     if (!userId || !deviceNotificationsEnabled || !NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
     if (pushRegistrationRef.current === userId) return;
-    pushRegistrationRef.current = userId;
-    void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY).catch(() => {
-      // In-app alerts carry on; the next launch tries again.
-      pushRegistrationRef.current = null;
-    });
+
+    let cancelled = false;
+    let timer = 0;
+
+    const attempt = async (remaining: number, delayMs: number) => {
+      const result = await enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+      if (cancelled) return;
+      setPushRegistration(result);
+      if (result.ok) {
+        pushRegistrationRef.current = userId;
+        return;
+      }
+      // Only the transient reasons are worth coming back for; a browser that
+      // cannot do push at all, or a permission that is not granted, answers the
+      // same every time.
+      const retryable = result.reason === "signed_out" || result.reason === "offline" || result.reason === "server";
+      if (!retryable || remaining === 0) return;
+      timer = window.setTimeout(() => void attempt(remaining - 1, Math.min(delayMs * 2, 30_000)), delayMs);
+    };
+
+    void attempt(4, 2_000);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [deviceNotificationsEnabled, userId]);
 
   useEffect(() => {
@@ -640,6 +673,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     browserNotificationPermission,
     browserNotificationTestStatus,
     deviceNotificationsEnabled,
+    pushRegistration,
     goals,
     academicTerm,
     financeTransactions,
@@ -689,6 +723,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setBrowserNotificationTestStatus("idle");
         writeDeviceNotificationPreference(false);
         setDeviceNotificationIntent(false);
+        setPushRegistration(null);
         pushRegistrationRef.current = null;
         void disablePushOnThisDevice();
         return;
@@ -724,9 +759,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setDeviceNotificationIntent(true);
 
       if (NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
-        pushRegistrationRef.current = userId;
-        void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY).catch(() => {
-          pushRegistrationRef.current = null;
+        void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY).then((result) => {
+          setPushRegistration(result);
+          // Left unset on failure so the launch effect's backoff takes over.
+          if (result.ok) pushRegistrationRef.current = userId;
         });
       }
 
@@ -1158,7 +1194,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         runCloudMutation((client, uid) => persistGradePlan(client, uid, gp));
       }
     },
-  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, deviceNotificationsEnabled, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
+  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, deviceNotificationsEnabled, pushRegistration, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

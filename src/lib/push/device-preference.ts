@@ -13,12 +13,22 @@ import { TALEVO_DEVICE_NOTIFICATIONS_KEY } from "@/lib/talevo-storage-keys";
 export function readDeviceNotificationPreference() {
   if (typeof window === "undefined") return false;
   try {
-    return window.localStorage.getItem(TALEVO_DEVICE_NOTIFICATIONS_KEY) === "on";
+    const stored = window.localStorage.getItem(TALEVO_DEVICE_NOTIFICATIONS_KEY);
+    if (stored === "on") return true;
+    if (stored === "off") return false;
   } catch {
-    // Private mode and blocked storage both throw; alerts stay off rather than
-    // crashing the page that reads them.
-    return false;
+    // Private mode and blocked storage both throw; fall through to the
+    // permission, which is readable either way.
   }
+
+  // Nothing recorded on this device yet. A browser only reports "granted"
+  // because this person was asked for this site and said yes, which is the
+  // request itself - so an install that already has permission is already
+  // opted in. Without this, moving the switch out of the synced settings and
+  // onto the device silently turned alerts off for everyone who had already
+  // allowed them, and they would have had to go and find the switch again.
+  // An explicit "off" is recorded, so turning it off still sticks.
+  return typeof Notification !== "undefined" && Notification.permission === "granted";
 }
 
 export function writeDeviceNotificationPreference(enabled: boolean) {
