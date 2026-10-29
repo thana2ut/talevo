@@ -973,34 +973,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       return { schedules: importedSchedulesCount, tasks: importedTasks.length, exams: importedExams.length };
     },
+    /**
+     * Edits the class that was opened, and only that one.
+     *
+     * It used to write the name, colour, course code, section and credits
+     * across every class sharing a courseId, on the theory that those are
+     * properties of the course rather than the period. Two classes end up
+     * sharing a courseId whenever their names or codes matched when they were
+     * added, which is easy to do by accident, and from then on renaming one
+     * silently renamed the other - the edit reached further than the screen it
+     * was made on, with nothing to say so. A period is what the form edits, so
+     * a period is what changes.
+     */
     updateSchedule: (id, input) => {
-      let updatedSchedules: ClassSchedule[] = [];
-      setSchedules((current) => {
-        const previous = current.find((item) => item.id === id);
-        if (!previous) return current;
-        const name = input.name.trim();
-        const courseCode = input.courseCode !== undefined ? (input.courseCode.trim() || undefined) : previous.courseCode;
-        const section = input.section !== undefined ? (input.section.trim() || undefined) : previous.section;
-        const credits = input.credits !== undefined ? input.credits : previous.credits;
-        const nextList = current.map((item) => item.courseId === previous.courseId
-          ? {
-              ...item,
-              ...(item.id === id ? input : {}),
-              id: item.id,
-              courseId: previous.courseId,
-              courseCode: item.id === id ? courseCode : (item.courseCode ?? courseCode),
-              section: item.id === id ? section : (item.section ?? section),
-              credits: item.id === id ? credits : (item.credits ?? credits),
-              name,
-              color: normalizeTalevoColor(input.color),
-            }
-          : item);
-        updatedSchedules = nextList.filter((item) => item.courseId === previous.courseId);
-        return nextList;
-      });
-      if (updatedSchedules.length > 0) {
-        const list = updatedSchedules;
-        runCloudMutation((client, uid) => persistClassSchedulesBatch(client, uid, list));
+      let updatedSchedule: ClassSchedule | null = null;
+      setSchedules((current) => current.map((item) => {
+        if (item.id !== id) return item;
+        const updated: ClassSchedule = {
+          ...item,
+          ...input,
+          id: item.id,
+          courseId: item.courseId,
+          name: input.name.trim(),
+          color: normalizeTalevoColor(input.color),
+          courseCode: input.courseCode !== undefined ? (input.courseCode.trim() || undefined) : item.courseCode,
+          section: input.section !== undefined ? (input.section.trim() || undefined) : item.section,
+          credits: input.credits !== undefined ? input.credits : item.credits,
+        };
+        updatedSchedule = updated;
+        return updated;
+      }));
+      if (updatedSchedule) {
+        const schedule = updatedSchedule;
+        runCloudMutation((client, uid) => persistClassSchedule(client, uid, schedule));
       }
     },
     deleteSchedule: (id) => {
