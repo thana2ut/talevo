@@ -244,8 +244,8 @@
   background: var(--hover-bg);
 }
 
-.timetable-day-header.is-selected::before {
-  background: transparent;
+.timetable-day-header.is-selected:not(.is-today)::before {
+  background: color-mix(in srgb, var(--purple-500) 8%, var(--surface-elevated));
   border-color: transparent;
 }
 
@@ -282,22 +282,6 @@
 }
 
 .timetable-day-header.is-today .day-name {
-  color: var(--purple-700);
-  font-weight: 800;
-}
-
-.timetable-day-header.is-selected .day-date {
-  color: #fff;
-  background: var(--purple-600);
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.timetable-day-header.is-selected .day-name {
   color: var(--purple-700);
   font-weight: 800;
 }
