@@ -279,6 +279,28 @@
   line-height: 1;
 }
 
+/* Month selection highlights the cell; only today gets a date circle. */
+.schedule-month-grid .month-days > button.selected {
+  background: color-mix(in srgb, var(--purple-500) 10%, var(--surface-elevated));
+}
+.schedule-month-grid .month-days > button.selected:not(.today) .month-date-number {
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-radius: 0;
+}
+.schedule-month-grid .month-days > button.today .month-date-number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--purple-600);
+  color: #fff;
+  line-height: 1;
+}
+
 .timetable-day-header .day-name {
   font-size: 12px;
   font-weight: 700;
