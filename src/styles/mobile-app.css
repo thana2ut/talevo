@@ -304,7 +304,14 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
 /* Reference layouts are restricted to phone screens. */
 .phone-task-totals,.phone-next-lesson,.phone-free-time { display:none; }
 @media(max-width:699px) {
- html .page { padding-inline:18px; padding-bottom:110px; }
+ /* One reservation for the tab bar, not two. .app-main already kept
+    66 + 10 + 24px clear and .page added 110 on top, so every phone screen
+    ended roughly 210px above a bar that is 66px tall. The page holds the
+    whole reservation now - the AI screen sizes itself to the viewport and
+    needs the room inside its own box - and .app-main adds nothing further. */
+ html .page { padding-inline:18px; padding-bottom:calc(var(--mobile-nav-bar) + 18px + env(safe-area-inset-bottom)); }
+ html .app-main,
+ html .app-main.app-main-ai { padding-bottom:0; }
  html .smart-today-header h1 { font-size:clamp(28px,8vw,38px); line-height:1.25; }
  html .smart-today-header { margin-bottom:20px; }
  html .smart-today-page .study-hero { grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr); gap:12px; }
@@ -326,10 +333,7 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .phone-task-totals svg:last-child { width:12px; color:var(--text-muted); }
  html .phone-task-totals strong { font-size:23px; }
  html .phone-task-totals span { font-size:11px; color:var(--text-secondary); }
- html .phone-next-lesson { display:block; grid-area:8 / 1 / 9 / -1; margin-top:5px; }
- html .phone-next-lesson header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:12px; }
- html .phone-next-lesson h3 { font-size:20px; font-weight:800; }
- html .phone-next-lesson header a { color:var(--purple-600); font-size:13px; }
+ html .phone-next-lesson { display:block; grid-area:8 / 1 / 9 / -1; margin-top:14px; }
  html .phone-next-lesson-card { display:flex; gap:14px; align-items:center; padding:19px 16px; border:1px solid white; border-radius:22px; background:linear-gradient(120deg,#fff,#ede6ff); }
  html .phone-next-lesson-card > svg { width:36px; height:36px; color:var(--purple-600); flex:none; }
  html .phone-next-lesson-card span { display:grid; gap:5px; }
@@ -337,10 +341,7 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  /* The glance row that answers "when am I free today" is hidden on phones, so
     the question had no answer here at all. Same row shape as the next lesson
     above it, so the two read as a pair. */
- html .phone-free-time { display:block; grid-area:9 / 1 / 10 / -1; margin-top:18px; }
- html .phone-free-time header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:12px; }
- html .phone-free-time h3 { font-size:20px; font-weight:800; }
- html .phone-free-time header a { color:var(--purple-600); font-size:13px; }
+ html .phone-free-time { display:block; grid-area:9 / 1 / 10 / -1; margin-top:10px; }
  html .phone-free-time-card { display:flex; gap:14px; align-items:center; padding:19px 16px; border:1px solid white; border-radius:22px; background:linear-gradient(120deg,#fff,#ede6ff); }
  html .phone-free-time-card > svg { width:36px; height:36px; color:var(--purple-600); flex:none; }
  html .phone-free-time-card span { display:grid; gap:5px; min-width:0; }
