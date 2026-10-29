@@ -1033,3 +1033,45 @@ html[data-theme="dark"] .drawer-nav-link.active {
   font-size: 14px;
   font-weight: 500;
 }
+
+/* Theme surfaces shared by phone, tablet and desktop. Keep illustrated hero art light. */
+html[data-theme="dark"] .quick-add-sheet,
+html[data-theme="dark"] .more-navigation-sheet,
+html[data-theme="dark"] .mobile-bottom-nav {
+  background: linear-gradient(135deg, #201e30, #191824);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .quick-options > a,
+html[data-theme="dark"] .phone-next-lesson-card,
+html[data-theme="dark"] .phone-free-time-card {
+  background: linear-gradient(125deg, #29243d, #211f30);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .quick-options strong,
+html[data-theme="dark"] .quick-add-sheet header h2,
+html[data-theme="dark"] .more-navigation-sheet header h2,
+html[data-theme="dark"] .study-hero-ring > span {
+  color: var(--text-primary);
+}
+html[data-theme="dark"] .quick-options > a > span,
+html[data-theme="dark"] .quick-add-sheet .quick-options > a > span {
+  background: #393050;
+  color: #c0a8ff;
+}
+html[data-theme="dark"] .quick-options small { color: var(--text-secondary); }
+html[data-theme="dark"] .mobile-bottom-nav .nav-link.active { background: #372b54; color: #c0a8ff; }
+html[data-theme="dark"] .quick-add-button { border-color: #201e30; }
+html[data-theme="dark"] .study-hero-ring circle { stroke: #3d3357; }
+html[data-theme="dark"] .study-hero-ring circle + circle { stroke: #a482ff; }
+html[data-theme="dark"] .ai-empty-state {
+  background: radial-gradient(ellipse at 50% 15%, #382855, transparent 65%), #201d2e;
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .ai-empty-state h2 span,
+html[data-theme="dark"] .ai-usage-top strong { color: #bb9cff; }
+html[data-theme="dark"] .ai-context-trigger { background: #372b54; color: #d1bcff; }
+html[data-theme="dark"] .ai-premium-composer { border-color: var(--border); }
+html[data-theme="dark"] .ai-empty-orbit { overflow: visible; }
