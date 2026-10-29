@@ -785,11 +785,11 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 @media (prefers-reduced-motion: reduce) { .study-hero-action, .study-hero-ring circle + circle { transition: none; } .study-hero-action:hover { transform: none; } }
 /* Keep the study details and visual on matching baselines. */
 @media (min-width: 1100px) {
-  .study-hero { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 22px; padding: 28px; }
+  .study-hero { grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr); gap: 20px; padding: 28px; }
   .study-hero-content { display: flex; flex-direction: column; }
   .study-hero-label { align-self: flex-start; }
   .study-hero h2 { font-size: 32px; margin-bottom: 18px; }
-  .study-hero-facts { grid-template-columns: 1.08fr .88fr 1.16fr; gap: 10px; }
+  .study-hero-facts { grid-template-columns: 1.08fr .88fr 1.16fr; gap: 12px; }
   .study-hero-facts > div { min-height: 76px; padding: 13px 14px; gap: 12px; }
   .study-hero-facts strong { font-size: 15px; }
   .study-hero-facts small { font-size: 12px; }
