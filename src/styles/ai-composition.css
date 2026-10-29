@@ -687,14 +687,18 @@ html[data-theme="dark"] .ai-context-badge { background: #2b2244; color: #c4b5fd;
 }
 .ai-context-panel .ai-panel-heading > div { min-width: 0; }
 .ai-context-panel .ai-panel-heading p,
-.ai-context-panel .ai-context-note { font-size: 9px; line-height: 1.5; white-space: nowrap; letter-spacing: -.02em; }
+.ai-context-panel .ai-context-note { font-size: 11px; line-height: 1.5; white-space: nowrap; letter-spacing: -.015em; }
 .ai-context-panel { container-type: inline-size; }
 @supports (font-size: 1cqi) {
  .ai-context-panel .ai-panel-heading p,
- .ai-context-panel .ai-context-note { font-size: clamp(7px, 2.1cqi, 10px); }
+ .ai-context-panel .ai-context-note { font-size: clamp(10px, 2.7cqi, 12px); }
 }
 /* Keep the context footer readable on one line at each panel width. */
-.ai-context-panel .ai-context-note { font-size: 10px; white-space: nowrap; letter-spacing: -.025em; }
+.ai-context-panel .ai-context-note { overflow: hidden; text-overflow: ellipsis; font-size: 11px; white-space: nowrap; letter-spacing: -.015em; }
 @supports (font-size: 1cqi) {
- .ai-context-panel .ai-context-note { font-size: clamp(8px, 2.55cqi, 12px); }
+ .ai-context-panel .ai-context-note { font-size: clamp(10px, 2.85cqi, 12.5px); }
+}
+.ai-context-panel .ai-context-item small { font-size: 11px; line-height: 1.35; }
+@supports (font-size: 1cqi) {
+ .ai-context-panel .ai-panel-heading p { font-size: clamp(10px, 2.7cqi, 12px); }
 }

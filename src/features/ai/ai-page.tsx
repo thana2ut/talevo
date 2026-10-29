@@ -152,8 +152,8 @@ function ContextPanel({ selected, onToggle }: { selected: AIContextSelection; on
           <h2 id="ai-context-title">ข้อมูลที่ให้ AI ใช้</h2>
           <p>
             {selectedCount === 0
-              ? "ยังไม่ได้แนบข้อมูล TALEVO · AI ใช้เฉพาะหมวดที่คุณเลือกในคำถามนี้"
-              : `เลือกแล้ว ${selectedCount} หมวด · AI ใช้เฉพาะหมวดที่คุณเลือกในคำถามนี้`}
+              ? "เลือกหมวด TALEVO ที่ต้องการให้ AI ใช้"
+              : `เลือกแล้ว ${selectedCount} หมวด · AI ใช้เฉพาะข้อมูลที่เลือก`}
           </p>
         </div>
       </div>
@@ -188,8 +188,8 @@ function ContextPanel({ selected, onToggle }: { selected: AIContextSelection; on
         </span>
         <p className="ai-context-note">
           {selectedCount === 0
-            ? "ยังไม่ได้แนบข้อมูล TALEVO · หากยังไม่เลือก ระบบจะไม่ใช้ข้อมูล TALEVO เพิ่มเติม"
-            : "AI ใช้เฉพาะหมวดที่คุณเลือก · ข้อมูลการเงิน โน้ต และข้อมูลส่วนตัวจะไม่ถูกส่งอัตโนมัติ"}
+            ? "ยังไม่เลือกหมวด · AI จะไม่ใช้ข้อมูล TALEVO"
+            : "AI ใช้เฉพาะหมวดที่เลือก · ข้อมูลส่วนตัวไม่ส่งอัตโนมัติ"}
         </p>
       </div>
     </section>
