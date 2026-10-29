@@ -220,3 +220,41 @@
   html .schedule-heading-actions,
   html .tasks-heading-actions { width: 100%; }
 }
+
+/* Native date/time controls must shrink inside narrow form columns on iOS. */
+.form-grid, .form-two, .field, .academic-end-time-input { min-width: 0; }
+.field, .form-two > *, .academic-end-time-input { max-width: 100%; }
+.form-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.field > .input, .academic-end-time-input > .input,
+.form-grid input[type="time"], .form-grid input[type="date"], .form-grid input[type="datetime-local"],
+.exam-editor-fields input[type="datetime-local"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+input.input[type="time"], input.input[type="date"], input.input[type="datetime-local"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input.input[type="time"]::-webkit-date-and-time-value,
+input.input[type="date"]::-webkit-date-and-time-value,
+input.input[type="datetime-local"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+.academic-end-time-input > label { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.academic-end-time-input > label input { flex: none; }
+@media (max-width: 1024px) {
+  input.input[type="time"], input.input[type="date"], input.input[type="datetime-local"] {
+    font-size: 16px;
+    min-height: 48px;
+    padding-inline: 12px;
+  }
+}
+@media (max-width: 360px) {
+  .form-two { grid-template-columns: minmax(0, 1fr); }
+}
