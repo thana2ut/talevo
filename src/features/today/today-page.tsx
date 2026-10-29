@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import { Activity, ArrowRight, ArrowUpRight, CalendarDays, Circle, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
-import { Card, IconTile, TalevoMascot, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
+import { Card, IconTile, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getTaskCourseLabel } from "@/lib/course-utils";
 import { formatHomeGreeting } from "@/lib/greeting";
 import { mondayIndex } from "@/lib/schedule-date";
@@ -14,7 +14,6 @@ import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ClassSchedule, Task } from "@/types";
 import { calculateDeadlineRisk, type DeadlineRiskAssessment } from "@/lib/alerts/deadline-risk";
-import type { MascotVariant } from "@/lib/mascot";
 
 const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
@@ -145,15 +144,18 @@ function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; sched
   );
 }
 
-function RecommendationCard({ task, risk, gap, nextClass, classCount, now }: { task?: Task; risk?: DeadlineRiskAssessment; gap?: FreeGap; nextClass?: ClassSchedule; classCount: number; now: Date }) {
+function RecommendationCard({ task, risk, gap, nextClass, classes, pendingTasks, now, nowMinutes }: { task?: Task; risk?: DeadlineRiskAssessment; gap?: FreeGap; nextClass?: ClassSchedule; classes: ClassSchedule[]; pendingTasks: Task[]; now: Date; nowMinutes: number }) {
   const { t } = useLanguage();
+  const featuredClass = nextClass ?? classes.find((item) => timeToMinutes(item.endTime) > nowMinutes) ?? classes[classes.length - 1];
+  const completedClasses = classes.filter((item) => timeToMinutes(item.endTime) <= nowMinutes).length;
+  const classProgress = classes.length ? Math.round((completedClasses / classes.length) * 100) : 0;
+  const dateLabel = new Intl.DateTimeFormat("th-TH", { weekday: "long", day: "numeric", month: "short", year: "numeric" }).format(now);
   let eyebrow = "เริ่มต้นพื้นที่เรียนของคุณ";
   let title = "เพิ่มตารางเรียนแรกเพื่อให้ TALEVO ช่วยวางแผน";
   let metadata = "ยังไม่มีตารางเรียนหรืองาน";
   let detail = "เมื่อเริ่มบันทึกข้อมูล ภาพรวมวันนี้และคำแนะนำจะปรากฏตรงนี้";
   let href = "/schedule/new";
   let action = "เพิ่มตารางเรียน";
-  let mascotVariant: MascotVariant = "neutral";
 
   if (task && risk?.level === "at_risk") {
     eyebrow = "เสี่ยงส่งไม่ทัน";
@@ -162,7 +164,6 @@ function RecommendationCard({ task, risk, gap, nextClass, classCount, now }: { t
     detail = `ก่อนกำหนดส่งมีเวลาว่างประมาณ ${formatDuration(risk.availableFreeMinutes)} ควรเริ่มในช่วงว่างถัดไป`;
     href = `/tasks/${task.id}`;
     action = "จัดการงานนี้";
-    mascotVariant = "focused";
   } else if (task) {
     const due = parseLocalTaskDate(task.dueDate);
     const dueState = getTaskDueState(task, now);
@@ -174,7 +175,6 @@ function RecommendationCard({ task, risk, gap, nextClass, classCount, now }: { t
     detail = gap ? `ลองใช้ช่วง ${formatMinutes(gap.start)}–${formatMinutes(gap.end)}${remaining > 0 ? ` เพื่อทำอีก ${remaining} ขั้นตอน` : " เพื่อเริ่มทำก่อนพัก"}` : remaining > 0 ? `เหลือ ${remaining} จาก ${total} ขั้นตอน` : "เริ่มทำก่อนจบวันเพื่อให้ตามแผนได้ทัน";
     href = `/tasks/${task.id}`;
     action = "ทำงานต่อ";
-    mascotVariant = "focused";
   } else if (nextClass) {
     eyebrow = "เตรียมตัวสำหรับคาบถัดไป";
     title = getScheduleDisplayName(nextClass);
@@ -182,18 +182,43 @@ function RecommendationCard({ task, risk, gap, nextClass, classCount, now }: { t
     detail = "ดูรายละเอียดคาบเรียนและเตรียมสิ่งที่ต้องใช้ล่วงหน้า";
     href = "/schedule";
     action = "ดูคาบเรียน";
-    mascotVariant = "happy";
-  } else if (classCount > 0) {
+  } else if (classes.length > 0) {
     eyebrow = "ตารางเรียนวันนี้ครบแล้ว";
     title = "วันนี้ไม่มีคาบเรียนถัดไป";
-    metadata = `${classCount} คาบเรียนวันนี้`;
+    metadata = `${classes.length} คาบเรียนวันนี้`;
     detail = "ตรวจดูตารางวันถัดไปหรือใช้ช่วงเวลาที่เหลือพักและทบทวนบทเรียน";
     href = "/schedule";
     action = "ดูตารางเรียน";
-    mascotVariant = "happy";
   }
 
-  return <section className="smart-recommendation"><div className="smart-recommendation-copy"><span className="smart-recommendation-label"><Sparkles /> {t("today.suggests")}</span><small>{eyebrow}</small><h2>{title}</h2><strong>{metadata}</strong><p>{detail}</p><Link href={href} className="smart-recommendation-action">{action} <ArrowUpRight /></Link></div><div className="smart-mascot-stage" aria-hidden="true"><span className="smart-mascot-aura" /><span className="smart-mascot-orbit" /><span className="smart-mascot-spark smart-mascot-spark-one" /><span className="smart-mascot-spark smart-mascot-spark-two" /><span className="smart-mascot-spark smart-mascot-spark-three" /><TalevoMascot variant={mascotVariant} crop="full" size="sm" sizes="(max-width: 390px) 112px, (max-width: 699px) 128px, 214px" decorative priority /><span className="smart-mascot-pedestal" /></div></section>;
+  return <section className="smart-recommendation smart-recommendation-dashboard">
+    <div className="smart-recommendation-copy smart-recommendation-content">
+      <div className="smart-recommendation-main">
+        <span className="smart-recommendation-label"><Sparkles /> {t("today.suggests")}</span>
+        <small>{eyebrow}</small>
+        <h2>{title}</h2>
+        <strong>{metadata}</strong>
+        <p>{detail}</p>
+        <Link href={href} className="smart-recommendation-action">{action} <ArrowUpRight /></Link>
+      </div>
+      <div className="smart-recommendation-facts" aria-label="ข้อมูลคาบเรียนวันนี้">
+        <div className="smart-recommendation-fact"><span><Clock3 aria-hidden="true" /></span><div><strong>{featuredClass ? `${featuredClass.startTime}–${featuredClass.endTime}` : "ไม่มีคาบเรียน"}</strong><small>{featuredClass ? nextClass ? "คาบถัดไป" : "คาบเรียนวันนี้" : "เวลาเรียน"}</small></div></div>
+        <div className="smart-recommendation-fact"><span><MapPin aria-hidden="true" /></span><div><strong>{featuredClass?.room || "ไม่มีห้องเรียน"}</strong><small>ห้องเรียน</small></div></div>
+        <div className="smart-recommendation-fact"><span><CalendarDays aria-hidden="true" /></span><div><strong>{dateLabel}</strong><small>วันที่เรียน</small></div></div>
+      </div>
+      <div className="smart-recommendation-bottom">
+        <div className="smart-recommendation-progress">
+          <span className="smart-recommendation-ring" style={{ background: `conic-gradient(var(--purple-600) ${classProgress}%, var(--purple-100) ${classProgress}% 100%)` }} aria-label={`เรียนแล้ว ${completedClasses} จาก ${classes.length} คาบ`}><span><strong>{completedClasses}<small>/{classes.length}</small></strong><small>คาบ</small></span></span>
+          <div><small>วันนี้เรียนไปแล้ว</small><strong>{completedClasses} จาก {classes.length} คาบ</strong><span>{Math.max(0, classes.length - completedClasses)} คาบที่เหลือ</span></div>
+        </div>
+        <div className="smart-recommendation-tasks">
+          <h3><ClipboardCheck aria-hidden="true" /> งานที่ต้องทำ <span>{pendingTasks.length}</span></h3>
+          {pendingTasks.length ? pendingTasks.slice(0, 2).map((item) => <Link href={`/tasks/${item.id}`} key={item.id}><span>{item.title}</span><ArrowRight aria-hidden="true" /></Link>) : <p>ไม่มีงานค้างในวันนี้</p>}
+        </div>
+      </div>
+    </div>
+    <div className="smart-mascot-stage smart-recommendation-art" aria-hidden="true"><span className="smart-mascot-aura" /><span className="smart-mascot-orbit" /><span className="smart-mascot-spark smart-mascot-spark-one" /><span className="smart-mascot-spark smart-mascot-spark-two" /><span className="smart-mascot-spark smart-mascot-spark-three" /><span className="smart-recommendation-mascot" /><span className="smart-mascot-pedestal" /></div>
+  </section>;
 }
 
 export function TodayPage() {
@@ -217,7 +242,7 @@ export function TodayPage() {
 
   return <div className="page today-page smart-today-page">
     <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><OverviewSentence classes={view.classes.length} pendingCount={view.pendingTasks.length} dueTodayCount={view.dueTodayTasks.length} /></div><NotificationBell /></header>
-    <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.pendingTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} classCount={view.classes.length} now={referenceDate} /></section>
+    <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.pendingTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} classes={view.classes} pendingTasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
       <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
