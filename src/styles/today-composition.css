@@ -393,7 +393,7 @@ html[data-theme="dark"] .academic-weather-empty {
   .smart-today-schedule-item:nth-child(odd) { padding-inline-start: 0; border-inline-start: 0; }
   .smart-today-schedule-item:first-child { padding-block-start: 8px; }
   .smart-today-schedule-item:nth-child(n + 3) { padding-top: 12px; border-top: 1px solid var(--border); }
-  .smart-today-schedule-item:nth-child(even) { padding-inline-end: 0; }
+  .smart-today-schedule-item:nth-child(even) { padding-inline: 20px 0; }
 }
 
 /* Smart Today Task Card (Single Priority Card) */
