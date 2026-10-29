@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, CalendarDays, Clock3, MapPin, Calculator, Check, ChevronDown, CircleAlert, CircleCheck, GraduationCap, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
+import { FileText, Save, X, BookOpen, CalendarDays, Clock3, MapPin, Calculator, Check, ChevronDown, CircleAlert, CircleCheck, GraduationCap, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { BottomSheet, Card, EmptyState, Field, Input, PageHeader, ProgressBar, Select, StatusPill, Textarea } from "@/components/ui";
 import { calculateGradePlan, formatExamDate, formatExamTimeRange, formatExamDateTime, getExamCountdown, getExamDate, getExamReadiness, getGradePlanSummary, hasEarnedScore, isGradeComponentUsed, validateGradePlan } from "@/lib/academic-utils";
@@ -132,7 +132,33 @@ export function ExamFormPage() {
   if (editId && !source) return <div className="page"><PageHeader title="แก้ไขการสอบ" backHref="/exams"/><EmptyState title="ไม่พบการสอบ" description="รายการอาจถูกลบแล้ว"/></div>;
   const save=(event:FormEvent)=>{event.preventDefault();if(!form.courseId){setError("กรุณาเลือกวิชาสำหรับการสอบ");return;}if(!form.title.trim()){setError("กรุณากรอกชื่อการสอบ");return;}if(!form.startAt || !getExamDate({ startAt: form.startAt })){setError("กรุณาระบุวันที่และเวลาเริ่มให้ถูกต้อง");return;}if(form.endAt && (!getExamDate({ startAt: form.endAt }) || new Date(form.endAt) <= new Date(form.startAt))){setError("เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม");return;}const input={...form,title:form.title.trim(),room:form.room?.trim(),note:form.note?.trim(),topics:form.topics};if(editId){updateExam(editId,input);router.push(`/exams/${editId}`);}else{const id=addExam(input);router.push(`/exams/${id}`);}};
   const editing = Boolean(editId);
-  return <div className="page form-page"><PageHeader title={editing ? "แก้ไขการสอบ" : "เพิ่มการสอบ"} backHref={editing ? `/exams/${editId}` : "/exams"} /><Card className="form-card"><form className="form-grid" onSubmit={save}><Field label="วิชา"><CourseSelect value={form.courseId} onChange={(courseId)=>{setForm({...form,courseId});setError("");}}/></Field><Field label="ประเภทการสอบ"><Select value={form.type} onChange={(event)=>setForm({...form,type:event.target.value as ExamType})}>{examTypes.map((type)=><option key={type} value={type}>{thaiExamTypes[type]}</option>)}</Select></Field><Field label="ชื่อการสอบ"><Input required value={form.title} onChange={(event)=>{setForm({...form,title:event.target.value});setError("");}}/></Field><Field label="วันที่และเวลาเริ่ม"><Input required type="datetime-local" value={form.startAt} onChange={(event)=>{setForm({...form,startAt:event.target.value});setError("");}}/></Field><Field label="เวลาสิ้นสุด (ไม่บังคับ)"><Input type="datetime-local" value={form.endAt} onChange={(event)=>{setForm({...form,endAt:event.target.value});setError("");}}/></Field><Field label="ห้องสอบ"><Input value={form.room} onChange={(event)=>setForm({...form,room:event.target.value})}/></Field><Field label="หมายเหตุ"><Textarea value={form.note} onChange={(event)=>setForm({...form,note:event.target.value})}/></Field><Field label="หัวข้อที่ต้องอ่าน"><div className="inline-input"><Input value={topic} onChange={(event)=>setTopic(event.target.value)} /><button type="button" className="secondary-button" disabled={!topic.trim()} onClick={()=>{if(topic.trim()){setForm({...form,topics:[...form.topics,{id:`topic-${Date.now()}`,title:topic.trim(),completed:false}]});setTopic("");}}}>เพิ่ม</button></div>{form.topics.map((item)=><div className="draft-chip" key={item.id}>{item.title}<button type="button" aria-label={`ลบหัวข้อ ${item.title}`} onClick={()=>setForm({...form,topics:form.topics.filter((topicItem)=>topicItem.id!==item.id)})}>×</button></div>)}</Field>{error&&<p className="form-error" role="alert">{error}</p>}<button className="primary-button button-block" type="submit">{editing ? "บันทึกการแก้ไข" : "บันทึกการสอบ"}</button></form></Card></div>;
+  return <div className="page exam-editor-page">
+    <PageHeader title={editing ? "แก้ไขรายละเอียดการสอบ" : "เพิ่มรายการสอบ"} backHref={editing ? `/exams/${editId}` : "/exams"}/>
+    <p className="exam-editor-intro">ปรับข้อมูลการสอบได้ครบในหน้าเดียว</p>
+    <form onSubmit={save} className="exam-editor-form">
+      <Card className="exam-editor-card"><header><span><FileText aria-hidden="true"/></span><div><h2>ข้อมูลการสอบ</h2><p>รายละเอียดพื้นฐานและกำหนดการสอบ</p></div></header>
+        <div className="exam-editor-fields">
+          <Field label="วิชา *"><CourseSelect value={form.courseId} onChange={courseId=>{setForm({...form,courseId});setError("");}}/></Field>
+          <Field label="ประเภทการสอบ *"><Select value={form.type} onChange={event=>setForm({...form,type:event.target.value as ExamType})}>{examTypes.map(type=><option key={type} value={type}>{thaiExamTypes[type]}</option>)}</Select></Field>
+          <Field label="ชื่อการสอบ *"><Input required placeholder="เช่น สอบปลายภาค" value={form.title} onChange={event=>{setForm({...form,title:event.target.value});setError("");}}/></Field>
+          <Field label="ห้องสอบ"><Input placeholder="ยังไม่ระบุห้องสอบ" value={form.room} onChange={event=>setForm({...form,room:event.target.value})}/></Field>
+          <Field label="วันที่และเวลาเริ่ม *"><Input required type="datetime-local" value={form.startAt} onChange={event=>{setForm({...form,startAt:event.target.value});setError("");}}/></Field>
+          <Field label="วันที่และเวลาสิ้นสุด"><Input type="datetime-local" value={form.endAt} onChange={event=>setForm({...form,endAt:event.target.value})}/></Field>
+        </div>
+        <div className="exam-editor-status"><span>สถานะการสอบ</span><strong>{source?.completedAt || (form.endAt && new Date(form.endAt) < new Date()) ? "สอบแล้ว" : "กำลังเตรียมตัวสอบ"}</strong><small>อ้างอิงจากกำหนดการสอบของคุณ</small></div>
+      </Card>
+      <div className="exam-editor-columns">
+        <Card className="exam-editor-card"><header><span><BookOpen aria-hidden="true"/></span><div><h2>หัวข้อที่ต้องอ่าน</h2><p>จัดการหัวข้อและติดตามการเตรียมตัวสอบ</p></div></header>
+          <div className="exam-editor-topics">{form.topics.map(item=><div key={item.id}><label><input type="checkbox" checked={item.completed} onChange={event=>setForm({...form,topics:form.topics.map(entry=>entry.id===item.id?{...entry,completed:event.target.checked,completedAt:event.target.checked?new Date().toISOString():undefined}:entry)})}/><span>{item.title}</span></label><button type="button" aria-label={`ลบหัวข้อ ${item.title}`} onClick={()=>setForm({...form,topics:form.topics.filter(entry=>entry.id!==item.id)})}><Trash2 aria-hidden="true"/></button></div>)}</div>
+          {!form.topics.length&&<p className="exam-editor-topic-empty">ยังไม่มีหัวข้อ เพิ่มสิ่งที่ต้องอ่านเพื่อเริ่มเตรียมตัว</p>}
+          <div className="exam-editor-topic-add"><Input aria-label="หัวข้อใหม่" placeholder="พิมพ์หัวข้อที่ต้องอ่าน" value={topic} onChange={event=>setTopic(event.target.value)}/><button type="button" disabled={!topic.trim()} onClick={()=>{if(topic.trim()){setForm({...form,topics:[...form.topics,{id:`topic-${Date.now()}`,title:topic.trim(),completed:false}]});setTopic("");}}}><Plus aria-hidden="true"/>เพิ่มหัวข้อ</button></div>
+        </Card>
+        <Card className="exam-editor-card"><header><span><FileText aria-hidden="true"/></span><div><h2>หมายเหตุเพิ่มเติม</h2><p>เพิ่มรายละเอียดอื่น ๆ เกี่ยวกับการสอบ</p></div></header><Textarea aria-label="หมายเหตุเพิ่มเติม" placeholder="สิ่งที่ต้องเตรียม ขอบเขตเนื้อหา หรือรายละเอียดการสอบ..." value={form.note} onChange={event=>setForm({...form,note:event.target.value})}/></Card>
+      </div>
+      {error&&<p className="form-error" role="alert">{error}</p>}
+      <div className="exam-editor-footer"><button className="primary-button" type="submit"><Save aria-hidden="true"/>{editing ? "บันทึกการเปลี่ยนแปลง" : "บันทึกรายการสอบ"}</button><Link className="secondary-button" href={editing ? `/exams/${editId}` : "/exams"}><X aria-hidden="true"/>ยกเลิก</Link></div>
+    </form>
+  </div>;
 }
 export function ExamDetailPage() {
   const { id } = useParams<{id:string}>();
