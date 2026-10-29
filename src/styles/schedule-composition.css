@@ -490,9 +490,14 @@ html[data-theme="dark"] .schedule-event-card.schedule-custom {
   gap: var(--timeline-gap);
 }
 
+/* The free-time block carried margin: -6px 0 8px, which pulled it up over the
+   card above - a 2px overlap that clipped that card's bottom corner - and left
+   2px above it against 12px below. Zeroing its own margins lets the list's one
+   gap set an even rhythm on both sides. */
+.schedule-timeline { gap: 10px; }
+
 .schedule-timeline .free-time-gap {
-  margin-left: var(--timeline-indent);
-  margin-right: 0;
+  margin: 0 0 0 var(--timeline-indent);
 }
 
 /* The hour sits on the card's first line rather than floating above it. */

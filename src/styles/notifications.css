@@ -192,23 +192,6 @@ html[data-theme="dark"] .notification-empty-unified-card {
 html[data-theme="dark"] .notification-card { background: var(--surface-elevated); border-color: var(--border); }
 html[data-theme="dark"] .notification-card.is-unread { background: var(--surface-elevated); }
 
-/* ==========================================================================
-   Home page summary rows
-   --------------------------------------------------------------------------
-   The colour chip here was a 34x36 box carrying tone-purple's 4px left border,
-   which a 12px radius drew as a clipped crescent, and the row showed a title
-   and a time with nothing between them. It is the same icon as the centre now,
-   with the alert's own line of copy.
-   ========================================================================== */
-.smart-notification-section .mini-notifications a { align-items: center; gap: 12px; min-height: 0; padding: 11px 12px; }
-.mini-notification-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 13px; background: var(--purple-50); color: var(--purple-600); }
-.mini-notification-icon svg { width: 18px; height: 18px; }
-.mini-notification-icon.tone-red { border-left: 0; background: var(--danger-soft); color: var(--danger); }
-.mini-notification-icon.tone-orange { border-left: 0; background: var(--warning-soft); color: var(--orange); }
-.mini-notification-icon.tone-purple { border-left: 0; background: var(--purple-50); color: var(--purple-600); }
-.smart-notification-section .mini-notifications a > div { min-width: 0; gap: 2px; }
-.smart-notification-section .mini-notifications a > div > span { overflow: hidden; color: var(--text-secondary); font-size: 12px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
-.smart-notification-section .mini-notifications a i { flex: none; margin-left: 8px; }
 
 /* The alert opened to read in full. */
 .notification-detail { display: grid; justify-items: center; gap: 10px; text-align: center; }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
-import { ArrowUpRight, BookOpen, CircleCheck, ClipboardCheck, Clock3, GraduationCap, Sparkles } from "lucide-react";
+import { ArrowUpRight, CircleCheck, ClipboardCheck, Clock3, GraduationCap, Sparkles } from "lucide-react";
 import { Card, IconTile, TalevoMascot, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getTaskCourseLabel } from "@/lib/course-utils";
 import { formatHomeGreeting } from "@/lib/greeting";
@@ -13,9 +13,7 @@ import { formatTodayTaskDeadline, getPendingTasksForToday, getTaskDueState, getT
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ClassSchedule, Task } from "@/types";
-import { NotificationIcon } from "@/components/domain";
 import { calculateDeadlineRisk, type DeadlineRiskAssessment } from "@/lib/alerts/deadline-risk";
-import { formatNotificationTime } from "@/lib/alerts/notification-utils";
 import type { MascotVariant } from "@/lib/mascot";
 
 const DAY_START = 8 * 60;
@@ -183,7 +181,7 @@ function RecommendationCard({ task, risk, gap, nextClass, classCount, now }: { t
 }
 
 export function TodayPage() {
-  const { profile, isAuthLoading, isHydrated, tasks, schedules, notifications, markNotificationRead, now: appNow } = useAppState();
+  const { profile, isAuthLoading, isHydrated, tasks, schedules, now: appNow } = useAppState();
   const { t, language } = useLanguage();
   const clientReady = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const referenceDate = useMemo(() => clientReady ? appNow : new Date(2000, 0, 1, 0, 0), [appNow, clientReady]);
@@ -211,12 +209,5 @@ export function TodayPage() {
       <Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong>{view.gaps.length > 1 && <Link href="/schedule">ดูทั้งหมด</Link>}</header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card>
     </div>
     </section>
-    {/* Each panel carries real content or nothing at all. An empty card still
-        costs a heading, a frame and a line of apology, which is more of the
-        screen than the absence of a class or an alert is worth. */}
-    {(view.nextClass || notifications.length > 0) && <div className="smart-today-bottom-grid">
-      {view.nextClass && <section className="smart-later-section"><SectionHeader title="ภายหลังวันนี้" /><Card className="smart-later-card"><BookOpen /><div><strong>{`${view.nextClass.startTime} · ${getScheduleDisplayName(view.nextClass)}`}</strong><small>{`${view.nextClass.room}${view.nextClass.teacher ? ` · ${view.nextClass.teacher}` : ""}`}</small></div></Card></section>}
-      {notifications.length > 0 && <section className="smart-notification-section"><SectionHeader title="แจ้งเตือนล่าสุด" action="ดูทั้งหมด" href="/notifications" /><Card className="mini-notifications">{notifications.slice(0, 3).map((item) => <Link href={item.href ?? "/notifications"} key={item.id} className={item.readAt ? "is-read" : ""} onClick={() => markNotificationRead(item.id)}><span className={`mini-notification-icon tone-${item.priority === "high" ? "red" : item.priority === "medium" ? "orange" : "purple"}`}><NotificationIcon type={item.type} /></span><div><strong>{item.title}</strong><span>{item.message}</span><small>{formatNotificationTime(item.createdAt, language, referenceDate)}</small></div>{!item.readAt && <i aria-label="ยังไม่อ่าน" />}</Link>)}</Card></section>}
-    </div>}
   </div>;
 }
