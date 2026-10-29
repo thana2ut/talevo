@@ -18,6 +18,14 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--course-color) 26%, var(--surface));
 }
 
+@media (min-width: 700px) and (max-width: 1023px) {
+  .schedule-day-layout { grid-template-columns: minmax(0, 1fr); }
+  .schedule-day-layout > .schedule-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+}
+
 .week-day-column {
   background: repeating-linear-gradient(
     to bottom,
@@ -512,3 +520,52 @@ html[data-theme="dark"] .schedule-event-card.schedule-custom {
   .schedule-timeline { --timeline-time: 40px; --timeline-rail: 14px; --timeline-gap: 8px; }
   .schedule-timeline .timeline-item > time { padding-top: 22px; font-size: 11px; }
 }
+
+/* Give free-time rows the same columns as class cards, including on phones. */
+.schedule-timeline .free-time-gap {
+  display: grid;
+  grid-template-columns: var(--timeline-time) var(--timeline-rail) minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--timeline-gap);
+  margin: 3px 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.schedule-timeline .free-time-gap > time {
+  align-self: start;
+  padding-top: 11px;
+  color: var(--text-muted);
+  text-align: right;
+  font-size: 11px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-timeline .free-time-rail {
+  justify-self: center;
+  width: 3px;
+  min-height: 54px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--purple-400) 38%, transparent);
+}
+
+.schedule-timeline .free-time-copy {
+  display: grid;
+  grid-column: 3;
+  align-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 8px 12px;
+  color: var(--purple-700);
+  background: #f4f0ff8c;
+  border: 1px dashed #7656f64d;
+  border-radius: 17px;
+}
+
+.free-time-copy > span { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.free-time-copy svg { width: 17px; height: 17px; flex: none; }
+.free-time-copy strong { font-size: 12px; }
+.free-time-copy small { color: var(--text-secondary); font-size: 10px; }

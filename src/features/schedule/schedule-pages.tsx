@@ -89,7 +89,7 @@ function EmptySchedule({ title = "วันนี้ไม่มีคาบเ�
 }
 
 function FreeTime({ startTime, endTime, duration }: { startTime: string; endTime: string; duration: number }) {
-  return <div className="free-time-gap"><Clock3 /><span><strong>ว่าง {formatScheduleDuration(duration)}</strong><small>{startTime} – {endTime}</small></span></div>;
+  return <div className="free-time-gap"><time>{startTime}</time><span className="free-time-rail" aria-hidden="true" /><span className="free-time-copy"><span><Clock3 aria-hidden="true" /><strong>ว่าง {formatScheduleDuration(duration)}</strong></span><small>{startTime} – {endTime}</small></span></div>;
 }
 
 function ScheduleSummary({ schedules, selectedDate, currentMinute }: { schedules: ClassSchedule[]; selectedDate: Date; currentMinute: number }) {

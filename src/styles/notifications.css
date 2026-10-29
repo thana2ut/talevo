@@ -208,3 +208,23 @@ html[data-theme="dark"] .notification-card.is-unread { background: var(--surface
 @media (min-width: 560px) {
   .notification-detail-actions { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
 }
+
+/* Keep the icon, text, and shared trailing cell on one center line. */
+.notification-card { grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; }
+.notification-card .notification-icon { align-self: center; flex: none; }
+.notification-card .notification-copy { align-self: center; min-width: 0; }
+.notification-copy > strong,
+.notification-copy > span { overflow-wrap: anywhere; }
+.notification-card .notification-trailing { align-self: center; }
+.notification-card-with-delete .notification-card-main {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+}
+.notification-card-main .notification-icon,
+.notification-card-main .notification-copy,
+.notification-card-main .notification-trailing { align-self: center; }
+
+@media (max-width: 480px) {
+  .notification-card { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .notification-card-with-delete .notification-card-main { grid-template-columns: 40px minmax(0, 1fr) auto; }
+}
