@@ -188,7 +188,7 @@ export function buildWeeklyRadarAlert(context: AlertContext): AppNotification | 
   if (!context.preferences.weeklyRadar || context.now.getDay() !== 1 || !isWithinScheduledWindow(context.now, 7, 5, 60)) return null;
   const eventKey = `weekly-radar:${getIsoWeekKey(context.now)}`;
   if (hasHandledEventKey(context, eventKey)) return null;
-  const radar = buildWeeklyRadar({ now: context.now, schedules: context.schedules, tasks: context.tasks, exams: [], language: context.language });
+  const radar = buildWeeklyRadar({ now: context.now, schedules: context.schedules, tasks: context.tasks, exams: context.exams, language: context.language });
   const busiest = new Intl.DateTimeFormat(context.language === "th" ? "th-TH" : "en-GB", { weekday: "long" }).format(radar.busiestDay.date);
   const message = context.language === "th" ? `${context.academicTerm.term} · เรียน ${radar.classCount} คาบ · งานส่ง ${radar.taskCount} งาน · ${busiest}ภาระมากที่สุด${radar.recommendation ? ` · ${radar.recommendation}` : ""}` : `${context.academicTerm.term} · ${radar.classCount} classes · ${radar.taskCount} deadlines · ${busiest} is busiest${radar.recommendation ? ` · ${radar.recommendation}` : ""}`;
   return createAlert(context.now, { type: "weekly_radar", priority: "normal", title: context.language === "th" ? "สัปดาห์นี้ของคุณ" : "Your week", message, href: "/today", eventKey, metadata: { academicYear: context.academicTerm.academicYear } });
@@ -196,7 +196,7 @@ export function buildWeeklyRadarAlert(context: AlertContext): AppNotification | 
 
 export function evaluateSmartAlerts(context: AlertContext) {
   if (!context.preferences.enabled) return [];
-  if (context.schedules.length === 0 && context.tasks.length === 0) return [];
+  if (context.schedules.length === 0 && context.tasks.length === 0 && context.exams.length === 0) return [];
   const alerts: AppNotification[] = [];
   const morning = buildMorningSummary(context);
   if (morning) alerts.push(morning);
@@ -207,5 +207,19 @@ export function evaluateSmartAlerts(context: AlertContext) {
   alerts.push(...evaluateDeadlineRiskAlerts(context));
   alerts.push(...evaluateTaskDeadlineAlerts(context));
   alerts.push(...evaluateClassAlerts(context));
+  for (const exam of context.exams) {
+    const start = parseLocalTaskDate(exam.startAt);
+    if (!start || exam.completedAt || start <= context.now) continue;
+    const minutes = (start.getTime() - context.now.getTime()) / MINUTE_MS;
+    const reminders = [[7, context.preferences.exam7d], [3, context.preferences.exam3d], [1, context.preferences.exam1d]] as const;
+    for (const [days, enabled] of reminders) {
+      if (enabled && isWithinMinuteWindow(minutes, days * 1440, 60)) appendIfNew(alerts, context, {
+        type: "exam_upcoming", priority: days === 1 ? "high" : "medium", title: `อีก ${days} วันมีสอบ`, message: `${exam.title} · ${formatTime(start)} · ${exam.room || "ยังไม่ระบุห้อง"}`, href: `/exams/${exam.id}`, sourceId: exam.id, eventKey: `exam-${days}d:${exam.id}:${exam.startAt}`,
+      });
+    }
+    if (context.preferences.examMorning && isSameLocalDate(start, context.now) && isWithinScheduledWindow(context.now, 6, 0, 60)) appendIfNew(alerts, context, {
+      type: "exam_today", priority: "high", title: "วันนี้มีสอบ", message: `${exam.title} · ${formatTime(start)} · ${exam.room || "ยังไม่ระบุห้อง"}`, href: `/exams/${exam.id}`, sourceId: exam.id, eventKey: `exam-morning:${exam.id}:${exam.startAt}`,
+    });
+  }
   return alerts.sort((first, second) => ({ high: 0, medium: 1, normal: 2 })[first.priority] - ({ high: 0, medium: 1, normal: 2 })[second.priority]);
 }

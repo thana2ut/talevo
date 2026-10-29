@@ -602,6 +602,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     const timer = window.setTimeout(() => {
       const plan = buildPushSchedule({
+        exams,
         now: new Date(),
         tasks,
         schedules,
@@ -616,7 +617,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }, 1_500);
 
     return () => window.clearTimeout(timer);
-  }, [academicTerm, deviceNotificationsEnabled, isCurrentScopeHydrated, language, profile, schedules, settings.notificationPreferences, tasks, userId]);
+  }, [academicTerm, deviceNotificationsEnabled, exams, isCurrentScopeHydrated, language, profile, schedules, settings.notificationPreferences, tasks, userId]);
 
   const adoptExistingLocalData = useCallback(() => {
     if (!userId) return;

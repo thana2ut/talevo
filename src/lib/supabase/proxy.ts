@@ -53,7 +53,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Keep old bookmarks safe: retired features return to the active home screen.
-  if (matchesRoute(pathname, "/finance") || matchesRoute(pathname, "/exams")) {
+  if (matchesRoute(pathname, "/finance")) {
     return NextResponse.redirect(new URL("/today", request.url));
   }
   if (matchesRoute(pathname, "/grades")) {

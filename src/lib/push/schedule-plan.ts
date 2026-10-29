@@ -2,7 +2,7 @@ import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
 import { addLocalDays, getClassOccurrences, MINUTE_MS } from "@/lib/alerts/date-time";
 import type { AppLanguage } from "@/lib/i18n";
 import { parseLocalTaskDate } from "@/lib/task-utils";
-import type { AcademicTerm, ClassSchedule, NotificationPreferences, Task, UserProfile } from "@/types";
+import type { AcademicTerm, ClassSchedule, Exam, NotificationPreferences, Task, UserProfile } from "@/types";
 
 export type ScheduledPush = {
   eventKey: string;
@@ -15,6 +15,7 @@ export type ScheduledPush = {
 type PlanInput = {
   now: Date;
   tasks: Task[];
+  exams?: Exam[];
   schedules: ClassSchedule[];
   profile: UserProfile;
   academicTerm: AcademicTerm;
@@ -50,6 +51,13 @@ function candidateInstants(input: PlanInput): Date[] {
     }
   }
 
+  for (const exam of input.exams ?? []) {
+    if (exam.completedAt) continue;
+    const start = parseLocalTaskDate(exam.startAt);
+    if (!start) continue;
+    for (const days of [7, 3, 1]) push(new Date(start.getTime() - days * 1440 * MINUTE_MS));
+    push(new Date(start.getFullYear(), start.getMonth(), start.getDate(), 6));
+  }
   for (const task of input.tasks) {
     if (task.status === "completed") continue;
     const due = parseLocalTaskDate(task.dueDate);
@@ -79,7 +87,7 @@ export function buildPushSchedule(input: PlanInput): ScheduledPush[] {
       now: instant,
       tasks: input.tasks,
       schedules: input.schedules,
-      exams: [],
+      exams: input.exams ?? [],
       profile: input.profile,
       academicTerm: input.academicTerm,
       preferences: input.preferences,
