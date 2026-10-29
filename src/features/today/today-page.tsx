@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
-import { ArrowUpRight, CircleCheck, ClipboardCheck, Clock3, GraduationCap, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
 import { Card, IconTile, TalevoMascot, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
 import { getTaskCourseLabel } from "@/lib/course-utils";
 import { formatHomeGreeting } from "@/lib/greeting";
@@ -62,13 +62,27 @@ function OverviewSentence({ classes, pendingCount, dueTodayCount }: { classes: n
   return <p className="smart-today-overview">{classText} · {taskText}</p>;
 }
 
-function NextClassCard({ classes, nowMinutes }: { classes: ClassSchedule[]; nowMinutes: number }) {
-  const { t } = useLanguage();
-  const current = classes.find((item) => timeToMinutes(item.startTime) <= nowMinutes && timeToMinutes(item.endTime) > nowMinutes);
-  const upcoming = classes.find((item) => timeToMinutes(item.startTime) > nowMinutes);
-  const item = current ?? upcoming;
-  const state = current ? "กำลังเรียนอยู่" : upcoming ? `อีก ${formatDuration(timeToMinutes(upcoming.startTime) - nowMinutes)}` : classes.length ? "วันนี้ไม่มีคาบเรียนต่อแล้ว" : "วันนี้ไม่มีคาบเรียน";
-  return <Link href="/schedule" className={`smart-next-class${current ? " is-current" : ""}`}><IconTile tone="purple"><GraduationCap /></IconTile><div className="smart-next-copy"><span>{t("today.nextClass")}</span>{item ? <><strong>{getScheduleDisplayName(item)}</strong><small>{current ? "กำลังเรียนอยู่" : `${item.startTime} · ${state}`}</small><small>{item.room}{item.teacher ? ` · ${item.teacher}` : ""}</small></> : <><strong>{state}</strong><small>ดูตารางเรียนหรือเพิ่มคาบเรียนได้จากหน้านี้</small></>}</div><ArrowUpRight aria-hidden="true" /></Link>;
+function TodayScheduleCard({ classes, nowMinutes }: { classes: ClassSchedule[]; nowMinutes: number }) {
+  const { t, language } = useLanguage();
+  const upcomingIndex = classes.findIndex((item) => timeToMinutes(item.startTime) > nowMinutes);
+  const currentIndex = classes.findIndex((item) => timeToMinutes(item.startTime) <= nowMinutes && timeToMinutes(item.endTime) > nowMinutes);
+  const countText = new Intl.NumberFormat(language).format(classes.length);
+  return <section className="smart-today-schedule" aria-label={language === "th" ? "ตารางเรียนวันนี้" : "Today's schedule"}>
+    <header className="smart-today-schedule-header"><IconTile tone="purple"><CalendarDays /></IconTile><div><h2>{language === "th" ? "ตารางเรียนวันนี้" : "Today's Schedule"}</h2><p>{language === "th" ? `มี ${countText} คาบเรียน` : `${countText} classes today`}</p></div><Link href="/schedule" className="smart-today-schedule-link">{language === "th" ? "ดูทั้งหมด" : "View all"} <ArrowRight aria-hidden="true" /></Link></header>
+    {classes.length ? <div className="smart-today-schedule-list">{classes.map((item, index) => {
+      const ended = timeToMinutes(item.endTime) <= nowMinutes;
+      const isCurrent = index === currentIndex;
+      const isNext = index === upcomingIndex && !isCurrent && !ended;
+      const status = language === "th"
+        ? isCurrent ? "กำลังเรียน" : isNext ? "คาบถัดไป" : ended ? "เรียนแล้ว" : "ยังไม่เริ่ม"
+        : isCurrent ? "In progress" : isNext ? "Next class" : ended ? "Completed" : "Not started";
+      return <article className={`smart-today-schedule-item${isCurrent || isNext ? " is-active" : ""}`} key={item.id}>
+        <div className="smart-today-schedule-meta"><span className={`smart-today-schedule-time${isCurrent || isNext ? " is-active" : ""}`}>{item.startTime}–{item.endTime}</span><span className={`smart-today-schedule-status${isCurrent || isNext ? " is-active" : ""}`}><i aria-hidden="true" />{status}</span></div>
+        <strong className="smart-today-schedule-name">{getScheduleDisplayName(item)}</strong>
+        <span className="smart-today-schedule-room"><MapPin aria-hidden="true" />{item.room || (language === "th" ? "ยังไม่ระบุห้อง" : "Room not set")}</span>
+      </article>;
+    })}</div> : <p className="smart-today-schedule-empty">{language === "th" ? "วันนี้ไม่มีคาบเรียน" : "No classes today"}</p>}
+  </section>;
 }
 
 function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; schedules: ClassSchedule[] }) {
@@ -204,7 +218,7 @@ export function TodayPage() {
     <section className="smart-today-hero"><RecommendationCard task={view.atRisk?.task ?? view.pendingTasks[0]} risk={view.atRisk?.assessment ?? undefined} gap={view.usefulGap} nextClass={view.nextClass} classCount={view.classes.length} now={referenceDate} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
-      <NextClassCard classes={view.classes} nowMinutes={view.nowMinutes} />
+      <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
       <TodayTaskCard task={view.pendingTasks[0]} now={referenceDate} schedules={schedules} />
       <Card className="smart-free-time"><header><span><Clock3 /></span><strong>{t("today.freeTime")}</strong>{view.gaps.length > 1 && <span>ดูทั้งหมด</span>}</header>{view.usefulGap ? <div className="smart-free-detail"><span>{view.nowMinutes >= view.usefulGap.start ? "ตอนนี้คุณว่างถึง" : "ช่วงว่างถัดไป"}</span><strong>{view.nowMinutes >= view.usefulGap.start ? formatMinutes(view.usefulGap.end) : `${formatMinutes(view.usefulGap.start)}–${formatMinutes(view.usefulGap.end)}`}</strong><small>เหลือ {formatDuration(view.usefulGap.end - Math.max(view.nowMinutes, view.usefulGap.start))}</small></div> : <div className="smart-free-detail"><strong>ไม่มีช่วงว่างอย่างน้อย 30 นาที</strong><small>หลังคาบสุดท้าย ลองจัดเวลาพักและทบทวนบทเรียน</small></div>}</Card>
     </div>
