@@ -48,17 +48,6 @@ function getFreeGaps(classes: ClassSchedule[]) {
   return gaps;
 }
 
-function OverviewSentence({ classes, pendingCount, dueTodayCount }: { classes: number; pendingCount: number; dueTodayCount: number }) {
-  const classText = classes === 0 ? "วันนี้ไม่มีเรียน" : `วันนี้มีเรียน ${classes} คาบ`;
-  let taskText = "ไม่มีงานค้าง";
-  if (dueTodayCount > 0) {
-    taskText = `มีงานส่งวันนี้ ${dueTodayCount} งาน`;
-  } else if (pendingCount > 0) {
-    taskText = `มีงานที่ต้องทำ ${pendingCount} งาน`;
-  }
-  return <p className="smart-today-overview">{classText} · {taskText}</p>;
-}
-
 function TodayScheduleCard({ classes, nowMinutes }: { classes: ClassSchedule[]; nowMinutes: number }) {
   const { t, language } = useLanguage();
   const upcomingIndex = classes.findIndex((item) => timeToMinutes(item.startTime) > nowMinutes);
@@ -172,7 +161,7 @@ export function TodayPage() {
   const greeting = formatHomeGreeting(profile.displayName, isLoadingProfile);
 
   return <div className="page today-page smart-today-page">
-    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><OverviewSentence classes={view.classes.length} pendingCount={view.pendingTasks.length} dueTodayCount={view.dueTodayTasks.length} /></div><NotificationBell /></header>
+    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1></div><NotificationBell /></header>
     <section className="smart-today-hero"><TodayFreeTimeCard gap={view.usefulGap} nowMinutes={view.nowMinutes} /></section>
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
