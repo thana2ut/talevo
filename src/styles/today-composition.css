@@ -766,7 +766,7 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 .study-hero-tasks > p svg { width: 20px; height: 20px; color: #9670f8; }
 .study-hero-visual { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; min-height: 310px; }
 .study-hero-mascot { position: absolute; inset: 25px -18px 44px; background: url('/assets/dashboard/mascot.webp') right bottom / contain no-repeat; }
-.study-hero-speech { position: absolute; top: 25px; left: -8px; z-index: 1; max-width: 148px; padding: 13px; border-radius: 18px 18px 2px 18px; background: rgba(255,255,255,.95); color: #38245f; font-size: 12px; font-weight: 750; box-shadow: 0 5px 20px #7140ff12; }
+.study-hero-speech { position: absolute; top: 25px; left: -8px; z-index: 1; max-width: 176px; padding: 14px 16px; border: 1px solid rgba(255,255,255,.72); border-radius: 20px 20px 4px 20px; background: rgba(255,255,255,.72); color: #38245f; font-size: 14px; line-height: 1.55; font-weight: 800; box-shadow: 0 8px 24px rgba(80,48,160,.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .study-hero-speech svg { width: 18px; height: 18px; margin-top: 4px; color: #7140ff; }
 .study-hero-action { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px; padding: 12px; border-radius: 18px; background: linear-gradient(110deg, #7544ff, #5f32f2); color: #fff; font-size: 22px; box-shadow: 0 8px 20px #7140ff40; }
 .study-hero-action svg { width: 28px; height: 28px; }
