@@ -1153,3 +1153,30 @@ html[data-theme="dark"] .selected-date-agenda .schedule-event-card { border-colo
   html .selected-date-agenda .schedule-event-copy { min-width:0; }
   html .selected-date-agenda .schedule-event-copy h3 { white-space:normal; overflow-wrap:anywhere; }
 }
+
+/* Tablet dark mode: restore the illustrated scene and keep controls legible. */
+@media (min-width:700px) and (max-width:1199px) {
+  html[data-theme="dark"] .smart-today-page .study-hero {
+    background-image: linear-gradient(90deg, #211b32fa 0%, #211b32ed 45%, #211b3266 75%, #211b3222 100%), url('/assets/dashboard/study-scene-cat-logo.webp');
+    background-position: center, right center;
+    background-size: cover, auto 110%;
+  }
+  html[data-theme="dark"] .schedule-page .secondary-button,
+  html[data-theme="dark"] .schedule-page a.secondary-button {
+    background: #29233c;
+    color: #e0d4ff;
+    border-color: #62517e;
+  }
+  html[data-theme="dark"] .schedule-page .tabs button.active,
+  html[data-theme="dark"] .schedule-page .tabs button[aria-selected="true"] {
+    background: linear-gradient(135deg,#8059f5,#5930d7);
+    color: #fff;
+  }
+  html[data-theme="dark"] .schedule-date-strip button.today {
+    background: linear-gradient(135deg,#8156ef,#6038d9);
+    color: #fff;
+  }
+  html[data-theme="dark"] .schedule-date-strip button.today span,
+  html[data-theme="dark"] .schedule-date-strip button.today strong { color: #fff; }
+  html[data-theme="dark"] .schedule-day-layout .icon-tile { background: #342a4b; color: #cbb2ff; }
+}
