@@ -630,3 +630,10 @@ html[data-theme="dark"] :is(.score-disclosure,.summary-schedule-details,.lab-cri
 html :is(.card,.lab-panel,.settings-card,.exam-panel,.vision-panel,.task-detail-card,.profile-menu-new,.bottom-sheet)>*{min-width:0}
 html[lang="en"] :is(.primary-button,.secondary-button,.score-disclosure>summary,.lab-criteria-editor>summary,.setting-row strong){overflow-wrap:anywhere;white-space:normal;line-height:1.5}
 html[data-theme="dark"] :is(.device-test-dialog,.lab-status-dialog){background:var(--surface-elevated);color:var(--text-primary);border:1px solid var(--border)}
+
+/* Compact criteria disclosure, aligned identically in both themes. */
+html .lab-page details.lab-criteria-editor,html[data-theme="dark"] .lab-page details.lab-criteria-editor{box-sizing:border-box;margin-top:12px;padding:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface-soft);}
+html .lab-page details.lab-criteria-editor>summary,html[data-theme="dark"] .lab-page details.lab-criteria-editor>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;min-height:48px;margin:0;padding:11px 14px;border:0;border-radius:13px;font-size:14px;font-weight:650;line-height:1.5;list-style:none;background:transparent;}
+html .lab-page details.lab-criteria-editor>summary::after{flex:none;display:grid;place-items:center;width:22px;height:22px;margin-left:auto;font-size:20px;line-height:1;}
+html .lab-page details.lab-criteria-editor[open]{padding:0 12px 12px;}
+html .lab-page details.lab-criteria-editor[open]>summary{margin-inline:-12px;padding-inline:14px;width:calc(100% + 24px);max-width:none;}
