@@ -115,3 +115,9 @@ html .lab-page .score-number-0{color:#bb4564}html .lab-page .score-number-1{colo
 .lab-page .lab-band-delete{justify-content:flex-start;min-height:36px;padding:0;border:0;border-radius:0;background:transparent}
 .lab-page .lab-band-delete:hover{text-decoration:underline}
 .lab-page details.lab-band:focus-within{outline:2px solid var(--purple-400);outline-offset:2px;border-radius:10px}
+
+
+/* Keep touch selection subtle; reserve the richer purple hover for desktop pointers. */
+.lab-page .lab-band-summary{-webkit-tap-highlight-color:transparent;transition:background-color .16s ease}
+@media (hover:hover) and (pointer:fine) and (min-width:1025px){.lab-page .lab-band-summary:hover{background:color-mix(in srgb,var(--purple-600) 18%,transparent)}}
+@media (hover:none),(pointer:coarse),(max-width:1024px){.lab-page .lab-band-summary:hover{background:transparent}.lab-page .lab-band-summary:active{background:color-mix(in srgb,var(--purple-500) 5%,transparent)}.lab-page details.lab-band:focus-within{outline-color:color-mix(in srgb,var(--purple-400) 42%,transparent)}}
