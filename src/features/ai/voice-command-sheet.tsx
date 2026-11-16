@@ -22,6 +22,10 @@ export function VoiceCommandSheet({ onClose }: { onClose: () => void }) {
   const [clarification, setClarification] = useState<{ command: string; question: string; kind: "action" | "details" } | null>(null);
   const recognition = useRef<Recognition | null>(null);
   const held = useRef(false);
+  const pressStarted = useRef(0);
+  const stopOnRelease = useRef(false);
+  const listeningStarted = useRef(false);
+  const startTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const busy = useRef(false);
   const mounted = useRef(true);
   const controller = useRef<AbortController | null>(null);
@@ -34,12 +38,14 @@ export function VoiceCommandSheet({ onClose }: { onClose: () => void }) {
       const mic = recognition.current;
       recognition.current = null;
       if (mic) { mic.onend = null; mic.onresult = null; mic.onerror = null; mic.onstart = null; mic.abort(); }
+      if (startTimer.current) clearTimeout(startTimer.current);
       if (finishTimer.current) clearTimeout(finishTimer.current);
       controller.current?.abort();
     };
   }, []);
   const stop = () => {
     held.current = false;
+    if (startTimer.current) clearTimeout(startTimer.current);
     const mic = recognition.current;
     if (!mic) return;
     setStage("finishing");
@@ -51,7 +57,7 @@ export function VoiceCommandSheet({ onClose }: { onClose: () => void }) {
       mic.abort();
       setStage("ready");
       setError("แสดงข้อความที่รับได้แล้ว กรุณาตรวจคำท้ายก่อนบันทึก เพราะบริการเสียงตอบกลับช้า");
-    }, 2500);
+    }, 10000);
   };
   const start = () => {
     if (recognition.current || busy.current) return;
@@ -61,6 +67,12 @@ export function VoiceCommandSheet({ onClose }: { onClose: () => void }) {
     const mic = new Constructor(); recognition.current = mic; held.current = true;
     setError(""); setPlan(null); setStage("starting");
     mic.lang = uiText.locale; mic.continuous = true; mic.interimResults = true;
+    listeningStarted.current = false;
+    startTimer.current = setTimeout(() => {
+      if (recognition.current !== mic || listeningStarted.current) return;
+      recognition.current = null; held.current = false; mic.abort();
+      setStage("ready"); setError("เปิดไมโครโฟนใช้เวลานาน กรุณาตรวจสิทธิ์ไมโครโฟนแล้วลองอีกครั้ง");
+    }, 15000);
     let committed = "";
     let currentText = "";
     let restarts = 0;
@@ -68,6 +80,8 @@ export function VoiceCommandSheet({ onClose }: { onClose: () => void }) {
     mic.onstart = () => {
       if (recognition.current !== mic) return;
       if (!held.current) { try { mic.stop(); } catch { /* finishing timeout handles it */ } return; }
+      listeningStarted.current = true;
+      if (startTimer.current) clearTimeout(startTimer.current);
       setStage("listening");
     };
     mic.onresult = (event) => {
@@ -96,6 +110,7 @@ export function VoiceCommandSheet({ onClose }: { onClose: () => void }) {
       }
       if (held.current && !fatal) setError("เบราว์เซอร์หยุดรับเสียงแล้ว ข้อความยังอยู่ กดไมค์อีกครั้งเพื่อพูดคำสั่งใหม่");
       else if (!fatal && !committed && !currentText) setError("ยังไม่ได้ยินเสียง กรุณากดค้าง รอให้ขึ้นว่ากำลังฟัง แล้วพูดอีกครั้ง");
+      if (startTimer.current) clearTimeout(startTimer.current);
       if (finishTimer.current) clearTimeout(finishTimer.current);
       recognition.current = null; held.current = false; setStage("ready");
     };
@@ -214,8 +229,8 @@ fields ที่อนุญาต: task title,course_name,course_id,description
     <div className="voice-intro" aria-live="polite"><span>TALEVO AI</span><h3>{stage === "done" ? uiText("เสร็จเรียบร้อย") : stage === "starting" ? uiText("กำลังเปิดไมโครโฟน…") : stage === "finishing" ? uiText("กำลังรับคำท้าย…") : stage === "listening" ? uiText("กำลังฟังคุณอยู่…") : stage === "thinking" ? uiText("กำลังวิเคราะห์คำสั่ง…") : stage === "saving" ? uiText("กำลังบันทึก…") : stage === "review" ? uiText("ตรวจรายละเอียดก่อนยืนยัน") : uiText("พูดมาได้เลย ให้เราช่วยจัดการ")}</h3>{stage !== "done" && <p>{uiText("งาน การสอบ คาบเรียน หรือเรื่องที่อยากแก้ไข")}</p>}</div>
     {error && <p role="alert" className="form-error">{uiText(error)}</p>}
     {(stage === "ready" || stage === "starting" || stage === "listening" || stage === "finishing") && <>
-      <div className="voice-recording-hero"><div className={`voice-orbit ${stage === "listening" ? "is-listening" : ""}`}><button type="button" className="voice-mic" aria-label={uiText("กดค้างเพื่อพูด หรือกด Enter เพื่อเริ่มและหยุด")} aria-pressed={stage === "listening"} onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);start();}} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={()=>{if(held.current)stop();}} disabled={stage==="finishing"} onKeyDown={e=>{if((e.key==="Enter"||e.key===" ")&&!e.repeat){e.preventDefault();if(held.current)stop();else start();}}}><Mic size={46} aria-hidden="true"/></button></div>
-      <p className="voice-hold-label">{uiText("กดค้างเพื่อพูด")}</p>
+      <div className="voice-recording-hero"><div className={`voice-orbit ${stage === "listening" ? "is-listening" : ""}`}><button type="button" className="voice-mic" aria-label={uiText("แตะเพื่อเริ่มหรือหยุด หรือกดค้างเพื่อพูด")} aria-pressed={stage === "listening"} onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);pressStarted.current=Date.now();stopOnRelease.current=held.current;if(!held.current)start();}} onPointerUp={()=>{if(stopOnRelease.current || (listeningStarted.current && Date.now()-pressStarted.current>=500))stop();}} onPointerCancel={stop} onClick={e=>{if(e.detail===0){if(held.current)stop();else start();}}} disabled={stage==="finishing"} onKeyDown={e=>{if((e.key==="Enter"||e.key===" ")&&!e.repeat){e.preventDefault();if(held.current)stop();else start();}}}><Mic size={46} aria-hidden="true"/></button></div>
+      <p className="voice-hold-label">{uiText(stage === "listening" ? "กำลังฟัง · แตะเพื่อหยุด" : "แตะหรือกดค้างเพื่อพูด")}</p>
       <div className={`voice-wave ${stage === "listening" ? "is-active" : ""}`} aria-hidden="true">{[12,18,26,36,18,22,34,16,13,33,18,14,30,44,20,16,32,17,13,32,18,15,13].map((height,index)=><i key={index} style={{height:`${height}px`,animationDelay:`${index*45}ms`}} />)}</div></div>
       <label htmlFor="voice-command-text">{uiText("คำสั่งของคุณ")}</label><textarea id="voice-command-text" className="input" rows={3} maxLength={1500} value={text} disabled={stage!=="ready"} onChange={e=>setText(e.target.value)} placeholder={uiText("เช่น เพิ่มงานสรุปบทที่ 3 วิชานวัตกรรม ส่งพรุ่งนี้ 17:00 น.")}/>
       {clarification && <button type="button" className="voice-text-alternative" onClick={()=>{setClarification(null);setError("");setText("");}}>{uiText("เริ่มคำสั่งใหม่")}</button>}
