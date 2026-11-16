@@ -90,6 +90,14 @@ html[data-theme="dark"] :is(.due-urgent, .task-due, .task-completed, .task-compl
   background: var(--surface-soft);
   border-color: var(--border);
 }
+/* Keep task due dates as inline metadata instead of a boxed strip in dark mode. */
+html[data-theme="dark"] .task-card .task-due {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
 html[data-theme="dark"] :is(.task-due, .task-completed, .task-auto-delete, .task-retention-notice, .due-today-meta small, .task-card p, .next-time span, .schedule-event-copy em, .week-class-block span, .week-class-block small) { color: var(--text-secondary); }
 html[data-theme="dark"] :is(.week-day-column, .week-timetable) { background-color: var(--surface-elevated); }
 html[data-theme="dark"] .week-day-column { border-color: var(--border); }
