@@ -204,7 +204,7 @@ function ScheduleWeekView({ selectedDate, schedules, onSelectDate, onSelectItem 
               const isWeekend = day === 5 || day === 6;
               const hasCurrentClass = isToday && dayEvents.some(({ item }) => timeToMinutes(item.startTime) <= currentMinute && currentMinute < timeToMinutes(item.endTime));
               const maxLanes = dayEvents.length ? Math.max(...dayEvents.map((e) => e.lanes)) : 1;
-              const rowHeightStyle = maxLanes > 1 ? { minHeight: `${Math.max(124, maxLanes * 124)}px` } : undefined;
+              const rowHeightStyle = maxLanes > 1 ? { minHeight: `${Math.max(100, maxLanes * 100)}px` } : undefined;
 
               return (
                 <div

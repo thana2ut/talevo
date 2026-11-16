@@ -644,12 +644,12 @@ html .timetable-current-time-line{z-index:10;pointer-events:none;width:2px}
 @media(max-width:699px){html .timetable-day-row,html .timetable-day-row.has-current-class{min-height:108px}html .timetable-class-block,html .timetable-class-block.is-current{justify-content:center;padding:8px 10px}html .timetable-class-block.is-current .class-block-meta{display:flex}html .timetable-class-block .class-block-meta,html .timetable-class-block .phone-class-room,html .timetable-class-block .class-block-badge{flex:none}html .timetable-class-block.is-current .class-block-meta{display:none}html .class-block-meta small{display:none}}
 
 /* Uniform two-line lesson layout and foreground clock marker on every screen. */
-html .academic-timetable .timetable-day-row,html .academic-timetable .timetable-day-row.has-current-class{min-height:124px}
-html .academic-timetable .timetable-class-block{justify-content:center;padding:10px 12px}
-html .academic-timetable .timetable-class-block .class-block-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;line-height:1.45;height:2.9em;max-height:2.9em;overflow:hidden;flex:none;margin:0}
-html .academic-timetable .timetable-class-block .class-block-content{display:flex;flex-direction:column;gap:5px;flex:0 0 auto;overflow:hidden}
+html .academic-timetable .timetable-day-row,html .academic-timetable .timetable-day-row.has-current-class{min-height:100px}
+html .academic-timetable .timetable-class-block{justify-content:center;padding:7px 10px}
+html .academic-timetable .timetable-class-block .class-block-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;line-height:1.35;height:2.7em;max-height:2.7em;overflow:hidden;flex:none;margin:0}
+html .academic-timetable .timetable-class-block .class-block-content{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;overflow:hidden}
 html .academic-timetable .timetable-class-block .class-block-meta,html .academic-timetable .timetable-class-block.is-current .class-block-meta{display:flex;flex:none}
-html .academic-timetable .class-block-location-row{display:flex;align-items:center;gap:8px;min-width:0;flex:none;min-height:20px}
+html .academic-timetable .class-block-location-row{display:flex;align-items:center;gap:6px;min-width:0;flex:none;min-height:18px}
 html .academic-timetable .class-block-location-row .phone-class-room{display:flex;align-items:center;gap:4px;min-width:0;margin:0;font-size:11px;color:var(--text-secondary)}
 html .academic-timetable .class-block-location-row .phone-class-room svg{width:13px;height:13px;flex:none}
 html .academic-timetable .class-block-location-row .class-block-badge{position:static;flex:none;margin:0;white-space:nowrap}
