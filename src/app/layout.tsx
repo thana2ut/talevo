@@ -41,7 +41,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#6843ee",
+  themeColor: "#f3e9fc",
   colorScheme: "light dark",
 };
 
@@ -56,7 +56,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${notoSansThai.variable} h-full antialiased`}
     >
-      <head><script nonce={nonce} dangerouslySetInnerHTML={{ __html: `try { document.documentElement.dataset.theme = localStorage.getItem("talevo-theme") === "dark" ? "dark" : "light"; } catch { document.documentElement.dataset.theme = "light"; }` }} /><script nonce={nonce} dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} /></head>
+      <head><script nonce={nonce} dangerouslySetInnerHTML={{ __html: `try { const isDark = localStorage.getItem("talevo-theme") === "dark"; document.documentElement.dataset.theme = isDark ? "dark" : "light"; const themeColor = document.querySelector('meta[name="theme-color"]'); if (themeColor) themeColor.content = isDark ? "#100b20" : "#f3e9fc"; } catch { document.documentElement.dataset.theme = "light"; }` }} /><script nonce={nonce} dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} /></head>
       <body className="min-h-full"><PwaRuntime /><LanguageProvider><SupabaseAuthProvider><AppStateProvider><AppShell>{children}</AppShell></AppStateProvider></SupabaseAuthProvider></LanguageProvider></body>
     </html>
   );
