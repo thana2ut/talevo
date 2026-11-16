@@ -121,3 +121,16 @@ html .lab-page .score-number-0{color:#bb4564}html .lab-page .score-number-1{colo
 .lab-page .lab-band-summary{-webkit-tap-highlight-color:transparent;transition:background-color .16s ease}
 @media (hover:hover) and (pointer:fine) and (min-width:1025px){.lab-page .lab-band-summary:hover{background:color-mix(in srgb,var(--purple-600) 18%,transparent)}}
 @media (hover:none),(pointer:coarse),(max-width:1024px){.lab-page .lab-band-summary:hover{background:transparent}.lab-page .lab-band-summary:active{background:color-mix(in srgb,var(--purple-500) 5%,transparent)}.lab-page details.lab-band:focus-within{outline-color:color-mix(in srgb,var(--purple-400) 42%,transparent)}}
+
+/* One continuous rounded boundary for collapsed and expanded grade rows. */
+html .lab-page .lab-band-list{gap:10px;}
+html .lab-page details.lab-band,html .lab-page details.lab-band:first-child{box-sizing:border-box;margin:0;padding:0;overflow:hidden;border:1px solid var(--border);border-radius:16px;background:transparent;outline:none;box-shadow:none;}
+html .lab-page details.lab-band[open]{border-color:color-mix(in srgb,var(--purple-400) 55%,var(--border));}
+html .lab-page details.lab-band:focus-within{outline:none;border-radius:16px;}
+html .lab-page .lab-band-summary{box-sizing:border-box;min-height:64px;padding:14px 16px;gap:12px;border:0;border-radius:0;box-shadow:none;}
+html .lab-page .lab-band-summary:focus-visible{outline:2px solid var(--purple-400);outline-offset:-4px;border-radius:15px;}
+html .lab-page .lab-band-fields{box-sizing:border-box;gap:14px;padding:16px;border-top:1px solid var(--border);}
+html .lab-page .lab-band-fields>.lab-field{min-width:0;margin:0;}
+html .lab-page .lab-band-fields .input{box-sizing:border-box;width:100%;min-width:0;border-radius:13px;}
+html .lab-page .lab-band-delete{min-height:44px;justify-self:start;padding:4px 8px;border-radius:10px;}
+@media(max-width:599px){html .lab-page .lab-band-summary{padding:12px 14px;min-height:60px;}html .lab-page .lab-band-fields{padding:14px;gap:12px;}}
