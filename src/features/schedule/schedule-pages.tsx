@@ -202,13 +202,14 @@ function ScheduleWeekView({ selectedDate, schedules, onSelectDate, onSelectItem 
               const isToday = isCurrentWeek && sameScheduleDate(date, referenceToday);
               const isSelected = sameScheduleDate(date, selectedDate);
               const isWeekend = day === 5 || day === 6;
+              const hasCurrentClass = isToday && dayEvents.some(({ item }) => timeToMinutes(item.startTime) <= currentMinute && currentMinute < timeToMinutes(item.endTime));
               const maxLanes = dayEvents.length ? Math.max(...dayEvents.map((e) => e.lanes)) : 1;
               const rowHeightStyle = maxLanes > 1 ? { minHeight: `${Math.max(76, maxLanes * 44)}px` } : undefined;
 
               return (
                 <div
                   key={date.toISOString()}
-                  className={`timetable-day-row ${isToday ? "is-today" : ""} ${isWeekend ? "is-weekend" : ""}`}
+                  className={`timetable-day-row ${isToday ? "is-today" : ""} ${isWeekend ? "is-weekend" : ""} ${hasCurrentClass ? "has-current-class" : ""}`}
                   style={rowHeightStyle}
                 >
                   {/* Sticky Day Header Cell */}

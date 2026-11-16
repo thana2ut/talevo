@@ -636,4 +636,6 @@ html .schedule-date-strip button.today {
 html .schedule-date-strip button.today span { color:#ffffffdf; font-weight:800; }
 html .schedule-date-strip button.today strong { color:#fff; background:transparent; }
 
-\n
+\n/* Live lessons keep their title above the room and status without flex clipping. */
+.timetable-class-block.is-current .class-block-content{flex-shrink:0;width:100%;overflow:visible;justify-content:flex-start}.timetable-class-block.is-current .class-block-title{flex-shrink:0}.timetable-class-block.is-current{background:color-mix(in srgb,var(--course-color) 12%,var(--surface-elevated));isolation:isolate}.timetable-class-block.is-current::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--surface-elevated)}
+@media(max-width:699px){html .timetable-class-block.is-current{justify-content:center}html .timetable-day-row.has-current-class{min-height:132px}html .timetable-class-block.is-current .class-block-title{max-height:none;line-height:1.4;-webkit-line-clamp:3;line-clamp:3}}

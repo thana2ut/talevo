@@ -981,11 +981,15 @@ html .tasks-page .tabs button{min-width:0;white-space:nowrap;padding:9px 5px;gap
 
 @media (max-width: 699px) {
   html .timetable-current-time-line {
-    z-index: 4;
+    z-index: 1;
   }
 
   html .timetable-class-block.is-current {
-    z-index: 6;
+    z-index: 5;
+  }
+
+  html .timetable-day-row.has-current-class {
+    min-height: 112px;
   }
 
   html .timetable-class-block {
@@ -994,16 +998,24 @@ html .tasks-page .tabs button{min-width:0;white-space:nowrap;padding:9px 5px;gap
   }
 
   html .class-block-content {
+    position: relative;
+    z-index: 1;
     justify-content: center;
     gap: 4px;
+  }
+
+  /* The time axis already gives the live lesson's time. Preserve vertical room
+     for its subject name, one room label and the current-status badge. */
+  html .timetable-class-block.is-current .class-block-meta {
+    display: none;
   }
 
   html .class-block-title {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    max-height: 2.6em;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    max-height: 3.9em;
     overflow: hidden;
     overflow-wrap: anywhere;
     text-overflow: clip;
