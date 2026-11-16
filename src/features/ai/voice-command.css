@@ -37,6 +37,7 @@ html .voice-command-sheet { max-width:540px; background:radial-gradient(ellipse 
 .voice-text-alternative { display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px; margin:8px auto; border:0; background:transparent; color:var(--purple-600); font-weight:650; font-size:13px; cursor:pointer; }
 .voice-review { padding-top:20px; }
 .voice-result-icon { display:grid; place-items:center; width:64px; height:64px; border-radius:50%; margin:0 auto 20px; color:var(--purple-600); background:var(--purple-100); }
+.voice-command-sheet > .voice-result-icon { box-sizing:border-box; position:relative; left:50%; margin:0 0 20px; transform:translateX(-50%); }
 .voice-result-icon.is-done { background:#dcfce7; color:#166534; }
 .voice-result-icon svg { width:30px; height:30px; }
 .voice-transcript { margin-bottom:16px; text-align:center; }
