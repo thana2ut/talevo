@@ -2,6 +2,7 @@ import "server-only";
 
 import Groq from "groq-sdk";
 import {
+  AI_MESSAGE_MAX_LENGTH,
   AI_PROVIDER_TIMEOUT_MS,
   AIConfigurationError,
   getTalevoAIModel,
@@ -120,7 +121,8 @@ function formatChatMessages(request: AIProviderRequest): Groq.Chat.ChatCompletio
 
   messages.push({
     role: "user",
-    content: request.message.trim().slice(0, 4_000),
+    // Match API validation so trailing voice commands and course inventory survive.
+    content: request.message.trim().slice(0, AI_MESSAGE_MAX_LENGTH),
   });
 
   return messages;
