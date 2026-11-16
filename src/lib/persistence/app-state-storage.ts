@@ -176,7 +176,7 @@ function normalizeTasks(value: unknown, fallback: Task[]) {
 }
 
 function normalizeSettings(value: unknown, fallback: AppSettings): AppSettings {
-  if (!isRecord(value)) return { ...fallback, notificationPreferences: { ...fallback.notificationPreferences } };
+  if (!isRecord(value)) return { ...fallback, dateFormat: "วัน/เดือน/ปี", yearSystem: "พ.ศ.", notificationPreferences: { ...fallback.notificationPreferences } };
   const preferences = isRecord(value.notificationPreferences) ? value.notificationPreferences : {};
   const supportedPreferences = { ...preferences };
   delete supportedPreferences.submissionReminders;
@@ -185,6 +185,9 @@ function normalizeSettings(value: unknown, fallback: AppSettings): AppSettings {
     ...fallback,
     ...value,
     timezone: "Asia/Bangkok",
+    // Date display is fixed, including for previously saved account preferences.
+    dateFormat: "วัน/เดือน/ปี",
+    yearSystem: "พ.ศ.",
     notificationPreferences: {
       ...fallback.notificationPreferences,
       ...supportedPreferences,

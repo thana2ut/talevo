@@ -139,7 +139,7 @@ function verifyPreferencesSurviveCloudHydration() {
   check(preferences.daily0700 === false, "the daily brief must hydrate from its own column instead of falling back to the default");
   check(preferences.weeklyRadar === false, "the weekly radar switch must survive a cloud hydration");
   check(!("browserNotifications" in preferences), "the device switch must not travel through the account state");
-  check(hydrated.settings.dateFormat === "เดือน/วัน/ปี" && hydrated.settings.yearSystem === "ค.ศ.", "date format and year system must hydrate from the account");
+  check(hydrated.settings.dateFormat === "วัน/เดือน/ปี" && hydrated.settings.yearSystem === "พ.ศ.", "cloud settings must use the fixed day/month/year and Buddhist year display");
 }
 
 verifyDeviceDelivery().catch((error) => {

@@ -164,14 +164,14 @@ const migrationState = createAppStateSnapshot({
   profile: { ...defaults.profile, displayName: "Legacy QA" },
   gradePlans: [{ id: "grade-plan-legacy", courseId: schedule.courseId, components: [], thresholds: [], targetGrade: "A" }],
   financeTransactions: [{ id: "finance-legacy", type: "expense", title: "Legacy lunch", amount: 321, category: "ค่าอาหาร", date: "2026-08-31" }],
-  settings: { ...defaults.settings, dateFormat: "เดือน/วัน/ปี" },
+  settings: { ...defaults.settings, dateFormat: "เดือน/วัน/ปี", yearSystem: "ค.ศ." },
 }, "legacy-tab", new Date("2026-08-31T02:00:00.000Z"));
 const legacyPrimaryStorage = new MemoryStorage({ [LEGACY_KERNOVA_APP_STATE_KEY]: JSON.stringify(migrationState) });
 const legacyPrimaryRead = readAppStateSnapshot(legacyPrimaryStorage, defaults);
 check(legacyPrimaryRead.source === "legacy-primary", "legacy Kernova primary should be identified as the migration source");
 check(legacyPrimaryRead.state.profile.displayName === "Legacy QA" && legacyPrimaryRead.state.tasks.length === 1 && legacyPrimaryRead.state.schedules.length === 1 && legacyPrimaryRead.state.exams.length === 0, "legacy primary migration must retain active profile, tasks and schedule while discarding exams");
 check(legacyPrimaryRead.state.gradePlans.length === 0 && legacyPrimaryRead.state.financeTransactions.length === 0 && legacyPrimaryRead.state.notifications[0].id === notification.id, "legacy primary migration must discard retired grades and finance while retaining notifications");
-check(legacyPrimaryRead.state.settings.dateFormat === "เดือน/วัน/ปี", "legacy primary migration must retain settings");
+check(legacyPrimaryRead.state.settings.dateFormat === "วัน/เดือน/ปี" && legacyPrimaryRead.state.settings.yearSystem === "พ.ศ.", "legacy settings must use the fixed day/month/year and Buddhist year display");
 check(legacyPrimaryStorage.getItem(TALEVO_APP_STATE_KEY) === legacyPrimaryStorage.getItem(TALEVO_APP_STATE_BACKUP_KEY), "legacy primary migration should write matching Talevo primary and backup snapshots");
 check(legacyPrimaryStorage.getItem(LEGACY_KERNOVA_APP_STATE_KEY) !== null, "legacy primary should remain during the compatibility period");
 const refreshes = [1, 2, 3].map(() => readAppStateSnapshot(legacyPrimaryStorage, defaults));

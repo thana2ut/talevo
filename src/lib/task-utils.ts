@@ -129,5 +129,5 @@ export function formatTaskCompletionDate(completedAt: string | undefined, langua
   const date = new Date(completedAt);
   if (Number.isNaN(date.getTime())) return "ไม่พบเวลาเสร็จสิ้น";
   const locale = language === "th" ? (yearSystem === "พ.ศ." ? "th-TH-u-ca-buddhist" : "th-TH-u-ca-gregory") : (dateFormat === "เดือน/วัน/ปี" ? "en-US" : "en-GB");
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(date).replace(",", " ·");
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric", calendar: yearSystem === "พ.ศ." ? "buddhist" : "gregory", hour: "2-digit", minute: "2-digit" }).format(date).replace(",", " ·");
 }
