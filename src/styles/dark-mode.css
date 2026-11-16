@@ -604,6 +604,16 @@ html[data-theme="dark"] .developer-crop { --crop-track:#51465e; }
 .support-detail-actions button { min-width:120px; }
 .support-inbox-layout > *, .support-detail-wrap { min-width:0; }
 .support-detail textarea { width:100%; box-sizing:border-box; }
+.support-inbox-card footer { flex-wrap:wrap; gap:12px; align-items:center; }
+.support-inbox-card footer .support-list-delete { display:inline-flex; align-items:center; gap:6px; color:var(--danger,#d84459); }
+.support-detail-actions .support-delete-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.support-delete-dialog { display:grid; gap:20px; }
+.support-delete-dialog > p { margin:0; line-height:1.7; }
+.support-delete-actions { display:flex; gap:12px; }
+.support-delete-actions button { flex:1; min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.support-delete-error,.support-delete-status { color:var(--danger,#d84459); }
+.support-delete-status { margin:8px 0; }
+.bottom-sheet.support-delete-sheet { padding-bottom:max(24px,env(safe-area-inset-bottom)); }
 @media(max-width:399px) { .support-detail header { flex-wrap:wrap; } .support-detail { padding:16px; } }
 /* New scoring surfaces inherit the selected theme; semantic colors stay legible. */
 html[data-theme=dark] .lab-criteria-upload,html[data-theme=dark] .lab-simple-score{background:var(--surface-soft);border-color:var(--border);color:var(--text-primary)}
