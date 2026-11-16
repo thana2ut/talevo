@@ -278,7 +278,9 @@ fields ที่อนุญาต: task title,course_name,course_id,description
     finally { busy.current = false; }
   };
   useEffect(() => { analyzeRef.current = analyze; });
-  const close = () => { if (busy.current) return; if (completedPlans.current.length) window.location.reload(); else onClose(); };
+  // Close the assistant sheet without reloading the whole app. A full reload
+  // would replay the first-entry mascot screen after every completed command.
+  const close = () => { if (busy.current) return; onClose(); };
   return <BottomSheet open title={uiText("ผู้ช่วยเสียง")} onClose={close} className="voice-command-sheet">
     <div className="voice-intro" aria-live="polite"><span>TALEVO AI</span><h3>{stage === "done" ? uiText("เสร็จเรียบร้อย") : stage === "starting" ? uiText("กำลังเปิดไมโครโฟน…") : stage === "finishing" ? uiText("กำลังรับคำท้าย…") : stage === "listening" ? uiText("กำลังฟังคุณอยู่…") : stage === "thinking" ? uiText("กำลังวิเคราะห์คำสั่ง…") : stage === "saving" ? uiText("กำลังบันทึก…") : uiText("พูดมาได้เลย ให้เราช่วยจัดการ")}</h3>{stage !== "done" && <p>{uiText("พูดคำสั่งแล้วหยุดสักครู่ ระบบจะดำเนินการให้ทันที")}</p>}</div>
     {clarification && <div className="voice-clarification" role="status"><strong>{uiText("ข้อมูลที่ต้องการเพิ่มเติม")}</strong><p>{clarification.question}</p><small>{uiText("แตะไมค์เพื่อตอบ หรือพิมพ์คำตอบด้านล่าง")}</small></div>}
@@ -292,6 +294,6 @@ fields ที่อนุญาต: task title,course_name,course_id,description
       <button type="button" className="primary-button button-block" disabled={!text.trim()||stage!=="ready"} onClick={()=>void analyze()}><Sparkles size={18} aria-hidden="true"/>{uiText("ดำเนินการตามคำสั่ง")}</button>
     </>}
     {(stage === "thinking" || stage === "saving") && <div className="voice-result-icon"><LoaderCircle className="voice-spin" aria-label={uiText("กำลังดำเนินการ")}/></div>}
-    {stage === "done" && <div className="voice-success"><div className="voice-result-icon is-done"><CheckCheck aria-hidden="true"/></div><div className="voice-success-summary" role="status"><small>{uiText("บันทึกบนบัญชีของคุณแล้ว")}</small><strong>{plan?.summary}</strong></div><button type="button" className="primary-button button-block" onClick={start}><Mic size={18} aria-hidden="true"/>{uiText("พูดคำสั่งถัดไป")}</button><button type="button" className="voice-text-alternative" onClick={close}>{uiText("เรียบร้อย")}</button></div>}
+    {stage === "done" && <div className="voice-success"><div className="voice-result-icon is-done"><CheckCheck aria-hidden="true"/></div><div className="voice-success-summary" role="status"><small>{uiText("บันทึกบนบัญชีของคุณแล้ว")}</small><strong>{plan?.summary}</strong></div><button type="button" className="primary-button button-block" onClick={start}><Mic size={18} aria-hidden="true"/>{uiText("เริ่มคำสั่งใหม่")}</button><button type="button" className="voice-text-alternative" onClick={close}>{uiText("เรียบร้อย")}</button></div>}
   </BottomSheet>;
 }
