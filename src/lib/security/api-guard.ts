@@ -19,6 +19,7 @@ const policies: Record<string, Policy> = {
   "/api/ai/syllabus/analyze": { body: 6 * 1024 * 1024 + 256 * 1024, multipart: true },
   "/api/ai/voice/execute": { body: 12000, schema: apiPayloadSchemas.voice },
   "/api/grade-lab": { body: 300000, schema: apiPayloadSchemas.grade },
+  "/api/grade-lab/criteria": { body: 4 * 1024 * 1024 + 256 * 1024, multipart: true },
   "/api/vision/analyze": { body: 3500000, multipart: true },
   "/api/vision/import": { body: 1500000, schema: apiPayloadSchemas.visionImport },
   "/api/vision/records": {},
