@@ -1488,5 +1488,6 @@
   "แตะเพื่อเริ่มหรือหยุด หรือกดค้างเพื่อพูด": "Tap to start or stop, or hold to speak",
   "กำลังฟัง · แตะเพื่อหยุด": "Listening \u00b7 Tap to stop",
   "แตะหรือกดค้างเพื่อพูด": "Tap or hold to speak",
-  "เปิดไมโครโฟนใช้เวลานาน กรุณาตรวจสิทธิ์ไมโครโฟนแล้วลองอีกครั้ง": "Microphone startup timed out. Check microphone permission and try again."
+  "เปิดไมโครโฟนใช้เวลานาน กรุณาตรวจสิทธิ์ไมโครโฟนแล้วลองอีกครั้ง": "Microphone startup timed out. Check microphone permission and try again.",
+  "ยืนยันการเปลี่ยนแปลง": "Confirm changes"
 }
