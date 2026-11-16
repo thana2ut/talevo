@@ -566,7 +566,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // throws, so one unlucky launch left the device registered nowhere and
   // silent until it was next opened.
   useEffect(() => {
-    if (!userId || !deviceNotificationsEnabled || !NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
+    if (!userId || !deviceNotificationsEnabled) return;
     if (pushRegistrationRef.current === userId) return;
 
     let cancelled = false;
@@ -589,10 +589,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     };
 
     void attempt(4, 2_000);
-
+    const reconnect = () => {
+      if (pushRegistrationRef.current === userId) return;
+      window.clearTimeout(timer);
+      void attempt(4, 2_000);
+    };
+    window.addEventListener("online", reconnect);
+    window.addEventListener("focus", reconnect);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
+      window.removeEventListener("online", reconnect);
+      window.removeEventListener("focus", reconnect);
     };
   }, [deviceNotificationsEnabled, userId]);
 
@@ -796,7 +804,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       writeDeviceNotificationPreference(true);
       setDeviceNotificationIntent(true);
 
-      if (NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+      {
         void enablePushOnThisDevice(NEXT_PUBLIC_VAPID_PUBLIC_KEY).then((result) => {
           setPushRegistration(result);
           // Left unset on failure so the launch effect's backoff takes over.

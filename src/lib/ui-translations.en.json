@@ -564,6 +564,10 @@
   "แก้ไขเกณฑ์": "Edit criteria",
   "ใช้เกณฑ์ตัวอย่าง": "Use example scale",
   "ตัวเลือกเพิ่มเติม": "More options",
+  "ยังไม่ระบุแต้ม GPA": "GPA points not set",
+  "แต้ม GPA (ไม่จำเป็น)": "GPA points (optional)",
+  "ลบเกณฑ์ {0} หรือไม่?": "Delete the {0} grade range?",
+  "ลบเกรด": "Delete grade",
   "ตั้งเกณฑ์เกรดของวิชานี้": "Set grade criteria for this course",
   "เกณฑ์คะแนนของวิชานี้": "Score criteria for this course",
   "ยังไม่ได้ตั้งเกณฑ์เกรดสำหรับวิชานี้ เลือกใช้เกณฑ์จากภาพตัวอย่างหรือกำหนดเองได้": "Grade criteria are not set for this course. Use the reference scale or set them manually.",
@@ -1540,5 +1544,8 @@
   "เริ่มใน": "Starts in",
   "งานค้าง {0} รายการ": "{0} pending tasks",
   "คาบต่อไป": "Next lesson",
-  "ยังไม่ระบุห้อง / ตึก": "Room / building not specified"
+  "ยังไม่ระบุห้อง / ตึก": "Room / building not specified",
+  "ปิดอยู่ · เปิดเพื่อรับการแจ้งเตือน": "Off · Enable to receive notifications",
+  "กำลังเชื่อมต่อการแจ้งเตือน…": "Connecting device notifications…",
+  "ตรวจการเชื่อมต่อ / ส่งทดสอบ": "Check connection / send test"
 }

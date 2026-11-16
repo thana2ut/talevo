@@ -81,7 +81,7 @@ async function registerPushOnThisDevice(vapidPublicKey: string): Promise<PushReg
 
   try {
     await navigator.serviceWorker.register(WORKER_PATH, { scope: WORKER_SCOPE });
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await Promise.race([navigator.serviceWorker.ready,new Promise<never>((_,reject)=>setTimeout(()=>reject(new Error("worker_timeout")),15000))]);
     const expectedKey = decodeVapidKey(vapidPublicKey);
 
     // Reuse the subscription this device already has. Unsubscribing first
@@ -123,6 +123,7 @@ async function registerPushOnThisDevice(vapidPublicKey: string): Promise<PushReg
     const response = await fetch("/api/push/subscribe", {
       method: "POST",
       headers: { "content-type": "application/json" },
+      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         endpoint: subscription.endpoint,
         keys: {
