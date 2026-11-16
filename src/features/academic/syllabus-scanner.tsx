@@ -289,9 +289,9 @@ setPreview(nextPreview);
                 {analysing ? <CircleStop /> : <ScanText />}
                 {analysing ? uiText("หยุด") : uiText("ให้ AI จัดตารางเรียน")}
               </button>
-              {analysisStage && (
-                <p className="syllabus-analysis-stage" role="status">
-                  <LoaderCircle className="spin" />
+              {analysing && analysisStage && (
+                <p className="syllabus-analysis-stage" role="status" aria-live="polite" aria-busy="true">
+                  <LoaderCircle className="syllabus-progress-spinner" aria-hidden="true" />
                   {uiText(analysisStage)}
                 </p>
               )}

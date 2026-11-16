@@ -168,3 +168,22 @@ html[data-theme=dark] .syllabus-file-row { background: var(--surface); }
 .syllabus-confirm-fields { grid-column:1/-1; min-height:44px; }
 html[data-theme=dark] .syllabus-schedule-card.needs-review { background:linear-gradient(135deg,#2d2034,#251e2e); border-color:#dc7e9b66; }
 html[data-theme=dark] .syllabus-schedule-card.is-ready { border-color:#72cf9e66; background:linear-gradient(135deg,#22322e,#20252d); }
+/* Scope the review layout: tablet page grids must not split a course editor. */
+.syllabus-import .syllabus-preview-section { display: block; width: 100%; min-width: 0; }
+.syllabus-import .syllabus-schedule-card { display: block; width: 100%; min-width: 0; max-width: none; margin: 0; }
+.syllabus-import .syllabus-schedule-card > header { width: 100%; min-width: 0; }
+.syllabus-import .syllabus-schedule-fields { width: 100%; min-width: 0; padding: 12px 16px 18px; }
+.syllabus-import .syllabus-schedule-summary strong { white-space: normal; overflow-wrap: anywhere; }
+.syllabus-import .syllabus-analysis-stage { flex-direction: column; gap: 12px; padding: 18px; margin: 0; border: 1px solid var(--border); border-radius: 18px; background: var(--surface-soft); text-align: center; }
+.syllabus-import .syllabus-progress-spinner { width: 36px; height: 36px; flex: none; animation: syllabus-progress-rotate 1s linear infinite; }
+@keyframes syllabus-progress-rotate { to { transform: rotate(360deg); } }
+@media (min-width: 700px) {
+  .bottom-sheet.syllabus-import-sheet { width: min(900px, calc(100vw - 48px)); max-width: 900px; }
+  .syllabus-import .syllabus-schedule-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 600px) and (max-width: 799px) {
+  .syllabus-import .syllabus-schedule-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .syllabus-import .syllabus-progress-spinner { animation: none; }
+}
