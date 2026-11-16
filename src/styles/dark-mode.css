@@ -609,3 +609,16 @@ html[data-theme="dark"] .developer-crop { --crop-track:#51465e; }
 html[data-theme=dark] .lab-criteria-upload,html[data-theme=dark] .lab-simple-score{background:var(--surface-soft);border-color:var(--border);color:var(--text-primary)}
 html[data-theme=dark] .lab-status-dialog{background:var(--surface-elevated);color:var(--text-primary)}
 html[data-theme=dark] .score-hero-heading>.score-number-0{color:#d46d8b}html[data-theme=dark] .score-hero-heading>.score-number-1{color:#e7837f}html[data-theme=dark] .score-hero-heading>.score-number-2{color:#eea36b}html[data-theme=dark] .score-hero-heading>.score-number-3{color:#eac970}html[data-theme=dark] .score-hero-heading>.score-number-4{color:#c9cf78}html[data-theme=dark] .score-hero-heading>.score-number-5{color:#93ce7c}html[data-theme=dark] .score-hero-heading>.score-number-6{color:#66c6ac}html[data-theme=dark] .score-hero-heading>.score-number-7{color:#8fa7f1}
+/* Dark grade criteria editor: a single padded panel with contained, even rows. */
+html[data-theme="dark"] .lab-page details.lab-criteria-editor{padding:14px;border:1px solid var(--border);border-radius:18px;background:var(--surface-soft);box-shadow:none;overflow:hidden}
+html[data-theme="dark"] .lab-page details.lab-criteria-editor>summary{margin:0;min-height:46px;padding:4px 6px;color:var(--text-primary);background:transparent;border-radius:10px;list-style:none}
+html[data-theme="dark"] .lab-page details.lab-criteria-editor>summary::-webkit-details-marker{display:none}
+html[data-theme="dark"] .lab-page .lab-criteria-editor .lab-preset-button{width:100%;margin:10px 0 14px;border:1px solid var(--border);border-radius:13px;background:var(--surface-elevated);color:var(--text-primary);box-shadow:none}
+html[data-theme="dark"] .lab-page .lab-band-list{display:grid;gap:8px;margin:0 0 14px}
+html[data-theme="dark"] .lab-page details.lab-band{display:block;margin:0;padding:0;border:1px solid var(--border);border-radius:13px;background:var(--surface-elevated);overflow:hidden;box-shadow:none}
+html[data-theme="dark"] .lab-page .lab-band-summary{display:grid;grid-template-columns:minmax(0,1fr) auto 20px;align-items:center;gap:12px;min-height:54px;padding:12px 14px;background:transparent;list-style:none}
+html[data-theme="dark"] .lab-page .lab-band-summary::-webkit-details-marker{display:none}
+html[data-theme="dark"] .lab-page .lab-band-summary strong{color:var(--text-primary);font-size:15px}
+html[data-theme="dark"] .lab-page .lab-band-summary span,html[data-theme="dark"] .lab-page .lab-band-summary>svg{color:var(--purple-600)}
+html[data-theme="dark"] .lab-page .lab-band-fields{padding:14px;border-top:1px solid var(--border);background:var(--surface-soft)}
+html[data-theme="dark"] .lab-page .lab-criteria-confirm{margin:12px 0 0;line-height:1.6}
