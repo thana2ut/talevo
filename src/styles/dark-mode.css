@@ -605,3 +605,7 @@ html[data-theme="dark"] .developer-crop { --crop-track:#51465e; }
 .support-inbox-layout > *, .support-detail-wrap { min-width:0; }
 .support-detail textarea { width:100%; box-sizing:border-box; }
 @media(max-width:399px) { .support-detail header { flex-wrap:wrap; } .support-detail { padding:16px; } }
+/* New scoring surfaces inherit the selected theme; semantic colors stay legible. */
+html[data-theme=dark] .lab-criteria-upload,html[data-theme=dark] .lab-simple-score{background:var(--surface-soft);border-color:var(--border);color:var(--text-primary)}
+html[data-theme=dark] .lab-status-dialog{background:var(--surface-elevated);color:var(--text-primary)}
+html[data-theme=dark] .score-hero-heading>.score-number-0{color:#d46d8b}html[data-theme=dark] .score-hero-heading>.score-number-1{color:#e7837f}html[data-theme=dark] .score-hero-heading>.score-number-2{color:#eea36b}html[data-theme=dark] .score-hero-heading>.score-number-3{color:#eac970}html[data-theme=dark] .score-hero-heading>.score-number-4{color:#c9cf78}html[data-theme=dark] .score-hero-heading>.score-number-5{color:#93ce7c}html[data-theme=dark] .score-hero-heading>.score-number-6{color:#66c6ac}html[data-theme=dark] .score-hero-heading>.score-number-7{color:#8fa7f1}

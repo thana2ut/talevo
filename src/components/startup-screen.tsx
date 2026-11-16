@@ -1,11 +1,13 @@
 "use client";
 
+import { useUiText } from "@/providers/ui-language";
 import { useEffect } from "react";
 import Image from "next/image";
 import "./startup-screen.css";
 
 /** Stage completion comes from authentication and account hydration, never a timer. */
 export function StartupScreen({ authReady = false, dataReady = false }: { authReady?: boolean; dataReady?: boolean }) {
+ const uiText=useUiText();
   useEffect(() => {
     const root = document.documentElement;
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -21,9 +23,9 @@ export function StartupScreen({ authReady = false, dataReady = false }: { authRe
     <div className="startup-waves" aria-hidden="true"><span/><span/></div>
     <div className="startup-content">
       <div className="startup-art" aria-hidden="true"><span className="startup-orbit"/><span className="startup-orbit second"/><Image src="/assets/startup/mascot.png" alt="" width={640} height={800} priority unoptimized/><span className="startup-platform"/></div>
-      <h1>TALEVO</h1><p className="startup-tagline">พื้นที่จัดการการเรียนรู้ของคุณ</p>
-      <div className="startup-progress" role="progressbar" aria-label="เตรียมข้อมูล TALEVO" aria-valuemin={0} aria-valuemax={2} aria-valuenow={complete} aria-valuetext={complete === 2 ? "เตรียมข้อมูลเรียบร้อยแล้ว" : authReady ? "ตรวจสอบบัญชีแล้ว กำลังเตรียมข้อมูล" : "กำลังตรวจสอบบัญชี"}><span style={{width: `${complete * 50}%`}}/><i/></div>
-      <p className="startup-status">{complete === 2 ? "โหลดข้อมูลเรียบร้อยแล้ว" : "กำลังโหลดข้อมูล TALEVO..."}</p>
+      <h1>TALEVO</h1><p className="startup-tagline">{uiText("พื้นที่จัดการการเรียนรู้ของคุณ")}</p>
+      <div className="startup-progress" role="progressbar" aria-label={uiText("เตรียมข้อมูล TALEVO")} aria-valuemin={0} aria-valuemax={2} aria-valuenow={complete} aria-valuetext={complete === 2 ? uiText("เตรียมข้อมูลเรียบร้อยแล้ว") : authReady ? uiText("ตรวจสอบบัญชีแล้ว กำลังเตรียมข้อมูล") : uiText("กำลังตรวจสอบบัญชี")}><span style={{width: `${complete * 50}%`}}/><i/></div>
+      <p className="startup-status">{complete === 2 ? uiText("โหลดข้อมูลเรียบร้อยแล้ว") : uiText("กำลังโหลดข้อมูล TALEVO...")}</p>
     </div><footer>POWERED BY INTELLIGENCE</footer>
   </div>;
 }
