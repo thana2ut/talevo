@@ -80,3 +80,7 @@ html .voice-command-sheet { max-width:540px; background:radial-gradient(ellipse 
 .voice-success-summary strong { color:var(--text-primary); font-size:15px; line-height:1.65; overflow-wrap:anywhere; }
 .voice-success > button { min-height:50px; border-radius:16px; }
 html[data-theme="dark"] .voice-success .voice-result-icon { background:linear-gradient(145deg,#244c39,#1b392d); color:#86edb4; box-shadow:inset 0 1px 2px #ffffff24,0 8px 24px #0003; }
+
+.voice-clarification{padding:16px;border:1px solid var(--border);border-inline-start:3px solid var(--purple-500);border-radius:18px;background:var(--surface-soft);color:var(--text-primary);line-height:1.7;}
+.voice-clarification p{margin:8px 0;}
+.voice-clarification small{color:var(--text-secondary);}

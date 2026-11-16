@@ -1489,5 +1489,8 @@
   "กำลังฟัง · แตะเพื่อหยุด": "Listening \u00b7 Tap to stop",
   "แตะหรือกดค้างเพื่อพูด": "Tap or hold to speak",
   "เปิดไมโครโฟนใช้เวลานาน กรุณาตรวจสิทธิ์ไมโครโฟนแล้วลองอีกครั้ง": "Microphone startup timed out. Check microphone permission and try again.",
-  "ยืนยันการเปลี่ยนแปลง": "Confirm changes"
+  "ยืนยันการเปลี่ยนแปลง": "Confirm changes",
+  "ข้อมูลที่ต้องการเพิ่มเติม": "More information needed",
+  "แตะไมค์เพื่อตอบ หรือพิมพ์คำตอบด้านล่าง": "Tap the microphone to reply, or type below",
+  "ยังไม่ได้ยินเสียง แตะไมค์แล้วรอคำว่ากำลังฟัง จากนั้นพูดอีกครั้ง": "No speech received. Tap the microphone, wait for Listening, and try again."
 }
