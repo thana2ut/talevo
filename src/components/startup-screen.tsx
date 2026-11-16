@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import { useUiText } from "@/providers/ui-language";
 import "./startup-screen.css";
 
 /** Stage completion comes from authentication and account hydration, never a timer. */
@@ -26,14 +25,5 @@ export function StartupScreen({ authReady = false, dataReady = false }: { authRe
       <div className="startup-progress" role="progressbar" aria-label="เตรียมข้อมูล TALEVO" aria-valuemin={0} aria-valuemax={2} aria-valuenow={complete} aria-valuetext={complete === 2 ? "เตรียมข้อมูลเรียบร้อยแล้ว" : authReady ? "ตรวจสอบบัญชีแล้ว กำลังเตรียมข้อมูล" : "กำลังตรวจสอบบัญชี"}><span style={{width: `${complete * 50}%`}}/><i/></div>
       <p className="startup-status">{complete === 2 ? "โหลดข้อมูลเรียบร้อยแล้ว" : "กำลังโหลดข้อมูล TALEVO..."}</p>
     </div><footer>POWERED BY INTELLIGENCE</footer>
-  </div>;
-}
-
-/** Quiet, inline loading state for route transitions and refreshes after startup. */
-export function AppLoadingIndicator() {
-  const uiText = useUiText();
-  return <div className="app-loading-state" role="status" aria-live="polite" aria-busy="true">
-    <span className="app-loading-line" aria-hidden="true" />
-    <span>{uiText("กำลังโหลด")}</span>
   </div>;
 }

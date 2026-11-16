@@ -81,11 +81,6 @@ html[data-theme=dark]:has(.startup-screen),html[data-theme=dark] body:has(.start
 .startup-orbit.second::after{top:50%;left:100%;}
 .startup-screen::after{display:none;}
 
-.app-loading-state{min-height:min(42dvh,360px);width:min(100%,420px);margin-inline:auto;padding:32px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;color:var(--text-secondary);font-size:14px;font-weight:650;text-align:center}
-.app-loading-line{position:relative;display:block;width:clamp(120px,34vw,220px);height:4px;overflow:hidden;border-radius:99px;background:var(--purple-100)}
-.app-loading-line::after{content:"";position:absolute;inset-block:0;left:0;width:36%;border-radius:inherit;background:linear-gradient(90deg,var(--purple-500),var(--purple-300));animation:app-loading-sweep 1.25s ease-in-out infinite}
-@keyframes app-loading-sweep{0%{transform:translateX(-110%)}100%{transform:translateX(310%)}}
-@media(prefers-reduced-motion:reduce){.app-loading-line::after{animation:none;left:32%;width:36%}}
 .startup-waves{position:absolute;z-index:-1;inset:auto 0 0;height:25%;overflow:hidden;pointer-events:none;}
 .startup-waves>span{position:absolute;width:115%;height:105%;left:23%;top:46%;border-radius:50%;transform:rotate(-24deg);border-top:1px solid #ffffffa8;background:linear-gradient(140deg,#dfc4f757,#d8b5f2a6);box-shadow:0 -24px 70px #dfc8fa38;}
 .startup-waves>span+span{left:43%;top:29%;height:115%;background:linear-gradient(140deg,#ead7fb52,#cfa0f3a6);box-shadow:none;}
