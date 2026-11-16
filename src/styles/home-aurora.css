@@ -128,8 +128,8 @@ html[data-theme] .smart-today-page .icon-tile {background:var(--home-glass);bord
 }
 @media(max-width:699px) {
   html[data-theme] .smart-today-page .mh-lessons::after {display:none;}
-  html[data-theme] .smart-today-page .mh-ring>div {background:var(--home-glass);border:1px solid var(--home-line);}
-  html[data-theme] .smart-today-page .mh-ring {background:conic-gradient(#b18bea80,#d6baff50);}
+  html[data-theme] .smart-today-page .mh-ring>div {background:transparent;border:0;box-shadow:none;}
+  html[data-theme] .smart-today-page .mh-ring {background:transparent;box-shadow:none;padding:0;}
 }
 @media(hover:hover) and (pointer:fine) {
   html,* {scrollbar-width:thin;scrollbar-color:#9864d8 #bfa2e520;}
