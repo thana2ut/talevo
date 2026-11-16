@@ -28,7 +28,7 @@ async function handlerPOST(request: NextRequest) {
   const existing = await supabase.from("talevo_scheduled_notifications").select("event_key").eq("user_id", auth.user.id).is("sent_at", null);
   if (existing.error) return NextResponse.json({ message: "จัดการแจ้งเตือนไม่สำเร็จ" }, { status: 503 });
   const keep = new Set(rows.map(row => row!.event_key));
-  const staleKeys = (existing.data ?? []).map(row => row.event_key).filter(key => !keep.has(key));
+  const staleKeys = (existing.data ?? []).map(row => row.event_key).filter(key => !key.startsWith("support-") && !keep.has(key));
   if (staleKeys.length) {
     const removed = await supabase.from("talevo_scheduled_notifications").delete().eq("user_id", auth.user.id).is("sent_at", null).in("event_key", staleKeys);
     if (removed.error) return NextResponse.json({ message: "อัปเดตรายการแจ้งเตือนไม่สำเร็จ" }, { status: 503 });

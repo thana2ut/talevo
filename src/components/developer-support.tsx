@@ -39,6 +39,7 @@ export function DeveloperSupport() {
   const [search, setSearch] = useState("");
   const [reply, setReply] = useState("");
   const [replyBusy, setReplyBusy] = useState(false);
+  const [replySentId, setReplySentId] = useState("");
   const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export function DeveloperSupport() {
     <dl><div><dt>{uiText("อีเมล")}</dt><dd>{selected.email || "—"}</dd></div><div><dt>{uiText("สาขา / มหาวิทยาลัย")}</dt><dd>{[selected.major,selected.university].filter(Boolean).join(" · ") || "—"}</dd></div></dl>
     <p>{uiText(inbox === "help" ? "ข้อความขอความช่วยเหลือ" : "ปัญหาที่พบ")}</p><div className="support-message-body">{selected.message}</div>
     <div className="support-detail-actions"><button type="button" className="secondary-button" disabled={Boolean(selected.read_at)} onClick={async()=>{await markRead(selected);setSelected({...selected,read_at:new Date().toISOString()});}}>{uiText("อ่านแล้ว")}</button><button type="button" className="primary-button" onClick={()=>document.getElementById("support-reply")?.focus()}>{uiText("ตอบกลับ")}</button></div>
-    <form onSubmit={async event=>{event.preventDefault();if(replyBusy || !reply.trim())return;setReplyBusy(true);setDashboardError("");const {error}=await createClient().rpc("support_admin_reply",{report_id:selected.id,reply_message:reply.trim()});setReplyBusy(false);if(error){setDashboardError(uiText("ส่งข้อความตอบกลับไม่สำเร็จ กรุณาลองใหม่"));return;}setReply("");setDashboardError(uiText("ส่งข้อความตอบกลับแล้ว"));}}><label className="sr-only" htmlFor="support-reply">{uiText("ตอบกลับ")}</label><textarea id="support-reply" className="input" maxLength={2000} required value={reply} onChange={event=>setReply(event.target.value)} placeholder={uiText("พิมพ์ข้อความตอบกลับ...")}/><button type="submit" className="primary-button" disabled={replyBusy || !reply.trim()}><Send size={18}/>{uiText(replyBusy ? "กำลังส่ง…" : "ส่ง")}</button></form>
+    <form onSubmit={async event=>{event.preventDefault();if(replyBusy || !reply.trim())return;setReplyBusy(true);setReplySentId("");setDashboardError("");const {error}=await createClient().rpc("support_admin_reply",{report_id:selected.id,reply_message:reply.trim()});setReplyBusy(false);if(error){setDashboardError(uiText("ส่งข้อความตอบกลับไม่สำเร็จ กรุณาลองใหม่"));return;}setReply("");setReplySentId(selected.id);}}>{replySentId===selected.id && <p role="status" aria-live="polite" className="support-reply-success">{uiText("ส่งข้อความตอบกลับแล้ว")}</p>}<label className="sr-only" htmlFor="support-reply">{uiText("ตอบกลับ")}</label><textarea id="support-reply" className="input" maxLength={2000} required value={reply} onChange={event=>{setReply(event.target.value);setReplySentId("");}} placeholder={uiText("พิมพ์ข้อความตอบกลับ...")}/><button type="submit" className="primary-button" disabled={replyBusy || !reply.trim()}><Send size={18}/>{uiText(replyBusy ? "กำลังส่ง…" : replySentId===selected.id ? "ส่งแล้ว" : "ส่ง")}</button></form>
   </Card>;
 
   return <section className="developer-support">
