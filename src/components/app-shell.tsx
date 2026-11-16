@@ -118,7 +118,8 @@ function AppShellContent({ children }: { children: ReactNode }) {
   ];
 
   const moreNavigationOptions = [
-    ...featureNavigationItems.filter(({ href }) => href !== "/schedule" && href !== "/tasks" && href !== "/vision"),
+    ...featureNavigationItems.filter(({ href }) => href === "/ai"),
+    ...featureNavigationItems.filter(({ href }) => href !== "/ai" && href !== "/schedule" && href !== "/tasks" && href !== "/vision"),
     { label: "โปรไฟล์", description: "ข้อมูลส่วนตัวและการศึกษา", icon: UserRound, href: "/profile" },
     { label: "การตั้งค่า", description: "การแจ้งเตือนและระบบการใช้งาน", icon: Settings, href: "/settings" },
   ];
