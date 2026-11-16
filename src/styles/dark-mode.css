@@ -622,3 +622,11 @@ html[data-theme="dark"] .lab-page .lab-band-summary strong{color:var(--text-prim
 html[data-theme="dark"] .lab-page .lab-band-summary span,html[data-theme="dark"] .lab-page .lab-band-summary>svg{color:var(--purple-600)}
 html[data-theme="dark"] .lab-page .lab-band-fields{padding:14px;border-top:1px solid var(--border);background:var(--surface-soft)}
 html[data-theme="dark"] .lab-page .lab-criteria-confirm{margin:12px 0 0;line-height:1.6}
+/* Disclosure surfaces must respect their rounded parent in either theme. */
+html :is(.score-disclosure,.summary-schedule-details,.lab-criteria-editor,.lab-score-editor,.support-report-item){min-width:0;max-width:100%;box-sizing:border-box}
+html :is(.score-disclosure,.summary-schedule-details,.lab-criteria-editor,.lab-score-editor,.support-report-item)>summary{min-width:0;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;border-start-start-radius:inherit;border-start-end-radius:inherit}
+html :is(.score-disclosure,.summary-schedule-details,.lab-criteria-editor,.lab-score-editor,.support-report-item):not([open])>summary{border-radius:inherit}
+html[data-theme="dark"] :is(.score-disclosure,.summary-schedule-details,.lab-criteria-editor,.lab-score-editor,.support-report-item)>summary{background:transparent;color:var(--text-primary)}
+html :is(.card,.lab-panel,.settings-card,.exam-panel,.vision-panel,.task-detail-card,.profile-menu-new,.bottom-sheet)>*{min-width:0}
+html[lang="en"] :is(.primary-button,.secondary-button,.score-disclosure>summary,.lab-criteria-editor>summary,.setting-row strong){overflow-wrap:anywhere;white-space:normal;line-height:1.5}
+html[data-theme="dark"] :is(.device-test-dialog,.lab-status-dialog){background:var(--surface-elevated);color:var(--text-primary);border:1px solid var(--border)}
