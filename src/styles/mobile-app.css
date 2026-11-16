@@ -397,7 +397,7 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .schedule-heading-shortcuts { display:grid; grid-template-columns:minmax(0,1fr); gap:9px; margin-top:9px; }
  html .schedule-heading-shortcuts > a { width:100%; min-width:0; min-height:48px; padding:9px 10px; border-radius:16px; gap:7px; font-size:12px; line-height:1.25; white-space:normal; text-align:center; }
  html .schedule-heading-shortcuts > a svg { width:17px; height:17px; flex:none; }
- html .schedule-heading-actions .desktop-add-button { display:none; }
+ html .schedule-heading-actions .desktop-add-button { display:inline-flex; }
  html .schedule-view-switcher { width:100%; max-width:none; padding:4px; border-radius:20px; margin-bottom:16px; }
  html .schedule-view-switcher button { min-height:45px; font-size:18px; border-radius:16px; }
  html .schedule-view-switcher button.active { background:linear-gradient(125deg,#9270ff,#6027f4); color:white; }
