@@ -84,3 +84,13 @@ html[data-theme="dark"] .voice-success .voice-result-icon { background:linear-gr
 .voice-clarification{padding:16px;border:1px solid var(--border);border-inline-start:3px solid var(--purple-500);border-radius:18px;background:var(--surface-soft);color:var(--text-primary);line-height:1.7;}
 .voice-clarification p{margin:8px 0;}
 .voice-clarification small{color:var(--text-secondary);}
+
+/* Keep microphone errors inside the dialog at every tablet orientation. */
+.voice-command-sheet { box-sizing:border-box; min-width:0; overflow-x:hidden; }
+.voice-command-sheet .form-error { box-sizing:border-box; width:100%; min-width:0; max-width:100%; overflow-wrap:anywhere; white-space:normal; line-height:1.6; }
+.voice-command-sheet .form-error > * { min-width:0; }
+
+/* Keep microphone errors inside the dialog at every tablet orientation. */
+.voice-command-sheet { box-sizing:border-box; min-width:0; overflow-x:hidden; }
+.voice-command-sheet .form-error { box-sizing:border-box; width:100%; min-width:0; max-width:100%; overflow-wrap:anywhere; white-space:normal; line-height:1.6; }
+.voice-command-sheet .form-error > * { min-width:0; }

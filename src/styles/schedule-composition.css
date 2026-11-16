@@ -655,3 +655,14 @@ html .academic-timetable .class-block-location-row .phone-class-room svg{width:1
 html .academic-timetable .class-block-location-row .class-block-badge{position:static;flex:none;margin:0;white-space:nowrap}
 html .academic-timetable .timetable-current-time-line{z-index:50!important;width:2px;pointer-events:none}
 html .academic-timetable .class-block-meta small{display:none}
+
+/* Use the observed class span to set the time axis, especially on iPad. */
+@media (max-width: 1199px) {
+  html .academic-timetable { min-width: 0; width: 100%; }
+  html .timetable-scroll-container { overflow-x: auto; }
+  html .timetable-time-axis { min-width: 0; }
+  html .timetable-time-label { font-size: 10px; }
+}
+@media (min-width: 700px) and (max-width: 1199px) {
+  html .academic-timetable { --timetable-day-column: 84px; }
+}

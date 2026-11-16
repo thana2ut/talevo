@@ -10,7 +10,7 @@ import { BottomSheet, Card, Field, Input, PageHeader, Textarea } from "@/compone
 import { SyllabusScanner } from "@/features/academic/syllabus-scanner";
 import { SubjectIcon } from "@/components/domain";
 import { addScheduleDays, createScheduleDate, formatThaiDay, formatThaiLongDate, formatThaiMonth, formatThaiWeekday, formatThaiWeekRange, getMonthDates, getScheduleWeekDates, mondayIndex, sameScheduleDate, startOfScheduleWeek } from "@/lib/schedule-date";
-import { findScheduleConflict, formatScheduleDuration, getClassDurationMinutes, getFreeTimeGaps, getHorizontalEventPosition, getHorizontalTimelinePercent, getHorizontalTimetableRange, getScheduleDisplayName, layoutHorizontalDay, timeToMinutes } from "@/lib/schedule-utils";
+import { findScheduleConflict, formatScheduleDuration, getClassDurationMinutes, getFreeTimeGaps, getHorizontalEventPosition, getHorizontalTimelinePercent, getWeekTimeRange, getScheduleDisplayName, layoutHorizontalDay, timeToMinutes } from "@/lib/schedule-utils";
 import { isValidAcademicTimeRange } from "@/lib/academic-time";
 import { defaultTalevoColor, getContrastTextColor, normalizeTalevoColor } from "@/lib/talevo-color-utils";
 import { useAppState } from "@/providers/app-state-provider";
@@ -144,8 +144,8 @@ function ScheduleWeekView({ selectedDate, schedules, onSelectDate, onSelectItem 
   const isCurrentWeek = sameScheduleDate(startOfScheduleWeek(selectedDate), startOfScheduleWeek(referenceToday));
   const totalMinutes = schedules.reduce((sum, item) => sum + getClassDurationMinutes(item), 0);
 
-  // Horizontal timeline range: 08:00 to 24:00 at minimum
-  const range = getHorizontalTimetableRange(schedules);
+  // Compact, hour-aligned range keeps the entire timetable legible on iPad.
+  const range = getWeekTimeRange(schedules);
   const totalRangeMinutes = Math.max(60, range.endMinutes - range.startMinutes);
   const hourMarkers = Array.from(
     { length: Math.floor(totalRangeMinutes / 60) + 1 },
