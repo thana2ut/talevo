@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- private local blobs are never public image URLs */
+import { AppLoadingIndicator } from "@/components/startup-screen";
 import Link from "next/link";
 import { useEffect,useRef,useState } from "react";
 import { ScanLine,Sparkles,Images,ClipboardList,FileText,Plus,Trash2,LoaderCircle,Check,AlertTriangle,Pencil,GraduationCap,ChevronLeft,Pause,RotateCcw,History,CalendarDays,Info } from "lucide-react";
@@ -140,7 +141,7 @@ function VisionWorkspace({owner}:{owner:string}){
   const groups=Object.groupBy(visible,item=>schedules.find(course=>course.courseId===item.courseId)?.name||item.facts.courseCode.value||item.facts.courseName.value||"ยังไม่ทราบรายวิชา");
   const finished=session?.images.filter(i=>i.state==="done").length??0;
   const renderEditorField=(key:typeof VISION_FIELDS[number])=>editing?<label key={key}>{uiText(fieldLabels[key])}{editing.conflicts.includes(key)&&<span className="needs-review">{uiText("ข้อมูลขัดแย้ง กรุณาเลือกค่าที่ถูก")}</span>}{key==="status"?<select className="input" value={editing.facts.status.value??"unknown"} onChange={e=>editFact(editing,key,e.target.value)}>{Object.entries(statusLabels).map(([v,l])=><option key={v} value={v}>{uiText(l)}</option>)}</select>:key==="description"||key==="attachments"?<textarea className="input" rows={3} maxLength={8000} value={editing.facts[key].value??""} onChange={e=>editFact(editing,key,e.target.value)}/>:<input className="input" maxLength={key==="title"?200:2000} value={editing.facts[key].value??""} onChange={e=>editFact(editing,key,e.target.value)} placeholder={key==="dueDate"?uiText("เช่น 2026-09-23 (ต้องยืนยันปี)"):key==="dueTime"?"23:59":uiText("ไม่พบข้อมูลในภาพ")}/>}{editing.facts[key].evidence.length>0&&<details><summary>{uiText("หลักฐาน")}{editing.facts[key].evidence.length} {uiText("จุด")}</summary>{editing.facts[key].evidence.map((source,index)=><button className="vision-evidence" type="button" key={index} onClick={()=>{setEditId(null);setSourceId(source.imageId);}}>{uiText("รูปที่")}{source.imageNumber}: “{source.text}”</button>)}</details>}</label>:null;
-  if(!ready)return <div className="page vision-page" role="status">{uiText("กำลังโหลดคิว Talevo Vision…")}</div>;
+  if(!ready)return <AppLoadingIndicator />;
   return <div className="page vision-page">
     <header className="vision-header"><Link href="/today" className="icon-button" aria-label={uiText("กลับหน้าหลัก")}><ChevronLeft/></Link><div><h1>{uiText("นำงานเข้าจากภาพ")}</h1><p><Sparkles size={14} aria-hidden="true"/>Talevo Vision</p></div><button type="button" className="secondary-button" onClick={()=>{setShowArchive(true);void loadArchive();}}><History size={18} aria-hidden="true"/><span>{uiText("ประวัติ")}</span></button></header>
     <section className="vision-heading"><span className="vision-heading-icon"><ScanLine/></span><div><h2>{step===1?uiText("เริ่มจากรูปภาพของคุณ"):step===2?uiText("กำลังวิเคราะห์ภาพ"):step===4?uiText("บันทึกรายการ"):uiText("ตรวจสอบงานที่พบ")}</h2><p>{uiText("อ่านหลายภาพ รวมงานซ้ำ แยกวิชาและเรียงวันส่ง")}</p></div></section>

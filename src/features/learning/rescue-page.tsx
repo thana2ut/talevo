@@ -1,4 +1,5 @@
 "use client";
+import { AppLoadingIndicator } from "@/components/startup-screen";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import {LifeBuoy,CalendarClock,Clock3,Check,LoaderCircle,Play,Plus,Trash2,AlertTriangle} from "lucide-react";
@@ -22,7 +23,7 @@ export function RescuePage(){
   const format=(value:string)=>new Intl.DateTimeFormat(t.locale,{timeZone:"Asia/Bangkok",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(value));
   return <div className="page learning-page rescue-dashboard"><LearningHeader title="โหมดกู้สถานการณ์" name="TALEVO RESCUE MODE" description="ค่อย ๆ จัดงานค้าง วางแผนตามเวลาที่มี" back="/tasks"/>
     {error&&<p className="learning-warning" role="alert">{t(error)} <button type="button" className="text-button" onClick={()=>void create()} disabled={busy}>{t("ลองใหม่")}</button></p>}
-    {loading||!isHydrated?<p role="status">{t("กำลังโหลดข้อมูล…")}</p>:<>
+    {loading||!isHydrated?<AppLoadingIndicator />:<>
     <section className="learning-stats rescue-stats" aria-label={t("ภาพรวมงาน")}>
       {[[LifeBuoy,ranked.length,"งานค้าง"],[CalendarClock,ranked.filter(r=>Date.parse(r.task.dueDate)<now.getTime()).length,"เลยกำหนด"],[Clock3,ranked.filter(r=>Date.parse(r.task.dueDate)>=now.getTime()&&Date.parse(r.task.dueDate)-now.getTime()<7*86400000).length,"ใกล้กำหนด"]].map(([Icon,count,label])=>{const I=Icon as typeof LifeBuoy;return <Card key={String(label)} className="rescue-stat"><I/><strong>{String(count)}</strong><span>{t(String(label))}</span></Card>;})}
     </section>

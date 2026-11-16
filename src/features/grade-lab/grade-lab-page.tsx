@@ -1,4 +1,5 @@
 "use client";
+import { AppLoadingIndicator } from "@/components/startup-screen";
 import {useRouter} from "next/navigation";
 import {useEffect,useMemo,useRef,useState} from "react";
 import {Calculator,ImagePlus,Plus,Save,Trash2,SlidersHorizontal,GraduationCap,RefreshCw,Check,AlertCircle,ArrowLeft,MoreVertical,Pencil} from "lucide-react";
@@ -95,7 +96,7 @@ function GradeLabWorkspace(){
  const currentScopeSchedules=schedules.filter(source=>sameScopeValue(source.academicLevel,academicTerm.level)===sameScopeValue(undefined,academicTerm.level)&&sameScopeValue(source.academicTerm,academicTerm.term)===sameScopeValue(undefined,academicTerm.term)&&sameScopeValue(source.academicYear,academicTerm.academicYear)===sameScopeValue(undefined,academicTerm.academicYear));
  const courses=[...new Map(currentScopeSchedules.map(s=>[s.courseId,s])).values()];const yearTermOptions=["ภาคเรียนที่ 1","ภาคเรียนที่ 2","ภาคฤดูร้อน"].map(term=>[term,academicTerm.academicYear].filter(Boolean).join(" "));const terms=[...new Set([...yearTermOptions,currentTerm,...data.courses.map(c=>c.term)].filter(Boolean))];const visible=data.courses.filter(c=>semester==="all"||c.term===semester).map(c=>{const source=schedules.find(s=>s.courseId===c.sourceCourseId);return source?{...c,name:source.name,code:source.courseCode??"",credits:source.credits===undefined?"":String(source.credits)}:c;}).sort((a,b)=>compareCourseNames(a.name,b.name));
  const availableCourses=(semester==="all"||semester===currentTerm)?courses.filter(source=>!data.courses.some(course=>course.term===currentTerm&&(course.sourceCourseId===source.courseId||course.code&&course.code===source.courseCode||course.name.trim()===source.name.trim()))).sort((a,b)=>compareCourseNames(a.name,b.name)):[];
- if(loading)return <div className="page lab-page" role="status">{uiText("กำลังโหลด คำนวณคะแนน…")}</div>;
+ if(loading)return <AppLoadingIndicator />;
  return <div className={`page lab-page ${draft?"lab-course-detail":"lab-course-list"}`}>
   <button type="button" className="score-back" onClick={async()=>{if(draft){if(dirty&&!await confirmAction(uiText("มีคะแนนที่ยังไม่บันทึก ต้องการกลับไปรายวิชาหรือไม่?")))return;setDraft(null);setBaseline("");window.scrollTo({top:0});}else if(window.history.length>1)router.back();else router.push("/today");}}><ArrowLeft size={19}/>{draft?uiText("รายวิชาทั้งหมด"):uiText("ย้อนกลับ")}</button>
   <header className="lab-header"><div className="lab-logo"><Calculator/></div><div><h1>{draft?(draft.name||uiText("วิชาใหม่")):uiText("คำนวณคะแนน")}</h1><p>{draft?draft.term:uiText("เลือกภาคเรียน แล้วเลือกวิชาเพื่อบันทึกคะแนน")}</p></div></header>
