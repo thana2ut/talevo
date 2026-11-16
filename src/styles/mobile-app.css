@@ -611,10 +611,10 @@ html .schedule-heading .academic-term-summary { display:none; }
   html .app-main { padding-inline: clamp(20px, 3.5vw, 32px); }
   html .schedule-page { width: 100%; max-width: 960px; margin-inline: auto; }
   html .schedule-heading { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-bottom: 14px; }
-  html .schedule-heading-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 10px; width: 100%; }
+  html .schedule-heading-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 10px; width: 100%; }
   html .schedule-heading-actions > .schedule-scope-trigger { grid-column: 1 / -1; width: 100%; max-width: none; min-height: 50px; margin: 0; }
   html .schedule-heading-actions > .schedule-import-button { width: 100%; min-width: 0; min-height: 50px; padding-inline: 10px; white-space: normal; text-align: center; }
-  html .schedule-heading-shortcuts { grid-column: span 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; margin: 0; }
+  html .schedule-heading-shortcuts { display: contents; }
   html .schedule-heading-shortcuts > a { width: 100%; min-width: 0; min-height: 50px; padding-inline: 10px; white-space: normal; text-align: center; }
   html .schedule-day-controls { width: 100%; min-width: 0; margin-top: 12px; padding: 14px; }
   html .schedule-date-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
@@ -889,7 +889,7 @@ html .ai-context-sheet .ai-context-item{min-height:72px;padding:12px;border-radi
 /* Align schedule actions in a consistent two-row grid on tablets and desktop. */
 @media(min-width:700px){
  html .schedule-page .schedule-heading{display:grid;grid-template-columns:minmax(210px,.8fr) minmax(0,2fr);gap:24px;align-items:start}
- html .schedule-page .schedule-heading-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:12px;width:100%;margin:0}
+ html .schedule-page .schedule-heading-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:12px;width:100%;margin:0}
  html .schedule-page .schedule-heading-actions>.schedule-scope-trigger{grid-column:1/-1;justify-content:center;width:100%;max-width:none;height:50px;min-height:50px;margin:0;align-self:stretch}
  html .schedule-page .schedule-heading-shortcuts{display:contents}
  html .schedule-page .schedule-heading-actions>.schedule-import-button,html .schedule-page .schedule-heading-shortcuts>a{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;min-width:0;min-height:50px;height:50px;margin:0;padding:8px 10px;border-radius:16px;font-size:12px;line-height:1.4;white-space:normal;text-align:center}
