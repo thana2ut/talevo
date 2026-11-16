@@ -85,12 +85,15 @@ html[data-theme="dark"] .voice-success .voice-result-icon { background:linear-gr
 .voice-clarification p{margin:8px 0;}
 .voice-clarification small{color:var(--text-secondary);}
 
-/* Keep microphone errors inside the dialog at every tablet orientation. */
+/* Keep microphone errors aligned with the text field at every screen size. */
 .voice-command-sheet { box-sizing:border-box; min-width:0; overflow-x:hidden; }
 .voice-command-sheet .form-error { box-sizing:border-box; width:100%; min-width:0; max-width:100%; overflow-wrap:anywhere; white-space:normal; line-height:1.6; }
 .voice-command-sheet .form-error > * { min-width:0; }
 
-/* Keep microphone errors inside the dialog at every tablet orientation. */
-.voice-command-sheet { box-sizing:border-box; min-width:0; overflow-x:hidden; }
-.voice-command-sheet .form-error { box-sizing:border-box; width:100%; min-width:0; max-width:100%; overflow-wrap:anywhere; white-space:normal; line-height:1.6; }
-.voice-command-sheet .form-error > * { min-width:0; }
+@media(max-width:699px) {
+  .voice-command-sheet .form-error {
+    width:calc(100% + 12px);
+    max-width:calc(100% + 12px);
+    margin-inline:-6px;
+  }
+}
