@@ -56,6 +56,13 @@ function AppShellContent({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, isAuthLoading, isHydrated } = useAppState();
   const { t } = useLanguage();
+  const [startupComplete, setStartupComplete] = useState(false);
+  useEffect(() => {
+    if (isAuthLoading || !isHydrated) return;
+    // Show the real completed state before dismissing the screen.
+    const timer = window.setTimeout(() => setStartupComplete(true), 350);
+    return () => window.clearTimeout(timer);
+  }, [isAuthLoading, isHydrated]);
   const [quickOpen, setQuickOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -95,8 +102,8 @@ function AppShellContent({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, isAuthLoading, isPublicRoute, pathname, router]);
 
+  if (isAuthLoading || !isHydrated || !startupComplete) return <StartupScreen authReady={!isAuthLoading} dataReady={isHydrated} />;
   if (isPublicRoute) return <>{children}</>;
-  if (isAuthLoading || !isHydrated) return <StartupScreen authReady={!isAuthLoading} dataReady={isHydrated} />;
   if (!isAuthenticated) return null;
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
