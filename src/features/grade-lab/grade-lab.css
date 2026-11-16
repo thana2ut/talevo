@@ -134,3 +134,23 @@ html .lab-page .lab-band-fields>.lab-field{min-width:0;margin:0;}
 html .lab-page .lab-band-fields .input{box-sizing:border-box;width:100%;min-width:0;border-radius:13px;}
 html .lab-page .lab-band-delete{min-height:44px;justify-self:start;padding:4px 8px;border-radius:10px;}
 @media(max-width:599px){html .lab-page .lab-band-summary{padding:12px 14px;min-height:60px;}html .lab-page .lab-band-fields{padding:14px;gap:12px;}}
+
+/* Keep the grade editor and save action inside iPad-width layouts. */
+@media (min-width: 700px) and (max-width: 1180px) {
+  .lab-page .lab-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .lab-page .lab-layout > * { min-width: 0; }
+  .lab-page .lab-panel { min-width: 0; }
+  .lab-page .lab-criteria-editor { min-width: 0; }
+  .lab-page .lab-band-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lab-page .lab-save-bar { align-items: center; flex-wrap: wrap; min-width: 0; }
+  .lab-page .lab-save-bar > span { flex: 1 1 55%; }
+}
+@media (min-width: 700px) and (max-width: 850px) {
+  .lab-page .lab-score-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lab-page .lab-score-fields > .lab-field:first-child { grid-column: 1 / -1; }
+  .lab-page .lab-score-fields > .lab-check { grid-column: auto; }
+}
+html[data-theme="dark"] .lab-page .lab-save-bar {
+  border-color: color-mix(in srgb, var(--purple-400) 28%, var(--border));
+  background: color-mix(in srgb, var(--surface-elevated) 88%, var(--purple-700));
+}

@@ -32,7 +32,7 @@ export function scoreUnits(course:Pick<GradeLabCourse,"components">):ScoreUnit[]
 }
 export function validateCourse(course:GradeLabCourse){
   const errors:string[]=[],warnings:string[]=[];
-  if(!course.name.trim()||course.name.length>200)errors.push("กรุณาระบุชื่อวิชา ไม่เกิน 200 ตัวอักษร");
+  if(!course.name.trim())errors.push("กรุณาระบุชื่อวิชา");
   if(!course.term.trim()||course.term.length>100)errors.push("กรุณาระบุภาคเรียน");
   if(course.code.length>100)errors.push("รหัสวิชายาวเกินไป");
   const optional=(value:string,label:string)=>{if(value)try{decimal(value);}catch{errors.push(`${label}: ตัวเลขไม่ถูกต้อง`);}};
