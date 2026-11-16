@@ -1547,5 +1547,7 @@
   "ยังไม่ระบุห้อง / ตึก": "Room / building not specified",
   "ปิดอยู่ · เปิดเพื่อรับการแจ้งเตือน": "Off · Enable to receive notifications",
   "กำลังเชื่อมต่อการแจ้งเตือน…": "Connecting device notifications…",
-  "ตรวจการเชื่อมต่อ / ส่งทดสอบ": "Check connection / send test"
+  "ตรวจการเชื่อมต่อ / ส่งทดสอบ": "Check connection / send test",
+  "ปิดการแจ้งเตือน": "Notifications off",
+  "ส่งทดสอบ": "Send test"
 }
