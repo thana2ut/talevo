@@ -91,8 +91,12 @@ html[data-theme="dark"] :is(.due-urgent, .task-due, .task-completed, .task-compl
   border-color: var(--border);
 }
 /* Keep task due dates as inline metadata instead of a boxed strip in dark mode. */
-html[data-theme="dark"] .task-card .task-due {
-  background: transparent;
+html[data-theme="dark"] .task-card > .task-due {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  min-height: 0;
+  background: none;
   border: 0;
   border-radius: 0;
   padding: 0;
