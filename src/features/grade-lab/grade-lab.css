@@ -154,3 +154,10 @@ html[data-theme="dark"] .lab-page .lab-save-bar {
   border-color: color-mix(in srgb, var(--purple-400) 28%, var(--border));
   background: color-mix(in srgb, var(--surface-elevated) 88%, var(--purple-700));
 }
+
+/* Keep expandable score sections contained at every viewport size. */
+html .lab-page :is(.lab-score-editor,.lab-criteria-editor){border:1px solid var(--border);border-radius:16px;background:transparent;overflow:hidden;margin-top:16px;padding:0;min-width:0}
+html .lab-page :is(.lab-score-editor,.lab-criteria-editor)>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:12px 16px;margin:0;border:0;border-radius:inherit;background:transparent;box-shadow:none;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+html .lab-page .lab-score-editor-content{padding:16px;min-width:0}
+html .lab-page .lab-save-bar{gap:16px;flex-wrap:wrap}
+html .lab-page .lab-save-bar>span{min-width:0;overflow-wrap:anywhere}
