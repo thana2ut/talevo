@@ -12,7 +12,8 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { BottomSheet, Card, Field, Input } from "@/components/ui";
 import { createEmptyAccountAppState } from "@/lib/app-state-defaults";
 import { hasLegacyLocalData } from "@/lib/persistence/local-account-storage";
@@ -20,6 +21,8 @@ import { readAppStateSnapshot } from "@/lib/persistence/app-state-storage";
 import { useAppState } from "@/providers/app-state-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
+import { useUiText } from "@/providers/ui-language";
+
 
 function ConfirmationPhraseInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const { t } = useLanguage();
@@ -27,6 +30,8 @@ function ConfirmationPhraseInput({ value, onChange }: { value: string; onChange:
 }
 
 export function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const uiText = useUiText();
+
   const router = useRouter();
   const { deleteUserAccount } = useAppState();
   const { t } = useLanguage();
@@ -35,9 +40,18 @@ export function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose:
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const operationLockRef = useRef(false);
+  const [adminStatus, setAdminStatus] = useState<"loading" | "admin" | "user" | "error">("loading");
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    createClient().rpc("is_support_admin").then(({ data, error }) => {
+      if (active) setAdminStatus(error || typeof data !== "boolean" ? "error" : data ? "admin" : "user");
+    });
+    return () => { active = false; };
+  }, [open]);
   const close = () => { setStep("warning"); setPhrase(""); setError(""); onClose(); };
   const reset = async () => {
-    if (operationLockRef.current) return;
+    if (operationLockRef.current || adminStatus !== "user") return;
     operationLockRef.current = true;
     setIsSubmitting(true);
     let nextError: string | null;
@@ -60,13 +74,12 @@ export function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose:
   const requiredPhrase = "talevo";
 
   return (
-    <BottomSheet open={open} title={step === "warning" ? t("settings.deleteDialogTitle") : t("settings.deleteConfirmTitle")} onClose={close}>
-      {step === "warning" ? (
+    <BottomSheet open={open} title={uiText("ลบบัญชี")} onClose={close} dismissible={!isSubmitting}>
+      {adminStatus !== "user" ? <div className="delete-account-dialog"><span className="danger-icon"><TriangleAlert /></span><h3>{uiText(adminStatus === "admin" ? "บัญชีแอดมินไม่สามารถลบได้" : adminStatus === "loading" ? "กำลังตรวจสอบบัญชี…" : "ตรวจสอบบัญชีไม่สำเร็จ")}</h3><p>{uiText(adminStatus === "admin" ? "บัญชีนี้ใช้ดูแลระบบและรับข้อความจากผู้ใช้งาน" : adminStatus === "error" ? "กรุณาปิดหน้านี้แล้วลองใหม่อีกครั้ง" : "กรุณารอสักครู่")}</p><button className="secondary-button button-block" type="button" onClick={close}>{uiText("ปิด")}</button></div> : step === "warning" ? (
         <div className="delete-account-dialog">
           <span className="danger-icon"><TriangleAlert /></span>
-          <p>{t("settings.deleteWarning")}</p>
-          <p>{t("settings.deleteFutureWarning")}</p>
-          <p className="prototype-warning">{t("settings.deleteLocalWarning")}</p>
+          <h3>{uiText("ต้องการลบบัญชีนี้ใช่ไหม?")}</h3>
+          <p>{uiText("บัญชี ตารางเรียน และงานทั้งหมดจะถูกลบถาวร และไม่สามารถกู้คืนได้")}</p>
           <div className="dialog-actions">
             <button className="secondary-button" type="button" onClick={close}>{t("common.cancel")}</button>
             <button className="danger-button" type="button" onClick={() => setStep("confirm")}>{t("settings.continue")}</button>
@@ -75,12 +88,12 @@ export function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose:
       ) : (
         <div className="delete-account-dialog">
           <span className="danger-icon"><TriangleAlert /></span>
-          <p>{t("settings.deleteConfirmDescription")}</p>
+          <p>{uiText("พิมพ์ talevo เพื่อยืนยันการลบบัญชีถาวร")}</p>
           <ConfirmationPhraseInput value={phrase} onChange={setPhrase} />
-          {error && <p className="form-error" role="alert">{error}</p>}
+          {error && <p className="form-error" role="alert">{uiText(error)}</p>}
           <button className="danger-button button-block" type="button" disabled={phrase !== requiredPhrase || isSubmitting} onClick={() => void reset()}>
             <Trash2 />
-            {isSubmitting ? "กำลังดำเนินการ..." : t("settings.deletePermanently")}
+            {isSubmitting ? uiText("กำลังดำเนินการ...") : t("settings.deletePermanently")}
           </button>
           <button className="text-button" type="button" disabled={isSubmitting} onClick={() => setStep("warning")}>{t("common.back")}</button>
         </div>
@@ -90,6 +103,8 @@ export function DeleteAccountDialog({ open, onClose }: { open: boolean; onClose:
 }
 
 function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const uiText = useUiText();
+
   const router = useRouter();
   const { endSession } = useAppState();
   const { t } = useLanguage();
@@ -120,10 +135,10 @@ function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => void })
       <div className="logout-dialog">
         <span className="logout-dialog-icon"><LogOut /></span>
         <p>{t("settings.logoutDialogDescription")}</p>
-        {error && <p className="form-error" role="alert">{error}</p>}
+        {error && <p className="form-error" role="alert">{uiText(error)}</p>}
         <div className="dialog-actions">
           <button className="secondary-button" type="button" disabled={isSubmitting} onClick={onClose}>{t("common.cancel")}</button>
-          <button className="logout-confirm-button" type="button" disabled={isSubmitting} onClick={() => void logout()}>{isSubmitting ? "กำลังออกจากระบบ..." : t("settings.logOut")}</button>
+          <button className="logout-confirm-button" type="button" disabled={isSubmitting} onClick={() => void logout()}>{isSubmitting ? uiText("กำลังออกจากระบบ...") : t("settings.logOut")}</button>
         </div>
       </div>
     </BottomSheet>
@@ -131,6 +146,8 @@ function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 export function AccountManagement() {
+  const uiText = useUiText();
+
   const { user } = useAuth();
   const {
     schedules,
@@ -208,10 +225,10 @@ export function AccountManagement() {
             <CloudCheck />
           </span>
           <span>
-            <strong>บันทึกข้อมูลอัตโนมัติ</strong>
-            <small>ตารางเรียน งาน และข้อมูลอื่นจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ</small>
+            <strong>{uiText("บันทึกข้อมูลอัตโนมัติ")}</strong>
+            <small>{uiText("ตารางเรียน งาน และข้อมูลอื่นจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ")}</small>
           </span>
-          <span className="account-data-badge">พร้อมใช้งาน</span>
+          <span className="account-data-badge">{uiText("พร้อมใช้งาน")}</span>
         </div>
 
         {/* Optional Legacy Data Recovery if legacy local data is detected */}
@@ -224,8 +241,8 @@ export function AccountManagement() {
                   <HardDrive />
                 </span>
                 <div>
-                  <strong>ข้อมูลเก่าในอุปกรณ์</strong>
-                  <p>พบข้อมูลจากการใช้งาน TALEVO ก่อนหน้านี้ คุณสามารถตรวจสอบและย้ายข้อมูลเข้าสู่บัญชีของคุณได้</p>
+                  <strong>{uiText("ข้อมูลเก่าในอุปกรณ์")}</strong>
+                  <p>{uiText("พบข้อมูลจากการใช้งาน TALEVO ก่อนหน้านี้ คุณสามารถตรวจสอบและย้ายข้อมูลเข้าสู่บัญชีของคุณได้")}</p>
                 </div>
               </div>
 
@@ -235,17 +252,17 @@ export function AccountManagement() {
                   className="secondary-button legacy-inspect-button"
                   onClick={handleInspect}
                 >
-                  <span>ตรวจสอบข้อมูล</span>
+                  <span>{uiText("ตรวจสอบข้อมูล")}</span>
                   <ArrowRight aria-hidden="true" />
                 </button>
               ) : (
                 <div className="legacy-inspection-details">
                   {legacySummary && (
                     <div className="legacy-summary-chips">
-                      <span>ตารางเรียน {legacySummary.schedules} คาบ</span>
-                      <span>งาน {legacySummary.tasks} ชิ้น</span>
-                      <span>การสอบ {legacySummary.exams} รายการ</span>
-                      <span>การเงิน {legacySummary.transactions} รายการ</span>
+                      <span>{uiText("ตารางเรียน")}{legacySummary.schedules} {uiText("คาบ")}</span>
+                      <span>{uiText("งาน")}{legacySummary.tasks} {uiText("ชิ้น")}</span>
+                      <span>{uiText("การสอบ")}{legacySummary.exams} {uiText("รายการ")}</span>
+                      <span>{uiText("การเงิน")}{legacySummary.transactions} {uiText("รายการ")}</span>
                     </div>
                   )}
 
@@ -253,8 +270,8 @@ export function AccountManagement() {
                     <div className="legacy-conflict-alert" role="status">
                       <AlertCircle aria-hidden="true" />
                       <div>
-                        <strong>บัญชีนี้มีข้อมูลอยู่แล้ว</strong>
-                        <p>เพื่อความปลอดภัยของข้อมูล บัญชีปัจจุบันจะไม่ถูกเขียนทับด้วยข้อมูลเก่า</p>
+                        <strong>{uiText("บัญชีนี้มีข้อมูลอยู่แล้ว")}</strong>
+                        <p>{uiText("เพื่อความปลอดภัยของข้อมูล บัญชีปัจจุบันจะไม่ถูกเขียนทับด้วยข้อมูลเก่า")}</p>
                       </div>
                     </div>
                   ) : (
@@ -265,14 +282,13 @@ export function AccountManagement() {
                         onClick={handleMigrate}
                       >
                         <RotateCcw aria-hidden="true" />
-                        ย้ายข้อมูลเข้าบัญชี
-                      </button>
+                        {uiText("ย้ายข้อมูลเข้าบัญชี")}</button>
                     </div>
                   )}
 
                   {actionError && (
                     <p className="form-error" role="alert">
-                      {actionError}
+                      {uiText(actionError)}
                     </p>
                   )}
                 </div>
@@ -286,7 +302,7 @@ export function AccountManagement() {
             <div className="account-actions-divider" />
             <div className="legacy-migrated-success" role="status" style={{ margin: "16px" }}>
               <CheckCircle2 aria-hidden="true" />
-              <span>ย้ายข้อมูลเข้าสู่บัญชีของคุณเรียบร้อยแล้ว</span>
+              <span>{uiText("ย้ายข้อมูลเข้าสู่บัญชีของคุณเรียบร้อยแล้ว")}</span>
             </div>
           </>
         )}

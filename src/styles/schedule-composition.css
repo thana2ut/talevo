@@ -619,3 +619,21 @@ html[data-theme="dark"] .schedule-event-card.schedule-custom {
  .schedule-timeline .free-time-copy { min-height: 64px; padding: 12px 14px; }
  .schedule-timeline .free-time-rail { min-height: 64px; }
 }
+
+html .schedule-date-strip button.selected:not(.today) {
+  color:var(--text-primary);
+  background:linear-gradient(145deg,color-mix(in srgb,var(--purple-500) 14%,var(--surface-elevated)),color-mix(in srgb,var(--purple-500) 8%,var(--surface-elevated)));
+  border:1px solid color-mix(in srgb,var(--purple-500) 14%,transparent);
+  box-shadow:0 5px 14px #7136df20,inset 0 1px 0 #ffffffb3;
+}
+html .schedule-date-strip button.selected:not(.today) span { color:var(--purple-700); font-weight:800; }
+html .schedule-date-strip button.selected:not(.today) strong { color:var(--text-primary); background:transparent; }
+html .schedule-date-strip button.today {
+  color:#fff; background:linear-gradient(145deg,#8c61ef 0%,#7545e3 58%,#6635d1 100%);
+  border:0;
+  box-shadow:0 5px 12px #6035b832,inset 0 1px 0 #ffffff58;
+}
+html .schedule-date-strip button.today span { color:#ffffffdf; font-weight:800; }
+html .schedule-date-strip button.today strong { color:#fff; background:transparent; }
+
+\n

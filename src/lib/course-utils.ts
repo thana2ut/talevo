@@ -36,13 +36,14 @@ export function getCourseById(schedules: ClassSchedule[], courseId?: string) {
   return courseId ? getCurrentTermCourses(schedules).find((course) => course.id === courseId) : undefined;
 }
 
-export function getCourseScheduleSummary(course: Pick<ScheduleCourse, "schedules">) {
-  const slots = course.schedules.slice(0, 2).map((schedule) => `${weekdayLabels[schedule.day]} ${schedule.startTime}${course.schedules.length === 1 ? `–${schedule.endTime} · ${schedule.room}` : ""}`);
+export function getCourseScheduleSummary(course: Pick<ScheduleCourse, "schedules">, language: "th" | "en" = "th") {
+  const days = language === "en" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : weekdayLabels;
+  const slots = course.schedules.slice(0, 2).map((schedule) => `${days[schedule.day]} ${schedule.startTime}${course.schedules.length === 1 ? `–${schedule.endTime} · ${schedule.room}` : ""}`);
   return `${slots.join(" · ")}${course.schedules.length > 2 ? ` · +${course.schedules.length - 2}` : ""}`;
 }
 
-export function getTaskCourseLabel(task: Pick<Task, "courseId">, schedules: ClassSchedule[]) {
+export function getTaskCourseLabel(task: Pick<Task, "courseId">, schedules: ClassSchedule[], language: "th" | "en" = "th") {
   const course = getCourseById(schedules, task.courseId);
   if (course) return course.name;
-  return task.courseId ? "วิชาถูกนำออกจากตารางเรียน" : "งานทั่วไป";
+  return language === "en" ? task.courseId ? "Course removed from timetable" : "General task" : task.courseId ? "วิชาถูกนำออกจากตารางเรียน" : "งานทั่วไป";
 }

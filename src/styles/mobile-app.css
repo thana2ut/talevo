@@ -40,7 +40,43 @@
   /* Leave exactly enough room for the floating bar plus breathing space. */
   html .app-main,
   html .app-main.app-main-ai {
-    padding-bottom: calc(var(--mobile-nav-bar) + var(--mobile-nav-gap) + 24px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--mobile-nav-bar) + var(--mobile-nav-gap) + 10px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Keep the voice AI label compact and consistent with the desktop purple badge. */
+@media (max-width: 1199px) {
+  html .quick-add-sheet .voice-quick-entry > div > strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    overflow: visible;
+    white-space: normal;
+  }
+
+  html .quick-add-sheet .voice-quick-entry > div > strong > em {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 21px;
+    margin: 0;
+    padding: 0 6px;
+    border: 1px solid #8654f5;
+    border-radius: 7px;
+    background: linear-gradient(140deg, #8957fa, #6836dc);
+    color: #fff;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  html[data-theme="dark"] .quick-add-sheet .voice-quick-entry > div > strong > em {
+    border-color: #b18aff;
+    background: linear-gradient(140deg, #7547df, #4c2a9b);
+    color: #fff;
   }
 }
 
@@ -106,7 +142,7 @@
 
   html .app-main,
   html .app-main.app-main-ai {
-    padding-bottom: calc(var(--mobile-nav-bar) + 24px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--mobile-nav-bar) + 14px + env(safe-area-inset-bottom));
   }
 }
 
@@ -309,7 +345,7 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
     ended roughly 210px above a bar that is 66px tall. The page holds the
     whole reservation now - the AI screen sizes itself to the viewport and
     needs the room inside its own box - and .app-main adds nothing further. */
- html .page { padding-inline:18px; padding-bottom:calc(var(--mobile-nav-bar) + 18px + env(safe-area-inset-bottom)); }
+ html .page { padding-inline:18px; padding-bottom:calc(var(--mobile-nav-bar) + 12px + env(safe-area-inset-bottom)); }
  html .app-main,
  html .app-main.app-main-ai { padding-bottom:0; }
  html .smart-today-header h1 { font-size:clamp(28px,8vw,38px); line-height:1.25; }
@@ -354,7 +390,13 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .schedule-heading .page-intro > p { font-size:15px; margin-top:6px; }
  html .academic-term-summary { display:flex; flex-wrap:wrap; gap:5px 9px; font-size:12px; line-height:1.6; margin-top:20px; }
  html .schedule-heading-actions { display:block; margin-top:18px; }
+ html .schedule-scope-trigger { display:flex; width:100%; min-height:44px; margin-bottom:9px; justify-content:space-between; border-radius:15px; padding:9px 13px; font-size:12px; }
+ html .schedule-scope-trigger span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ html .schedule-scope-trigger svg { flex:none; }
  html .schedule-heading-actions > :first-child { width:100%; min-height:48px; justify-content:center; border-radius:16px; }
+ html .schedule-heading-shortcuts { display:grid; grid-template-columns:minmax(0,1fr); gap:9px; margin-top:9px; }
+ html .schedule-heading-shortcuts > a { width:100%; min-width:0; min-height:48px; padding:9px 10px; border-radius:16px; gap:7px; font-size:12px; line-height:1.25; white-space:normal; text-align:center; }
+ html .schedule-heading-shortcuts > a svg { width:17px; height:17px; flex:none; }
  html .schedule-heading-actions .desktop-add-button { display:none; }
  html .schedule-view-switcher { width:100%; max-width:none; padding:4px; border-radius:20px; margin-bottom:16px; }
  html .schedule-view-switcher button { min-height:45px; font-size:18px; border-radius:16px; }
@@ -386,8 +428,10 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .month-days > button { min-height:62px; padding:8px 5px; }
  html .month-event-names { display:none; }
  html .month-date-number { font-size:14px; }
- html .mobile-bottom-nav { border-radius:26px 26px 0 0; background:rgba(255,255,255,.95); box-shadow:0 -5px 25px #7443d412; }
+ html .mobile-bottom-nav { border:1px solid rgba(255,255,255,.76); border-bottom:0; border-radius:26px 26px 0 0; background:linear-gradient(135deg,rgba(255,255,255,.74),rgba(248,243,255,.54)); box-shadow:0 -8px 32px rgba(92,59,149,.13),inset 0 1px 0 rgba(255,255,255,.88); backdrop-filter:blur(24px) saturate(165%); -webkit-backdrop-filter:blur(24px) saturate(165%); }
  html .mobile-bottom-nav .nav-link.active { border-radius:17px; background:#f0eaff; color:#6931f8; }
+ html[data-theme="dark"] .mobile-bottom-nav { border-color:rgba(209,177,255,.25); background:linear-gradient(135deg,rgba(42,31,62,.78),rgba(23,18,37,.68)); box-shadow:0 -8px 34px rgba(5,2,17,.32),inset 0 1px 0 rgba(231,207,255,.18); }
+ html[data-theme="dark"] .mobile-bottom-nav .nav-link.active { background:linear-gradient(135deg,rgba(135,91,209,.34),rgba(94,62,150,.28)); color:#dfc7ff; }
  html .quick-add-button { background:linear-gradient(135deg,#9569ff,#6224f6); border:4px solid #faf8ff; box-shadow:0 6px 24px #7545ed40; }
  html .sheet-backdrop { backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); background:#22184b55; }
  html .quick-add-sheet,html .more-navigation-sheet { padding:12px 20px calc(24px + env(safe-area-inset-bottom)); border-radius:30px 30px 0 0; background:linear-gradient(135deg,#fff,#f8f5ff); }
@@ -480,10 +524,12 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .schedule-page-วัน .page-intro h1 { max-width:70%; }
  html .schedule-heading .page-intro > p { font-size:clamp(12px,3.4vw,15px); }
  html .schedule-heading-actions > :first-child { border:1px solid #b69aff; background:var(--surface); font-weight:800; font-size:15px; min-height:49px; }
+ html .schedule-heading-actions > .schedule-scope-trigger { min-height:44px; margin-bottom:9px; border:1px solid var(--purple-200); background:var(--surface-elevated); font-size:12px; }
+ html .schedule-heading-shortcuts .secondary-button { border-color:var(--purple-200); background:var(--surface-elevated); box-shadow:var(--shadow-small); font-weight:750; }
  html .schedule-view-switcher { margin-top:18px; background:#eee7fa; }
- html .schedule-date-strip button.today { background:linear-gradient(135deg,#9874ff,#6223f4); color:white; border:0; box-shadow:0 6px 16px #8156e92b; }
+ html .schedule-date-strip button.today { background:linear-gradient(145deg,#8c61ef 0%,#7545e3 58%,#6635d1 100%); color:white; border:0; box-shadow:0 5px 12px #6035b832,inset 0 1px 0 #ffffff58; }
  html .schedule-date-strip button.today strong,html .schedule-date-strip button.today span { color:white; background:none; }
- html .schedule-date-strip button.selected:not(.today) { background:#eee7ff; border:0; box-shadow:none; }
+ html .schedule-date-strip button.selected:not(.today) { background:linear-gradient(145deg,#f0eaff,#e8ddff); border:1px solid #8c62e426; box-shadow:0 5px 14px #7136df20,inset 0 1px 0 #ffffff; }
  html .timeline-item { align-items:stretch; }
  html .schedule-timeline .timeline-item > time { padding-top:14px; font-weight:700; }
  html .timeline-line { position:relative; border-radius:9px; }
@@ -538,6 +584,43 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-premium-bubble table { display:block; max-width:100%; overflow-x:auto; }
  html .ai-premium-bubble pre { max-width:100%; overflow-x:auto; }
  html .ai-context-trigger { width:36px; height:40px; border-radius:13px; color:var(--text-secondary); }
+}
+
+@media (max-width: 699px) {
+  html .rescue-task-entry { display:flex; width:100%; max-width:100%; min-height:48px; margin:0 0 14px; padding:10px 16px; border-radius:16px; align-items:center; justify-content:center; gap:9px; font-size:13px; line-height:1.25; box-shadow:var(--shadow-small); }
+  html .rescue-task-entry svg { width:18px; height:18px; flex:none; }
+}
+
+@media (min-width: 700px) and (max-width: 1023px) {
+  html .schedule-heading-shortcuts { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px; }
+  html .schedule-heading-shortcuts > a { min-height:46px; }
+}
+
+/* Scope selection stays in the semester selector; remove the redundant pencil shortcut. */
+html .schedule-heading .academic-term-summary { display:none; }
+
+.academic-scope-sheet .scope-sheet-hint { margin:0 0 14px; color:var(--text-secondary); font-size:13px; line-height:1.65; }
+.academic-scope-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+.academic-scope-fields .field { min-width:0; }
+.academic-scope-fields .field > label,.academic-scope-fields .field-label { font-size:12px; }
+.schedule-scope-trigger { min-height:44px; max-width:min(100%,420px); display:inline-flex; align-items:center; gap:9px; }
+.schedule-scope-trigger span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media(max-width:599px) { .academic-scope-fields { grid-template-columns:1fr; gap:6px; } }
+@media(min-width:700px) { .schedule-heading-actions > .schedule-scope-trigger { align-self:flex-end; margin-bottom:10px; } }
+
+/* Portrait tablet: distribute the schedule controls across the available width. */
+@media (min-width: 700px) and (max-width: 1199px) and (orientation: portrait) {
+  html .app-main { padding-inline: clamp(20px, 3.5vw, 32px); }
+  html .schedule-page { width: 100%; max-width: 960px; margin-inline: auto; }
+  html .schedule-heading { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-bottom: 14px; }
+  html .schedule-heading-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 10px; width: 100%; }
+  html .schedule-heading-actions > .schedule-scope-trigger { grid-column: 1 / -1; width: 100%; max-width: none; min-height: 50px; margin: 0; }
+  html .schedule-heading-actions > .schedule-import-button { width: 100%; min-width: 0; min-height: 50px; padding-inline: 10px; white-space: normal; text-align: center; }
+  html .schedule-heading-shortcuts { grid-column: span 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; margin: 0; }
+  html .schedule-heading-shortcuts > a { width: 100%; min-width: 0; min-height: 50px; padding-inline: 10px; white-space: normal; text-align: center; }
+  html .schedule-day-controls { width: 100%; min-width: 0; margin-top: 12px; padding: 14px; }
+  html .schedule-date-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+  html .schedule-date-strip button { min-width: 0; padding-inline: 3px; }
 }
 
 /* Phone AI: the page is the viewport, the thread is the only thing that moves.
@@ -642,9 +725,297 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
     height: 48px;
     flex: none;
     border-radius: 16px;
-    background: var(--surface-elevated);
-    box-shadow: 0 10px 26px rgba(80, 55, 160, .1);
+    background: linear-gradient(145deg, rgba(255, 255, 255, .34), rgba(234, 220, 255, .13) 58%, rgba(255, 255, 255, .09));
+    border: 1px solid rgba(255, 255, 255, .52);
+    box-shadow: 0 8px 24px rgba(80, 55, 160, .08), inset 0 1px 0 rgba(255, 255, 255, .76), inset 0 -1px 0 rgba(255, 255, 255, .3);
+    backdrop-filter: blur(20px) saturate(165%);
+    -webkit-backdrop-filter: blur(20px) saturate(165%);
   }
 
   html .smart-today-header > .notification-bell svg { width: 21px; height: 21px; }
+}
+
+@media(max-width:699px) {
+  html .schedule-heading .page-intro::after,
+  html .exam-header::after { content:none; display:none; }
+}
+html[lang=en] .exam-legend::before { content:'Calendar colors'; }
+html[lang=en] .smart-today-page .study-hero::after { content:'Your day'; }
+
+/* Keep the floating AI shortcut beside the artwork on portrait tablets, clear
+   of the live schedule facts. Docked navigation only needs a small breathing
+   space below page content on phone and tablet screens. */
+@media (min-width: 700px) and (max-width: 1199px) and (orientation: portrait) {
+  html .smart-today-page .study-hero { min-width: 0; }
+  html .smart-today-page .study-hero-content,
+  html .smart-today-page .study-hero-summary { min-width: 0; }
+}
+@media (min-width: 700px) and (max-width: 1199px) {
+  html .smart-today-page {
+    min-height: 0;
+  }
+}
+@media (max-width: 1199px) {
+  html .app-main:not(.app-main-ai) { padding-bottom: calc(var(--mobile-nav-bar) + var(--mobile-nav-gap) + 10px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 699px) {
+  /* The app shell already reserves the dock's clearance. A second page-level
+     reserve doubled the blank area below content on every phone route. */
+  html .page { padding-bottom: 0; }
+}
+
+/* Keep touch scrolling while hiding browser and nested-container scrollbars on
+   phones and tablets, including the persistent right-edge iOS/WebKit track. */
+@media (max-width: 1199px) and (pointer: coarse) {
+  html:has(.today-page), body:has(.today-page), html .today-page * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html:has(.today-page)::-webkit-scrollbar, body:has(.today-page)::-webkit-scrollbar, html .today-page *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+/* Keep the five mobile tabs visually grouped instead of stretching across
+   the entire viewport. The glass bar remains full-width; only its controls
+   use a centered, device-sized track. */
+@media (max-width: 699px) {
+  html .mobile-bottom-nav {
+    grid-template-columns:
+      clamp(50px, 15vw, 62px)
+      clamp(50px, 15vw, 62px)
+      54px
+      clamp(50px, 15vw, 62px)
+      clamp(50px, 15vw, 62px);
+    column-gap: 6px;
+    justify-content: center;
+    padding-inline: 4px;
+  }
+}
+
+@media (min-width: 700px) and (max-width: 1199px) {
+  html .mobile-bottom-nav {
+    grid-template-columns:
+      clamp(64px, 7vw, 84px)
+      clamp(64px, 7vw, 84px)
+      64px
+      clamp(64px, 7vw, 84px)
+      clamp(64px, 7vw, 84px);
+    column-gap: 10px;
+    justify-content: center;
+  }
+}
+
+/* The personal-info and help cards in the More sheet need a clearer gap. */
+html .more-navigation-options {
+  gap: 16px;
+}
+
+.syllabus-history-action{display:flex;justify-content:flex-end;margin:0 0 16px}.syllabus-history-action button{gap:8px;min-height:44px}
+@media(max-width:1199px){html .ai-premium-page{height:auto;min-height:100dvh;overflow:visible}html .ai-premium-page>.ai-workbench{flex:none}html .ai-premium-page .ai-conversation-card{overflow:visible;flex:none}html .ai-premium-page .ai-conversation-scroll{flex:none;max-height:55dvh;overflow-y:auto;scrollbar-width:thin}html .ai-premium-page .ai-premium-composer{position:sticky;bottom:calc(var(--mobile-nav-bar) + env(safe-area-inset-bottom) + 8px);z-index:5}html .ai-premium-page .ai-context-trigger{min-width:44px}html .ai-premium-page .ai-context-trigger span{display:inline;font-size:12px}html .ai-premium-page .ai-conversation-scroll::-webkit-scrollbar{display:block;width:4px}}
+
+/* Touch AI: one document scroll keeps the complete conversation reachable. */
+@media(max-width:1199px){
+ html:has(.ai-premium-page),body:has(.ai-premium-page){height:auto;overflow-y:auto;touch-action:pan-y}
+ html .app-main.app-main-ai{height:auto;min-height:100dvh;overflow:visible}
+ html .ai-premium-page,html .ai-premium-page>.ai-workbench,html .ai-premium-page .ai-conversation-card{height:auto;max-height:none;overflow:visible}
+ html .ai-premium-page .ai-conversation-scroll{height:auto;max-height:none;overflow:visible;flex:none;overscroll-behavior:auto;touch-action:pan-y}
+ html .ai-premium-page .ai-premium-composer{position:sticky;bottom:calc(var(--mobile-nav-bar) + env(safe-area-inset-bottom) + 8px)}
+}
+
+/* Keep a real, bounded touch scrollport for the entire AI screen. */
+@media(max-width:1199px),(hover:none) and (pointer:coarse){
+ html .app-main.app-main-ai{height:100dvh;min-height:0;overflow:hidden}
+ html .app-main.app-main-ai>.ai-premium-page{display:block;height:100dvh;min-height:0;max-height:100dvh;overflow-x:hidden;overflow-y:scroll;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-bottom:calc(var(--mobile-nav-bar) + env(safe-area-inset-bottom) + 24px)}
+ html .ai-premium-page>.ai-workbench{display:block;height:auto;min-height:0;overflow:visible}
+ html .ai-premium-page .ai-conversation-card{display:block;height:auto;max-height:none;overflow:visible}
+ html .ai-premium-page .ai-conversation-scroll{display:block;height:auto;max-height:none;overflow:visible;touch-action:pan-y}
+ html .ai-premium-page .ai-premium-composer{position:sticky;bottom:0;margin-top:16px}
+}
+
+/* Tablet dock: use the available width with equal, comfortable tab spacing. */
+@media(min-width:700px) and (max-width:1199px),(min-width:1200px) and (hover:none) and (pointer:coarse){
+ html .app-shell .mobile-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr));column-gap:clamp(16px,3vw,36px);justify-content:stretch;padding-inline:clamp(24px,7vw,110px)}
+ html .app-shell .mobile-bottom-nav>.nav-link{width:100%;max-width:132px;justify-self:center;min-width:0}
+ html .app-shell .mobile-bottom-nav>.quick-add-button{justify-self:center}
+}
+
+/* iPad chat layout in portrait and landscape, including wide touch displays. */
+@media(min-width:700px) and (max-width:1199px),(min-width:1200px) and (hover:none) and (pointer:coarse){
+ html .app-main.app-main-ai>.ai-premium-page{padding-inline:clamp(22px,4vw,48px)}
+ html .ai-premium-page .ai-workbench{display:flex;flex-direction:column;gap:14px;width:100%;max-width:1000px;margin-inline:auto}
+ html .ai-premium-page .ai-mobile-summary{display:grid;width:100%}
+ html .ai-premium-page .ai-header-right,html .ai-premium-page .ai-desktop-sidebar{display:none}
+ html .ai-premium-page .ai-conversation-card{display:flex;flex-direction:column;width:100%;min-height:440px;height:auto;background:transparent;border:1px solid var(--ai-line);border-radius:24px}
+ html .ai-premium-page .ai-conversation-scroll{flex:1 0 auto;padding:22px;min-height:300px}
+ html .ai-premium-page .ai-premium-composer{width:100%;position:sticky;bottom:0;border-radius:20px;padding:12px;background:var(--surface)}
+ html .ai-premium-page .ai-context-trigger{display:inline-flex;width:auto;min-width:100px;gap:7px;padding-inline:12px}
+ html .ai-premium-page .ai-context-trigger span{display:inline;font-size:13px;font-weight:700}
+ html .ai-premium-page .ai-context-trigger b{position:static;border:0}
+ html .ai-premium-page .ai-empty-state{min-height:280px;padding:18px;max-width:720px;margin-inline:auto}
+ html .ai-premium-page .ai-empty-state h2{font-size:26px;line-height:1.5}
+ html .ai-premium-page .ai-premium-header{max-width:1000px;margin:0 auto 18px}
+ html .ai-premium-page .ai-composer-row textarea{font-size:16px}
+}
+
+@media(min-width:1200px) and (hover:hover) and (pointer:fine){html .ai-premium-page .ai-info-button,html .ai-premium-page .ai-phone-context-button{display:none}}
+
+/* Portrait tablet: fill the space above the dock with a scrollable chat. */
+@media(min-width:700px) and (max-width:1199px) and (orientation:portrait){
+ html .app-main.app-main-ai>.ai-premium-page{display:flex;flex-direction:column;box-sizing:border-box;height:100dvh;min-height:0;overflow:hidden;padding-bottom:calc(var(--mobile-nav-bar) + env(safe-area-inset-bottom) + 16px)}
+ html .ai-premium-page .ai-premium-header{flex:none;width:100%;margin-bottom:16px}
+ html .ai-premium-page>.ai-workbench{display:flex;flex:1 1 0;min-height:0;overflow:hidden;gap:14px}
+ html .ai-premium-page .ai-mobile-summary{flex:none}
+ html .ai-premium-page .ai-conversation-card{display:flex;flex:1 1 0;min-height:0;overflow:hidden}
+ html .ai-premium-page .ai-conversation-scroll{flex:1 1 0;min-height:0;height:auto;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:22px}
+ html .ai-premium-page .ai-premium-composer{position:static;flex:none;margin-top:0}
+ html .ai-premium-page .ai-empty-state{min-height:100%;display:flex;flex-direction:column;justify-content:center;box-sizing:border-box}
+}
+
+html .ai-context-sheet .ai-context-summary,html .ai-context-sheet .ai-panel-heading{display:none}
+html .ai-context-sheet .ai-context-options{display:grid;grid-template-columns:1fr;gap:10px;margin:8px 0 18px}
+html .ai-context-sheet .ai-context-item{min-height:72px;padding:12px;border-radius:18px}
+@media(min-width:700px){html .ai-context-sheet .ai-context-options{grid-template-columns:repeat(2,minmax(0,1fr))}html .ai-context-sheet .ai-context-item:last-child{grid-column:1/-1}}
+
+/* Phone dock: equal tab tracks and a centered action, with room for Thai labels. */
+@media(max-width:699px){
+ html .app-shell .mobile-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr));column-gap:4px;justify-content:stretch;align-items:start;padding-inline:10px;padding-top:8px}
+ html .app-shell .mobile-bottom-nav>.nav-link{width:100%;min-width:0;max-width:84px;justify-self:center;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:7px 2px;border-radius:19px;font-size:11px;line-height:1.3;white-space:nowrap}
+ html .app-shell .mobile-bottom-nav>.nav-link svg{width:24px;height:24px;flex:none}
+ html .app-shell .mobile-bottom-nav>.quick-add-button{justify-self:center;align-self:start;width:58px;height:58px;margin-top:-16px}
+}
+@media(max-width:359px){html .app-shell .mobile-bottom-nav{padding-inline:5px;column-gap:2px}html .app-shell .mobile-bottom-nav>.nav-link{font-size:10px}html .app-shell .mobile-bottom-nav>.quick-add-button{width:54px;height:54px;margin-top:-13px}}
+
+/* Align schedule actions in a consistent two-row grid on tablets and desktop. */
+@media(min-width:700px){
+ html .schedule-page .schedule-heading{display:grid;grid-template-columns:minmax(210px,.8fr) minmax(0,2fr);gap:24px;align-items:start}
+ html .schedule-page .schedule-heading-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:12px;width:100%;margin:0}
+ html .schedule-page .schedule-heading-actions>.schedule-scope-trigger{grid-column:1/-1;justify-content:center;width:100%;max-width:none;height:50px;min-height:50px;margin:0;align-self:stretch}
+ html .schedule-page .schedule-heading-shortcuts{display:contents}
+ html .schedule-page .schedule-heading-actions>.schedule-import-button,html .schedule-page .schedule-heading-shortcuts>a{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;min-width:0;min-height:50px;height:50px;margin:0;padding:8px 10px;border-radius:16px;font-size:12px;line-height:1.4;white-space:normal;text-align:center}
+ html .schedule-page .schedule-heading-actions svg{flex:none;width:18px;height:18px}
+ html .schedule-page .schedule-heading .page-intro p{max-width:none}
+}
+@media(min-width:700px) and (max-width:999px){html .schedule-page .schedule-heading{grid-template-columns:1fr;gap:16px}}
+
+/* Consistent phone lesson cards: two-line titles above unbroken times. */
+@media(max-width:699px){
+ html .schedule-page .schedule-event-card{display:flex;align-items:center;gap:12px;min-height:104px;padding:15px;text-align:left}
+ html .schedule-page .schedule-event-card>.subject-icon{flex:none;width:44px;height:44px}
+ html .schedule-page .schedule-event-card .schedule-event-copy{display:flex;flex:1 1 0;flex-direction:column;align-items:flex-start;min-width:0;gap:5px}
+ html .schedule-page .schedule-event-copy>strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;text-overflow:ellipsis;white-space:normal;overflow-wrap:anywhere;width:100%;font-size:14px;line-height:1.5;max-height:3em}
+ html .schedule-page .schedule-event-copy>small{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:12px;line-height:1.5;max-width:100%}
+ html .schedule-page .schedule-event-copy>small svg{flex:none;width:15px;height:15px}
+ html .schedule-page .schedule-event-arrow{flex:none;width:18px}
+}
+
+/* Task filter labels and counters form balanced, separate controls. */
+html .tasks-page .tabs{gap:8px;padding:6px;align-items:stretch}
+html .tasks-page .tabs button{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;min-height:48px;padding:10px 12px;border-radius:16px;line-height:1.4}
+html .tasks-page .tabs button span{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:24px;min-height:24px;margin:0;border-radius:50%;font-size:11px}
+html .tasks-heading{gap:16px}
+@media(max-width:699px){html .tasks-page .tabs{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:row;gap:6px}html .tasks-page .tabs button{padding:9px 5px;gap:6px;font-size:12px}html .tasks-page .tabs button span{min-width:21px;min-height:21px;font-size:10px}}
+
+/* Keep all four task filters in one horizontal row. */
+html .tasks-page .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-flow:row;gap:4px;overflow:visible}
+html .tasks-page .tabs button{min-width:0;white-space:nowrap;padding:9px 5px;gap:6px}
+@media(max-width:699px){html .tasks-page .tabs button{font-size:11px;gap:4px;padding-inline:3px}html .tasks-page .tabs button span{min-width:19px;min-height:19px;font-size:10px}}
+@media(max-width:359px){html .tasks-page .tabs button{font-size:10px;gap:3px}html .tasks-page .tabs button span{min-width:17px;min-height:17px}}
+
+/* Balance tablet and desktop schedule and task controls. */
+@media (min-width:700px) {
+  html .tasks-page .rescue-task-entry { display:flex; width:100%; max-width:none; box-sizing:border-box; min-height:52px; justify-content:center; align-items:center; gap:10px; margin:0 0 14px; padding:12px 18px; border-radius:16px; }
+  html .schedule-page .selected-date-agenda .schedule-event-card { display:flex; align-items:center; gap:14px; min-width:0; padding:14px 16px; }
+  html .schedule-page .selected-date-agenda .schedule-event-card > .subject-icon { flex:none; }
+  html .schedule-page .selected-date-agenda .schedule-event-copy { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:16px; flex:1; min-width:0; }
+  html .schedule-page .selected-date-agenda .schedule-event-copy > strong { min-width:0; white-space:normal; overflow-wrap:anywhere; line-height:1.45; text-align:left; }
+  html .schedule-page .selected-date-agenda .schedule-event-copy > small:first-of-type { display:flex; align-items:center; gap:6px; white-space:nowrap; line-height:1.4; }
+}
+@media (min-width:700px) and (max-width:1199px) and (orientation:portrait) {
+  html .app-main.app-main-ai { padding:0; height:100dvh; min-height:0; overflow:hidden; }
+  html .app-main.app-main-ai > .ai-premium-page { width:100%; max-height:100dvh; padding:calc(14px + env(safe-area-inset-top)) clamp(22px,4vw,48px) calc(var(--mobile-nav-bar,66px) + var(--mobile-nav-gap,10px) + env(safe-area-inset-bottom) + 20px); }
+  html .ai-premium-page > .ai-workbench { flex-direction:column; }
+  html .ai-premium-page .ai-conversation-card { flex-direction:column; }
+  html .ai-premium-page .ai-premium-composer { position:static; margin:0; padding:12px; box-sizing:border-box; }
+}
+
+/* Compact schedule summaries below the daily timeline on phones. */
+@media (max-width:699px) {
+ html .schedule-day-layout > .schedule-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:10px; width:100%; min-width:0; margin-top:4px; }
+ html .schedule-day-layout > .schedule-summary > .card { display:flex; flex-direction:column; gap:9px; min-width:0; height:100%; box-sizing:border-box; padding:15px!important; border:1px solid var(--border); border-radius:19px; background:var(--surface-elevated); box-shadow:0 8px 24px rgba(93,62,151,.08); }
+ html .schedule-summary .schedule-summary-icon { width:34px; height:34px; border-radius:11px; }
+ html .schedule-summary .schedule-summary-icon svg { width:18px; height:18px; }
+ html .schedule-summary h2, html .schedule-summary .week-summary h2 { margin:0; font-size:14px; line-height:1.45; font-weight:750; }
+ html .schedule-summary .card > div { display:grid; gap:8px; }
+ html .schedule-summary .card > div span { display:grid; gap:1px; color:var(--text-secondary); font-size:11px; line-height:1.45; }
+ html .schedule-summary .card > div strong { color:var(--text-primary); font-size:14px; line-height:1.45; overflow-wrap:anywhere; }
+ html .schedule-summary .week-summary p { margin:0; color:var(--text-primary); font-size:13px; line-height:1.55; }
+ html .schedule-summary .week-summary small { color:var(--text-secondary); font-size:11px; line-height:1.5; overflow-wrap:anywhere; }
+ html[data-theme="dark"] .schedule-day-layout > .schedule-summary > .card { background:var(--surface-elevated); border-color:var(--border); }
+}
+
+@media (min-width:700px) and (max-width:1199px) and (orientation:portrait) {
+ html .ai-premium-page .ai-conversation-card, html[data-theme="dark"] .ai-premium-page .ai-conversation-card { border:0; box-shadow:none; background:transparent; }
+}
+
+@media (max-width:699px) {
+ html .schedule-day-layout > .schedule-summary { grid-template-columns:minmax(0,1fr); gap:8px; }
+ html .schedule-day-layout > .schedule-summary > .card { height:auto; padding:13px 15px!important; gap:8px; }
+ html .schedule-summary > .card:first-child { display:grid; grid-template-columns:30px minmax(0,1fr); align-items:center; column-gap:9px; }
+ html .schedule-summary .schedule-summary-icon { width:30px; height:30px; border-radius:10px; }
+ html .schedule-summary > .card:first-child > div { grid-column:1/-1; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; }
+ html .schedule-summary .card > div span { display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 5px; font-size:11px; }
+ html .schedule-summary .card > div strong { font-size:13px; }
+ html .schedule-summary .week-summary { display:grid!important; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px 10px!important; }
+ html .schedule-summary .week-summary small { grid-column:1/-1; }
+}
+
+@media (max-width:699px) {
+ html .schedule-summary > .card:first-child > div > span:nth-child(n+3) { display:none; }
+ html .schedule-summary > .card:first-child > div { gap:8px; }
+ html .schedule-summary > .card:first-child > div > span { display:flex; align-items:baseline; gap:5px; min-width:0; padding:8px 10px; border-radius:12px; background:var(--surface-soft); }
+ html .schedule-summary > .card:first-child > div > span strong { font-size:14px; }
+}
+
+@media (max-width: 699px) {
+  html .timetable-current-time-line {
+    z-index: 4;
+  }
+
+  html .timetable-class-block.is-current {
+    z-index: 6;
+  }
+
+  html .timetable-class-block {
+    justify-content: flex-start;
+    padding: 8px 9px;
+  }
+
+  html .class-block-content {
+    justify-content: center;
+    gap: 4px;
+  }
+
+  html .class-block-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    max-height: 2.6em;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  html .class-block-meta {
+    max-width: 100%;
+  }
+
+  html .class-block-badge {
+    flex: none;
+  }
 }

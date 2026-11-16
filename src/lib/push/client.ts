@@ -172,26 +172,11 @@ export async function disablePushOnThisDevice() {
  * deleted because they are no longer in the plan.
  */
 export async function syncScheduledPush(client: SupabaseClient, userId: string, plan: ScheduledPush[]) {
-  const keys = plan.map((item) => item.eventKey);
-
-  const stale = client.from("talevo_scheduled_notifications").delete().eq("user_id", userId).is("sent_at", null);
-  await (keys.length ? stale.not("event_key", "in", `(${keys.map((key) => `"${key}"`).join(",")})`) : stale);
-
-  if (!plan.length) return;
-
-  // Updating rather than ignoring a conflict: a class renamed or moved keeps
-  // its event key, so ignoring the row would leave the old wording queued.
-  // sent_at is absent from the payload and survives the update, which is what
-  // keeps an already-delivered reminder from being sent a second time.
-  await client.from("talevo_scheduled_notifications").upsert(
-    plan.map((item) => ({
-      user_id: userId,
-      event_key: item.eventKey,
-      send_at: item.sendAt,
-      title: item.title,
-      body: item.body,
-      href: item.href,
-    })),
-    { onConflict: "user_id,event_key" },
-  );
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user || auth.user.id !== userId || plan.length > 500) return;
+  await fetch("/api/push/queue", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ rows: plan.map(item => ({ user_id: userId, event_key: item.eventKey, send_at: item.sendAt, title: item.title, body: item.body, href: item.href })) }),
+  }).catch(() => undefined);
 }

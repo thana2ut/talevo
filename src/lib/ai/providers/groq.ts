@@ -131,7 +131,7 @@ function createClient(): Groq {
   if (!apiKey) {
     throw new AIConfigurationError();
   }
-  return new Groq({ apiKey });
+  return new Groq({ apiKey, maxRetries: 0 });
 }
 
 export class GroqProviderAdapter implements AIProviderAdapter {
@@ -174,6 +174,7 @@ export class GroqProviderAdapter implements AIProviderAdapter {
           model,
           messages,
           temperature: 0.3,
+          max_completion_tokens: 4096,
         },
         {
           signal: abortController.signal,
@@ -182,7 +183,7 @@ export class GroqProviderAdapter implements AIProviderAdapter {
       );
 
       const content = response.choices[0]?.message?.content?.trim();
-      if (content && content.length > 0) {
+      if (content && content.length > 0 && content.length <= 32000) {
         return {
           text: content,
           model,

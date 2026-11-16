@@ -1,3 +1,4 @@
+import {summaryTime,summaryWeekday} from "@/lib/alerts/summary-schedule";
 import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
 import { addLocalDays, getClassOccurrences, MINUTE_MS } from "@/lib/alerts/date-time";
 import type { AppLanguage } from "@/lib/i18n";
@@ -68,9 +69,9 @@ function candidateInstants(input: PlanInput): Date[] {
 
   for (let day = 0; day <= HORIZON_DAYS; day += 1) {
     const date = addLocalDays(now, day);
-    if (preferences.morning0600) push(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 6, 0, 0, 0));
+    if (preferences.morning0600) { const [hour,minute]=summaryTime(preferences.dailySummaryTime,"06:00"); push(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0)); }
     if (preferences.daily0700) push(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 7, 0, 0, 0));
-    if (preferences.weeklyRadar) push(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 7, 5, 0, 0));
+    if (preferences.weeklyRadar && date.getDay()===summaryWeekday(preferences)) { const [hour,minute]=summaryTime(preferences.weeklySummaryTime,"06:00"); push(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0)); }
   }
 
   return [...new Map(instants.map((date) => [date.getTime(), date])).values()]

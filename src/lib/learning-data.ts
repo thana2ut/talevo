@@ -1,0 +1,8 @@
+import "server-only";
+import type {SupabaseClient} from "@supabase/supabase-js";
+import type {Task,ClassSchedule,Exam} from "@/types";
+export async function learningContext(db:SupabaseClient,userId:string){
+  const [tasks,subtasks,classes,exams]=await Promise.all([db.from("tasks").select("id,title,course_id,description,due_date,estimate,status,color,completed_at").eq("user_id",userId),db.from("task_subtasks").select("task_id,id,title,completed,position").eq("user_id",userId).order("position"),db.from("class_schedules").select("id,course_id,name,course_code,teacher,room,color,day,start_time,end_time").eq("user_id",userId),db.from("exams").select("id,course_id,title,type,start_at,end_at,completed_at").eq("user_id",userId)]);
+  if([tasks,subtasks,classes,exams].some(r=>r.error))throw new Error("อ่านข้อมูลงานและตารางเรียนไม่สำเร็จ");
+  return {tasks:tasks.data!.map(t=>({id:t.id,title:t.title,courseId:t.course_id,description:t.description,dueDate:t.due_date,dueLabel:"",estimate:t.estimate,status:t.status,color:t.color,completedAt:t.completed_at,subtasks:subtasks.data!.filter(s=>s.task_id===t.id).map(s=>({id:s.id,title:s.title,completed:s.completed}))})) as Task[],schedules:classes.data!.map(s=>({id:s.id,courseId:s.course_id,name:s.name,courseCode:s.course_code,teacher:s.teacher,room:s.room,color:s.color,day:s.day,startTime:s.start_time.slice(0,5),endTime:s.end_time.slice(0,5)})) as ClassSchedule[],exams:exams.data!.map(e=>({id:e.id,courseId:e.course_id,title:e.title,type:e.type,startAt:e.start_at,endAt:e.end_at,completedAt:e.completed_at,topics:[],createdAt:"",updatedAt:""})) as Exam[]};
+}

@@ -403,6 +403,14 @@ svg { width: 20px; height: 20px; stroke-width: 1.9; }
 .quick-options a:focus-visible, .quick-options button:focus-visible, .quick-add-button:focus-visible { outline: 3px solid var(--purple-400); outline-offset: 3px; }
 .quick-options > * > span { display: grid; width: 46px; height: 46px; flex: none; place-items: center; border-radius: 15px; background: var(--surface-elevated); color: var(--purple-600); }
 .quick-options > * > span svg { width: 21px; height: 21px; }
+/* Every create action shares the same add badge, including the voice button. */
+.quick-options-create > * > span { position: relative; }
+.quick-options-create > * > span::after { content: ""; position: absolute; right: -2px; bottom: -1px; width: 21px; height: 21px; border: 2px solid var(--surface-elevated); border-radius: 50%; background: linear-gradient(#fff,#fff) center/9px 2.5px no-repeat, linear-gradient(#fff,#fff) center/2.5px 9px no-repeat, var(--purple-600); pointer-events: none; }
+.quick-options-create > * > div { flex: 1; }
+.quick-options-create .quick-option-chevron { display: block; flex: none; margin-left: auto; width: 31px; height: 31px; padding: 6px; border-radius: 50%; background: var(--surface-elevated); color: var(--purple-600); }
+.quick-options-create strong, .more-navigation-options strong { white-space: normal; overflow-wrap: anywhere; }
+.drawer-nav-link > span { min-width: 0; overflow-wrap: anywhere; }
+
 /* The phone sheet shows this trailing chevron; the desktop list does not. */
 .quick-option-chevron { display: none; }
 .quick-options div { display: grid; min-width: 0; }
@@ -581,7 +589,7 @@ svg { width: 20px; height: 20px; stroke-width: 1.9; }
     max-width: 1240px;
     min-height: calc(100dvh - 80px);
     margin: 0 auto;
-    padding: 12px 32px 64px;
+    padding: 12px 32px 36px;
     box-sizing: border-box;
     min-width: 0;
   }
@@ -632,13 +640,6 @@ svg { width: 20px; height: 20px; stroke-width: 1.9; }
   .desktop-hamburger-button.is-active {
     background: var(--purple-100, #eee7ff);
     color: #5935de;
-  }
-
-  /* When drawer is open, hamburger smoothly fades out because drawer header has [X] */
-  .app-shell.desktop-drawer-open .desktop-hamburger-button {
-    opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
   }
 
   /* Drawer Header */
@@ -1038,9 +1039,11 @@ html[data-theme="dark"] .drawer-nav-link.active {
 html[data-theme="dark"] .quick-add-sheet,
 html[data-theme="dark"] .more-navigation-sheet,
 html[data-theme="dark"] .mobile-bottom-nav {
-  background: linear-gradient(135deg, #201e30, #191824);
+  background: linear-gradient(135deg, rgba(42,31,62,.78), rgba(23,18,37,.68));
   color: var(--text-primary);
-  border-color: var(--border);
+  border-color: rgba(209,177,255,.25);
+  backdrop-filter: blur(24px) saturate(165%);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
 }
 html[data-theme="dark"] .quick-options > a,
 html[data-theme="dark"] .phone-next-lesson-card,
@@ -1180,3 +1183,50 @@ html[data-theme="dark"] .selected-date-agenda .schedule-event-card { border-colo
   html[data-theme="dark"] .schedule-date-strip button.today strong { color: #fff; }
   html[data-theme="dark"] .schedule-day-layout .icon-tile { background: #342a4b; color: #cbb2ff; }
 }
+
+
+.summary-schedule-details{margin:0 18px 18px;min-width:0;border:1px solid var(--purple-200);border-radius:17px;background:var(--surface-soft);overflow:hidden}
+.summary-schedule-details>summary{display:grid;grid-template-columns:minmax(0,1fr) 22px;align-items:center;gap:4px 12px;padding:14px 16px;min-height:66px;cursor:pointer;list-style:none}
+.summary-schedule-details>summary::-webkit-details-marker{display:none}
+.summary-schedule-details>summary>span{grid-column:1;font-size:13px;font-weight:750;line-height:1.5;color:var(--purple-700)}
+.summary-schedule-details>summary>small{grid-column:1;font-size:11px;line-height:1.6;color:var(--text-secondary);overflow-wrap:anywhere}
+.summary-schedule-chevron{grid-column:2;grid-row:1/3;width:20px;height:20px;justify-self:end;color:var(--purple-600);transform:rotate(90deg);transition:transform 150ms ease}
+.summary-schedule-details[open] .summary-schedule-chevron{transform:rotate(-90deg)}
+.summary-schedule-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;border-top:1px solid var(--border)}
+.summary-schedule-fields label{display:grid;gap:8px;min-width:0;font-size:12px;color:var(--text-secondary)}
+.summary-schedule-fields .input{box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:10px 12px;border-radius:12px;font-size:16px;color:var(--text-primary);background:var(--surface-elevated);color-scheme:light}
+.summary-schedule-fields>small{grid-column:1/-1;font-size:10px;color:var(--text-muted)}
+.summary-schedule-details>summary:focus-visible{outline:3px solid var(--purple-400);outline-offset:-3px}
+html[data-theme=dark] .summary-schedule-fields .input{color-scheme:dark}
+@media(max-width:599px){.summary-schedule-details{margin:0 14px 16px}.summary-schedule-details>summary{padding:12px 14px;gap:3px 10px}.summary-schedule-fields{grid-template-columns:minmax(0,1fr);gap:11px;padding:14px}.summary-schedule-fields label{grid-template-columns:minmax(0,1fr) minmax(130px,48%);align-items:center;gap:12px;font-size:12px}.summary-schedule-fields .input{min-height:44px;padding:9px 10px}}
+@media(prefers-reduced-motion:reduce){.summary-schedule-chevron{transition:none}}
+
+/* Touch movement does not mark a destination as the current page. */
+html .sheet-backdrop .quick-options{--quick-card-bg:linear-gradient(120deg,#f4efff,#f8f5ff);--quick-card-border:#fff;--quick-card-selected:var(--purple-100)}
+html[data-theme=dark] .sheet-backdrop .quick-options{--quick-card-bg:linear-gradient(125deg,#29243d,#211f30);--quick-card-border:var(--border);--quick-card-selected:#393050}
+html .sheet-backdrop .quick-options>:is(a,button),html .sheet-backdrop .quick-options>:is(a,button):is(:hover,:active,:focus){background:var(--quick-card-bg);border:1px solid var(--quick-card-border);transform:none}
+html .sheet-backdrop .quick-options>a[aria-current=page],html .sheet-backdrop .quick-options>a[aria-current=page]:is(:hover,:active,:focus){background:var(--quick-card-selected);border-color:var(--purple-300)}
+html .quick-add-sheet .quick-options.quick-options-create>:is(a,button){min-height:86px;padding:14px;border-radius:20px;box-shadow:0 9px 22px #8454e511}
+html .quick-add-sheet .quick-options.quick-options-create>:is(a,button)>span{width:58px;height:58px;border-radius:17px;background:linear-gradient(135deg,#f0e8ff,#e4d8ff)}
+html[data-theme=dark] .quick-add-sheet .quick-options.quick-options-create>:is(a,button)>span{background:#393050}
+html .quick-add-sheet .quick-options.quick-options-create .quick-option-chevron{width:31px;height:31px;padding:6px;border-radius:50%;background:var(--surface-elevated);color:var(--purple-600)}
+
+.notification-bell .notification-unread-badge{position:absolute;top:-5px;right:-5px;display:grid;place-items:center;box-sizing:border-box;min-width:20px;height:20px;padding:0 4px;border:2px solid var(--surface-elevated);border-radius:999px;background:#e73750;color:#fff;font-size:10px;font-weight:800;line-height:1;box-shadow:0 2px 5px #e7375024;pointer-events:none}
+html .account-management-card .account-action-row{grid-template-columns:44px minmax(0,1fr) 144px;gap:12px;align-items:center;padding:18px 16px}html .account-management-card .account-action-row>button{display:flex;align-items:center;justify-content:center;justify-self:end;width:144px;min-height:44px;padding:10px 14px;margin:0;border:1px solid var(--purple-200);border-radius:14px;background:var(--surface-soft);color:var(--purple-700);font:inherit;font-size:13px;font-weight:750;line-height:1.4;cursor:pointer}html .account-management-card .account-delete-row>button{border-color:color-mix(in srgb,var(--danger) 25%,var(--border));background:color-mix(in srgb,var(--danger) 6%,var(--surface-elevated));color:var(--danger)}@media(max-width:599px){html .account-management-card .account-action-row{grid-template-columns:40px minmax(0,1fr);gap:10px 12px;padding:16px}html .account-management-card .account-action-row>button{grid-column:1/-1;justify-self:stretch;width:100%;min-height:44px;margin-top:3px}html .account-management-card .account-action-row>span:first-child{width:40px;height:40px;border-radius:13px}html .account-management-card .account-action-row>span:nth-child(2){align-self:center}html .account-management-card .account-action-row strong{font-size:14px}html .account-management-card .account-action-row small{font-size:12px;line-height:1.65}}
+
+/* Keep the app viewport fixed horizontally while retaining vertical scrolling. */
+html, body { max-width: 100%; overflow-x: clip; overscroll-behavior-x: none; touch-action: pan-x pan-y; }
+.app-shell, .app-workspace, .app-main { min-width: 0; max-width: 100%; }
+button, a, input, textarea, select, summary { touch-action: pan-x pan-y; }
+a, button, [role="button"], [role="link"], img { -webkit-touch-callout: none; }
+img { -webkit-user-drag: none; }
+@media (any-pointer: coarse) {
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]), textarea, select { font-size: max(16px, 1em); }
+}
+
+@media (max-width: 1199px) {
+  .quick-add-sheet .quick-options-create > .voice-quick-entry { display: none; }
+}
+
+.rescue-home-entry{display:flex;width:100%;margin:0 0 14px;justify-content:center;gap:8px}.desktop-rescue-entry{margin:14px 0}
+@media(max-width:699px){.desktop-rescue-entry{display:none!important}}

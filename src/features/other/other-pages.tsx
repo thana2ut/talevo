@@ -1,124 +1,30 @@
 "use client";
 
-import { Moon, Bell, CalendarDays, Check, CheckCheck, CheckCircle2, ChevronRight, Clock3, Languages, Sparkles, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Moon, Bell, CalendarDays, Check, CheckCircle2, ChevronRight, Clock3, Languages } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { BottomSheet, Card, PageHeader, Select } from "@/components/ui";
-import Link from "next/link";
-import { NotificationCard, NotificationIcon } from "@/components/domain";
+
+import { DeveloperSupport } from "@/components/developer-support";
 import { AccountManagement } from "@/components/account-actions";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { languageLabels } from "@/lib/i18n";
-import { formatNotificationTime, getNotificationTone, getUnreadNotificationCount, groupNotifications, type NotificationGroupKey } from "@/lib/alerts/notification-utils";
-import type { AppNotification, NotificationPreferences } from "@/types";
+import type { NotificationPreferences } from "@/types";
+import { useUiText } from "@/providers/ui-language";
 
-export function NotificationsPage() {
-  const { notifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteReadNotifications } = useAppState();
-  const { language, t } = useLanguage();
-  const [deleteReadDialogOpen, setDeleteReadDialogOpen] = useState(false);
-  const [openedNotification, setOpenedNotification] = useState<AppNotification | null>(null);
-  const [notice, setNotice] = useState("");
-  const unread = getUnreadNotificationCount(notifications);
-  const readCount = notifications.length - unread;
-  const groups = useMemo(() => groupNotifications(notifications, new Date()), [notifications]);
-  const groupOrder: NotificationGroupKey[] = ["important", "today", "thisWeek", "previous"];
-  const unreadBadge = language === "th" ? `${unread > 99 ? "99+" : unread} ยังไม่อ่าน` : `${unread > 99 ? "99+" : unread} unread`;
 
-  useEffect(() => {
-    if (!notice) return;
-    const timer = window.setTimeout(() => setNotice(""), 3200);
-    return () => window.clearTimeout(timer);
-  }, [notice]);
-
-  const openNotification = (item: AppNotification) => {
-    markNotificationRead(item.id);
-    setOpenedNotification(item);
-  };
-  const handleDeleteNotification = (id: string) => {
-    deleteNotification(id);
-    setNotice(t("notifications.deleted"));
-  };
-  const handleMarkAllRead = () => {
-    if (!unread) return;
-    markAllNotificationsRead();
-    setNotice(t("notifications.markedAllRead"));
-  };
-  const handleDeleteRead = () => {
-    deleteReadNotifications();
-    setDeleteReadDialogOpen(false);
-    setNotice(t("notifications.deletedRead"));
-  };
-
-  return <div className="page notifications-page">
-    <PageHeader title={t("notifications.title")} backHref="/today" />
-    {notifications.length ? (
-      <>
-        <section className="notification-summary-card" aria-labelledby="notification-summary-title">
-          <span className="notification-summary-icon" aria-hidden="true"><Bell /></span>
-          <div className="notification-summary-copy">
-            <div><h2 id="notification-summary-title">{t("notifications.centerTitle")}</h2>{unread > 0 && <span className="notification-unread-badge">{unreadBadge}</span>}</div>
-            <p>{unread > 0 ? t("notifications.unreadSummary").replace("{count}", String(unread)) : t("notifications.allCaughtUp")}</p>
-          </div>
-          <div className="notification-summary-actions" aria-label={t("notifications.actionsLabel")}>
-            <button className="secondary-button notification-mark-read-button" type="button" onClick={handleMarkAllRead} disabled={unread === 0}><CheckCheck aria-hidden="true" />{t("notifications.markAllRead")}</button>
-            {readCount > 0 && <button className="notification-delete-read-button" type="button" onClick={() => setDeleteReadDialogOpen(true)}><Trash2 aria-hidden="true" />{t("notifications.deleteRead")}</button>}
-          </div>
-        </section>
-        {notice && <p className="notification-action-notice" role="status">{notice}</p>}
-        <div className="notification-groups">
-          {groupOrder.map((group) => groups[group].length > 0 && (
-            <section className="notification-group" key={group} aria-labelledby={`notification-group-${group}`}>
-              <h2 id={`notification-group-${group}`}>{t(`notifications.groups.${group}`)}</h2>
-              <div className="notification-list">
-                {groups[group].map((item) => (
-                  <NotificationCard key={item.id} item={item} onClick={() => markNotificationRead(item.id)} onOpen={() => openNotification(item)} onDelete={item.readAt ? () => handleDeleteNotification(item.id) : undefined} deleteLabel={t("notifications.deleteOne")} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      </>
-    ) : (
-      <Card className="notification-empty-unified-card">
-        <div className="notification-empty-card-header">
-          <span className="notification-summary-icon" aria-hidden="true"><Bell /></span>
-          <div className="notification-summary-copy">
-            <h2>{t("notifications.centerTitle")}</h2>
-            <p>{language === "th" ? "อัปเดตสิ่งสำคัญจาก TALEVO" : "Important updates from TALEVO"}</p>
-          </div>
-        </div>
-        <div className="notification-empty-card-divider" />
-        <div className="notification-empty-card-body">
-          <span className="notification-empty-check-badge" aria-hidden="true">
-            <CheckCircle2 size={36} />
-          </span>
-          <h2>{t("notifications.emptyTitle")}</h2>
-          <p>{language === "th" ? "TALEVO จะแจ้งเตือนจากงานและตารางเรียนของคุณเมื่อมีสิ่งที่ต้องรู้" : "TALEVO will alert you from your tasks and class schedule when there is something to know."}</p>
-        </div>
-      </Card>
-    )}
-    <BottomSheet open={Boolean(openedNotification)} title={t("notifications.detailTitle")} onClose={() => setOpenedNotification(null)} closeLabel={t("common.close")} className="notification-detail-sheet">
-      {openedNotification && <div className="notification-detail">
-        <span className={`notification-detail-icon notification-${getNotificationTone(openedNotification)}`}><NotificationIcon type={openedNotification.type} /></span>
-        <h3>{openedNotification.title}</h3>
-        <p>{openedNotification.message}</p>
-        <small>{formatNotificationTime(openedNotification.createdAt, language)}</small>
-        <div className="notification-detail-actions">
-          {openedNotification.href && <Link className="primary-button" href={openedNotification.href} onClick={() => setOpenedNotification(null)}>{t("notifications.openRelated")}</Link>}
-          <button className="secondary-button" type="button" onClick={() => setOpenedNotification(null)}>{t("common.close")}</button>
-        </div>
-      </div>}
-    </BottomSheet>
-    <BottomSheet open={deleteReadDialogOpen} title={t("notifications.deleteReadTitle")} onClose={() => setDeleteReadDialogOpen(false)} closeLabel={t("common.close")} className="notification-delete-dialog"><p>{t("notifications.deleteReadConfirm")}</p><div className="notification-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDeleteReadDialogOpen(false)}>{t("common.cancel")}</button><button className="notification-delete-confirm-button" type="button" onClick={handleDeleteRead}>{t("notifications.deleteRead")}</button></div></BottomSheet>
-  </div>;
-}
+export { NotificationsPage } from "@/features/notifications/notifications-page";
 
 function SettingRow({ icon, title, description, children }: { icon: ReactNode; title: string; description?: string; children: ReactNode }) {
-  return <div className="setting-row"><span className="setting-icon">{icon}</span><div><strong>{title}</strong>{description && <small>{description}</small>}</div>{children}</div>;
+  const uiText = useUiText();
+
+  return <div className="setting-row"><span className="setting-icon">{icon}</span><div><strong>{uiText(title)}</strong>{description && <small>{uiText(description)}</small>}</div>{children}</div>;
 }
 
 function Toggle({ checked, onChange, label, disabled = false }: { checked: boolean; onChange: (value: boolean) => void; label: string; disabled?: boolean }) {
-  return <button type="button" role="switch" aria-checked={checked} aria-label={label} className={`toggle ${checked ? "on" : ""}`} onClick={() => onChange(!checked)} disabled={disabled}><span /></button>;
+  const uiText = useUiText();
+
+  return <button type="button" role="switch" aria-checked={checked} aria-label={uiText(label)} className={`toggle ${checked ? "on" : ""}`} onClick={() => onChange(!checked)} disabled={disabled}><span /></button>;
 }
 
 /* One switch per heading. The per-alert rows underneath said the same thing in
@@ -126,12 +32,12 @@ function Toggle({ checked, onChange, label, disabled = false }: { checked: boole
    so each heading now writes every key it owns. */
 const NOTIFICATION_GROUPS = [
   { titleKey: "settings.alertTasks", keys: ["task24h", "task12h", "deadlineRisk"] },
-  { titleKey: "settings.alertDaily", keys: ["morning0600", "daily0700"] },
   { titleKey: "settings.alertClasses", keys: ["class30m", "classEnd10m"] },
-  { titleKey: "settings.alertWeekly", keys: ["weeklyRadar"] },
 ] as const satisfies ReadonlyArray<{ titleKey: string; keys: ReadonlyArray<keyof NotificationPreferences> }>;
 
 export function SettingsPage() {
+  const uiText = useUiText();
+
   const [darkMode, setDarkMode] = useState(false);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setDarkMode(document.documentElement.dataset.theme === "dark"));
@@ -151,19 +57,21 @@ export function SettingsPage() {
   const languageRowLabel = language === "th" ? `ภาษา ภาษาปัจจุบัน ${languageLabels[language]}` : `Language Current language ${languageLabels[language]}`;
   const preferences = settings.notificationPreferences;
   const disabled = !preferences.enabled;
-  const groupIcons = [<CheckCircle2 key="tasks" />, <Clock3 key="daily" />, <CalendarDays key="classes" />, <Sparkles key="weekly" />];
+  const groupIcons = [<CheckCircle2 key="tasks" />, <CalendarDays key="classes" />];
   // On when any alert in the group is on, so a mix inherited from the old
   // per-alert rows reads as on rather than silently off.
   const isGroupOn = (keys: ReadonlyArray<keyof NotificationPreferences>) => keys.some((key) => preferences[key]);
   const setGroup = (keys: ReadonlyArray<keyof NotificationPreferences>, value: boolean) =>
     updateNotificationPreferences(Object.fromEntries(keys.map((key) => [key, value])));
   return <div className="page settings-page"><PageHeader title={t("settings.title")} backHref="/profile" />
-    <section><div className="section-header"><h2>{t("settings.general")}</h2></div><Card className="settings-card"><button className="setting-row language-setting-row" type="button" onClick={() => setLanguagePickerOpen(true)} aria-label={languageRowLabel}><span className="setting-icon"><Languages /></span><span className="language-setting-copy"><strong>{t("settings.language")}</strong><small>{t("settings.languageDescription")}</small></span><span className="language-setting-trailing"><strong className="setting-value language-setting-value">{languageLabels[language]}</strong><ChevronRight className="setting-chevron" aria-hidden="true" /></span></button><SettingRow icon={<Moon />} title="โหมดมืด" description="ปรับสีหน้าจอให้อ่านสบายในที่แสงน้อย"><Toggle label="โหมดมืด" checked={darkMode} onChange={changeDarkMode} /></SettingRow><SettingRow icon={<Clock3 />} title={t("settings.timeZone")}><strong className="setting-value">Asia/Bangkok</strong></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.dateFormat")}><Select aria-label={t("settings.dateFormat")} value={settings.dateFormat} onChange={(event) => updateSettings({dateFormat:event.target.value as typeof settings.dateFormat})}><option value="วัน/เดือน/ปี">{language === "th" ? "วัน/เดือน/ปี" : "Day / Month / Year"}</option><option value="เดือน/วัน/ปี">{language === "th" ? "เดือน/วัน/ปี" : "Month / Day / Year"}</option></Select></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.yearDisplay")}><Select aria-label={t("settings.yearDisplay")} value={settings.yearSystem} onChange={(event) => updateSettings({yearSystem:event.target.value as typeof settings.yearSystem})}><option>พ.ศ.</option><option>ค.ศ.</option></Select></SettingRow></Card></section>
+    <section><div className="section-header"><h2>{t("settings.general")}</h2></div><Card className="settings-card"><button className="setting-row language-setting-row" type="button" onClick={() => setLanguagePickerOpen(true)} aria-label={languageRowLabel}><span className="setting-icon"><Languages /></span><span className="language-setting-copy"><strong>{t("settings.language")}</strong><small>{t("settings.languageDescription")}</small></span><span className="language-setting-trailing"><strong className="setting-value language-setting-value">{uiText(languageLabels[language])}</strong><ChevronRight className="setting-chevron" aria-hidden="true" /></span></button><SettingRow icon={<Moon />} title={uiText("โหมดมืด")} description={uiText("ปรับสีหน้าจอให้อ่านสบายในที่แสงน้อย")}><Toggle label={uiText("โหมดมืด")} checked={darkMode} onChange={changeDarkMode} /></SettingRow><SettingRow icon={<Clock3 />} title={t("settings.timeZone")}><strong className="setting-value">Asia/Bangkok</strong></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.dateFormat")}><Select aria-label={t("settings.dateFormat")} value={settings.dateFormat} onChange={(event) => updateSettings({dateFormat:event.target.value as typeof settings.dateFormat})}><option value="วัน/เดือน/ปี">{language === "th" ? uiText("วัน/เดือน/ปี") : "Day / Month / Year"}</option><option value="เดือน/วัน/ปี">{language === "th" ? uiText("เดือน/วัน/ปี") : "Month / Day / Year"}</option></Select></SettingRow><SettingRow icon={<CalendarDays />} title={t("settings.yearDisplay")}><Select aria-label={t("settings.yearDisplay")} value={settings.yearSystem} onChange={(event) => updateSettings({yearSystem:event.target.value as typeof settings.yearSystem})}><option>{uiText("พ.ศ.")}</option><option>{uiText("ค.ศ.")}</option></Select></SettingRow></Card></section>
     <section><div className="section-header"><h2>{t("settings.notifications")}</h2></div><Card className="settings-card notification-settings">
       <SettingRow icon={<Bell />} title={t("settings.smartAlerts")}><Toggle label={t("settings.smartAlerts")} checked={preferences.enabled} onChange={(value) => updateNotificationPreferences({ enabled: value })} /></SettingRow>
       {NOTIFICATION_GROUPS.map((group, index) => <div className={`setting-row notification-preference-row ${disabled ? "is-disabled" : ""}`} key={group.titleKey}><span className="setting-icon">{groupIcons[index]}</span><strong>{t(group.titleKey)}</strong><Toggle label={t(group.titleKey)} checked={isGroupOn(group.keys)} disabled={disabled} onChange={(value) => setGroup(group.keys, value)} /></div>)}
+      <SettingRow icon={<Clock3 />} title={uiText("สรุปตามเวลา")} description={uiText("รายวันและรายสัปดาห์")}><Toggle label={uiText("สรุปตามเวลา")} checked={preferences.morning0600||preferences.daily0700||preferences.weeklyRadar} disabled={disabled} onChange={value=>updateNotificationPreferences({morning0600:value,daily0700:false,weeklyRadar:value})}/></SettingRow>
+      {(preferences.morning0600||preferences.daily0700||preferences.weeklyRadar)&&<details className="summary-schedule-details"><summary><span>{uiText("ตั้งค่าวันและเวลา")}</span><small>{uiText("ทุกวัน")}{preferences.dailySummaryTime??"06:00"} {uiText("· ทุกวัน")}{[uiText("อาทิตย์"),uiText("จันทร์"),uiText("อังคาร"),uiText("พุธ"),uiText("พฤหัสบดี"),uiText("ศุกร์"),uiText("เสาร์")][preferences.weeklySummaryDay??6]} {preferences.weeklySummaryTime??"06:00"}</small><ChevronRight className="summary-schedule-chevron" aria-hidden="true"/></summary><div className="summary-schedule-fields"><label>{uiText("สรุปรายวัน")}<input className="input" type="time" disabled={disabled} value={preferences.dailySummaryTime??"06:00"} onChange={event=>{if(event.target.value)updateNotificationPreferences({dailySummaryTime:event.target.value,morning0600:true,daily0700:false});}}/></label><label>{uiText("สรุปรายสัปดาห์")}<Select disabled={disabled} value={preferences.weeklySummaryDay??6} onChange={event=>updateNotificationPreferences({weeklySummaryDay:Number(event.target.value)})}>{[uiText("อาทิตย์"),uiText("จันทร์"),uiText("อังคาร"),uiText("พุธ"),uiText("พฤหัสบดี"),uiText("ศุกร์"),uiText("เสาร์")].map((day,index)=><option key={uiText(day)} value={index}>{uiText("ทุกวัน")}{uiText(day)}</option>)}</Select></label><label>{uiText("เวลารายสัปดาห์")}<input className="input" type="time" disabled={disabled} value={preferences.weeklySummaryTime??"06:00"} onChange={event=>{if(event.target.value)updateNotificationPreferences({weeklySummaryTime:event.target.value});}}/></label><small>{uiText("เวลาไทย · Asia/Bangkok")}</small></div></details>}
       <div className="setting-row notification-preference-row device-notification-row"><span className="setting-icon"><Bell /></span><strong>{t("settings.browserNotifications")}</strong><Toggle label={t("settings.browserNotifications")} checked={deviceNotificationsEnabled} disabled={browserNotificationPermission === "unsupported" || browserNotificationTestStatus === "sending"} onChange={(value) => void setBrowserNotificationsEnabled(value)} /></div>
-      <p className={`notification-permission permission-${browserNotificationPermission} ${pushRegistration && !pushRegistration.ok ? "is-warning" : ""}`} role="status">{browserNotificationTestStatus === "sending" ? t("settings.notificationTestSending") : browserNotificationPermission === "unsupported" ? t("settings.permissionUnsupported") : browserNotificationPermission === "denied" ? t("settings.permissionDenied") : !deviceNotificationsEnabled ? t("settings.permissionDefault") : pushRegistration && !pushRegistration.ok ? t(`settings.push_${pushRegistration.reason}`) : pushRegistration?.ok ? t("settings.pushReady") : t("settings.deviceNotificationsOn")}</p>
+      <p className={`notification-permission ${pushRegistration?.ok && deviceNotificationsEnabled ? "is-ready" : "is-not-ready"}`} role="status">{browserNotificationTestStatus === "sending" ? t("settings.notificationTestSending") : pushRegistration?.ok && deviceNotificationsEnabled ? uiText("พร้อมแล้ว") : uiText("ยังไม่พร้อม")}</p>
     </Card></section>
-    <AccountManagement /><BottomSheet className="language-selector-sheet" open={languagePickerOpen} title={t("settings.chooseLanguage")} onClose={() => setLanguagePickerOpen(false)}><div className="language-selector-intro">{t("settings.chooseLanguageDescription")}</div><div className="language-options" role="radiogroup" aria-label={t("settings.chooseLanguage")}>{(["th", "en"] as const).map((option) => <button type="button" role="radio" aria-checked={language === option} className={language === option ? "selected" : ""} key={option} onClick={() => { setLanguage(option); setLanguagePickerOpen(false); }}><span><strong>{languageLabels[option]}</strong><small>{option === "th" ? "Thai" : "English"}</small></span>{language === option && <Check className="language-option-check" aria-hidden="true" />}</button>)}</div></BottomSheet></div>;
+    <AccountManagement /><DeveloperSupport /><BottomSheet className="language-selector-sheet" open={languagePickerOpen} title={t("settings.chooseLanguage")} onClose={() => setLanguagePickerOpen(false)}><div className="language-selector-intro">{t("settings.chooseLanguageDescription")}</div><div className="language-options" role="radiogroup" aria-label={t("settings.chooseLanguage")}>{(["th", "en"] as const).map((option) => <button type="button" role="radio" aria-checked={language === option} className={language === option ? "selected" : ""} key={option} onClick={() => { setLanguage(option); setLanguagePickerOpen(false); }}><span><strong>{uiText(languageLabels[option])}</strong><small>{option === "th" ? "Thai" : "English"}</small></span>{language === option && <Check className="language-option-check" aria-hidden="true" />}</button>)}</div></BottomSheet></div>;
 }

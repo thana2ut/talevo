@@ -211,7 +211,7 @@ export class GeminiProviderAdapter implements AIProviderAdapter {
         });
 
         const text = response.text?.trim();
-        if (text) {
+        if (text && text.length <= 32000) {
           return {
             text,
             model,

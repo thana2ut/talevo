@@ -1,3 +1,4 @@
+import { secureApi } from "@/lib/security/api-guard";
 import { NextResponse } from "next/server";
 import {
   getActiveAIProviderLabel,
@@ -9,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+async function handlerGET() {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
@@ -69,3 +70,5 @@ export async function GET() {
     });
   }
 }
+
+export const GET = secureApi(handlerGET, "/api/ai/status", "GET");

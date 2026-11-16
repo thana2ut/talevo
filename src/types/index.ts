@@ -39,6 +39,9 @@ export interface ClassSchedule {
   note?: string;
   section?: string;
   credits?: number;
+  academicLevel?: string;
+  academicTerm?: string;
+  academicYear?: string;
 }
 
 export type TaskStatus = "todo" | "doing" | "completed";
@@ -145,6 +148,9 @@ export interface NotificationPreferences {
   exam1d: boolean;
   examMorning: boolean;
   weeklyRadar: boolean;
+  dailySummaryTime?: string;
+  weeklySummaryTime?: string;
+  weeklySummaryDay?: number;
 }
 
 export interface ChatMessage {
@@ -191,6 +197,9 @@ export interface NewClassInput {
   note: string;
   section?: string;
   credits?: number;
+  academicLevel?: string;
+  academicTerm?: string;
+  academicYear?: string;
 }
 
 export type FinanceTransactionType = "income" | "expense" | "saving";

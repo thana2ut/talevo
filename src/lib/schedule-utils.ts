@@ -139,9 +139,10 @@ export function layoutHorizontalDay(events: ClassSchedule[]): DayRowLayoutItem[]
   });
 }
 
-export function formatScheduleDuration(minutes: number) {
+export function formatScheduleDuration(minutes: number, language: "th" | "en" = "th") {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
+  if (language === "en") return [hours ? `${hours} hr` : "", remainingMinutes ? `${remainingMinutes} min` : ""].filter(Boolean).join(" ") || "0 min";
   return `${hours ? `${hours} ชม.` : ""}${hours && remainingMinutes ? " " : ""}${remainingMinutes ? `${remainingMinutes} นาที` : ""}` || "0 นาที";
 }
 

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useUiText } from "@/providers/ui-language";
+
 
 type VerificationCodeInputProps = {
   length: number;
@@ -27,6 +29,8 @@ export function VerificationCodeInput({
   label,
   invalid,
 }: VerificationCodeInputProps) {
+  const uiText = useUiText();
+
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const completedRef = useRef("");
 
@@ -91,7 +95,7 @@ export function VerificationCodeInput({
     <div
       className={`verification-code${invalid ? " verification-code-invalid" : ""}`}
       role="group"
-      aria-label={label}
+      aria-label={uiText(label)}
       style={{ "--verification-code-count": length } as React.CSSProperties}
     >
       {digits.map((digit, index) => (
@@ -110,7 +114,7 @@ export function VerificationCodeInput({
           // maxLength stays above 1 so a keystroke on a filled box still
           // registers and can overwrite it instead of being swallowed.
           maxLength={length}
-          aria-label={`${label} หลักที่ ${index + 1}`}
+          aria-label={uiText("{0} หลักที่ {1}", [label, index + 1])}
           aria-invalid={invalid || undefined}
         />
       ))}

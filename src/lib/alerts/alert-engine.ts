@@ -1,3 +1,4 @@
+import {summaryTime,summaryWeekday} from "@/lib/alerts/summary-schedule";
 import type { AppLanguage } from "@/lib/i18n";
 import type { AcademicTerm, AppNotification, ClassSchedule, Exam, NotificationPreferences, Task, UserProfile } from "@/types";
 import { calculateDeadlineRisk } from "@/lib/alerts/deadline-risk";
@@ -124,7 +125,7 @@ function getTodayState(context: AlertContext) {
 }
 
 export function buildMorningSummary(context: AlertContext): AppNotification | null {
-  if (!context.preferences.morning0600 || !isWithinScheduledWindow(context.now, 6, 0, 60)) return null;
+  if (!context.preferences.morning0600 || !isWithinScheduledWindow(context.now, ...summaryTime(context.preferences.dailySummaryTime,"06:00") as [number,number], 60)) return null;
   const eventKey = `daily-0600:${localDateKey(context.now)}`;
   if (hasHandledEventKey(context, eventKey)) return null;
   const { classes, dueTasks } = getTodayState(context);
@@ -185,7 +186,7 @@ export function evaluateClassAlerts(context: AlertContext) {
 }
 
 export function buildWeeklyRadarAlert(context: AlertContext): AppNotification | null {
-  if (!context.preferences.weeklyRadar || context.now.getDay() !== 1 || !isWithinScheduledWindow(context.now, 7, 5, 60)) return null;
+  if (!context.preferences.weeklyRadar || context.now.getDay() !== summaryWeekday(context.preferences) || !isWithinScheduledWindow(context.now, ...summaryTime(context.preferences.weeklySummaryTime,"06:00") as [number,number], 60)) return null;
   const eventKey = `weekly-radar:${getIsoWeekKey(context.now)}`;
   if (hasHandledEventKey(context, eventKey)) return null;
   const radar = buildWeeklyRadar({ now: context.now, schedules: context.schedules, tasks: context.tasks, exams: context.exams, language: context.language });

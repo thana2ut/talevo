@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420" fill="none">
+  <defs>
+    <linearGradient id="ribbon" x1="130" y1="0" x2="830" y2="300" gradientUnits="userSpaceOnUse"><stop stop-color="#A071ED" stop-opacity="0"/><stop offset=".48" stop-color="#A477E6" stop-opacity=".18"/><stop offset=".77" stop-color="#C3A1F5" stop-opacity=".1"/><stop offset="1" stop-color="#8C57C9" stop-opacity="0"/></linearGradient>
+    <linearGradient id="edge" x1="60" y1="60" x2="875" y2="235" gradientUnits="userSpaceOnUse"><stop stop-color="#B18DE8" stop-opacity="0"/><stop offset=".43" stop-color="#DCC6FF" stop-opacity=".42"/><stop offset=".7" stop-color="#B993F5" stop-opacity=".3"/><stop offset="1" stop-color="#CBB1F4" stop-opacity="0"/></linearGradient>
+    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="translate(585 105) rotate(90) scale(190 370)" gradientUnits="userSpaceOnUse"><stop stop-color="#8650C9" stop-opacity=".15"/><stop offset="1" stop-color="#8650C9" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#light)" d="M0 0h900v420H0z"/>
+  <path d="M-80 4C150 28 196 194 403 159C603 125 626-20 940-47L940 14C677 12 594 203 400 205C182 208 116 65-80 68Z" fill="url(#ribbon)"/>
+  <path d="M-80 4C150 28 196 194 403 159C603 125 626-20 940-47" stroke="url(#edge)" stroke-width="1.4"/>
+  <path d="M-80 68C116 65 182 208 400 205C594 203 677 12 940 14" stroke="url(#edge)" stroke-width="1"/>
+  <path d="M-90 98C134 106 258 244 477 211C638 187 721 151 940 218L940 249C700 177 633 222 468 239C262 261 107 144-90 137Z" fill="url(#ribbon)" opacity=".8"/>
+  <path d="M-90 98C134 106 258 244 477 211C638 187 721 151 940 218" stroke="url(#edge)" stroke-width="1.3"/>
+  <path d="M137 47C295 73 369 282 548 280C709 278 748 255 940 324" stroke="url(#edge)" stroke-width=".8" opacity=".6"/>
+</svg>

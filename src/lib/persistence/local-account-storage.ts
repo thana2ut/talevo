@@ -10,6 +10,7 @@ import {
   TALEVO_ACCOUNT_STATE_PREFIX,
   TALEVO_APP_STATE_OWNER_KEY,
 } from "@/lib/talevo-storage-keys";
+import { parseLocalOwnerBinding } from "@/lib/security/local-data";
 
 type LocalOwnerBinding = {
   version: 1;
@@ -40,10 +41,7 @@ function readOwnerBinding(storage: StorageLike): LocalOwnerBinding | null {
   const raw = storage.getItem(TALEVO_APP_STATE_OWNER_KEY);
   if (!raw) return null;
   try {
-    const value = JSON.parse(raw) as Partial<LocalOwnerBinding>;
-    return value.version === 1 && typeof value.userId === "string" && value.userId
-      ? { version: 1, userId: value.userId }
-      : null;
+    return parseLocalOwnerBinding(JSON.parse(raw));
   } catch {
     return null;
   }

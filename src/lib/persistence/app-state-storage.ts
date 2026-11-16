@@ -86,6 +86,20 @@ export type AppStateReadResult = {
 type UnknownRecord = Record<string, unknown>;
 
 const isRecord = (value: unknown): value is UnknownRecord => Boolean(value) && typeof value === "object" && !Array.isArray(value);
+const hasSafeStructure = (value: unknown) => {
+  const pending = [value];
+  let nodes = 0;
+  while (pending.length) {
+    const item = pending.pop();
+    if (++nodes > 100_000) return false;
+    if (!item || typeof item !== "object") continue;
+    for (const [key, child] of Object.entries(item)) {
+      if (["__proto__", "prototype", "constructor"].includes(key)) return false;
+      pending.push(child);
+    }
+  }
+  return true;
+};
 const isString = (value: unknown): value is string => typeof value === "string";
 const isFiniteNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const hasStringId = (value: unknown): value is UnknownRecord & { id: string } => isRecord(value) && isString(value.id) && value.id.length > 0;
@@ -217,7 +231,7 @@ function normalizeAssistantChatCopy(message: ChatMessage): ChatMessage {
  * event keys, and version 8 removes the retired submission-tracking feature.
  */
 export function migratePersistedState(rawState: unknown): UnknownRecord | null {
-  if (!isRecord(rawState)) return null;
+  if (!isRecord(rawState) || !hasSafeStructure(rawState)) return null;
   let state: UnknownRecord = { ...rawState };
   let version = isFiniteNumber(state.version) ? state.version : 1;
   if (version > APP_STATE_CURRENT_VERSION || version < 1) return null;

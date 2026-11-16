@@ -13,9 +13,10 @@ export function getGreetingByLocalTime(date: Date): string {
  * - "สวัสดี {displayName}" if displayName exists and profile is loaded
  * - "สวัสดี" if loading, empty, null, undefined, or email prefix
  */
-export function formatHomeGreeting(displayName?: string | null, isLoading = false): string {
-  if (isLoading) return "สวัสดี";
+export function formatHomeGreeting(displayName?: string | null, isLoading = false, language: "th" | "en" = "th"): string {
+  const hello = language === "en" ? "Hello" : "สวัสดี";
+  if (isLoading) return hello;
   const trimmed = displayName?.trim();
-  if (!trimmed || trimmed.includes("@")) return "สวัสดี";
-  return `สวัสดี ${trimmed}`;
+  if (!trimmed || trimmed.includes("@")) return hello;
+  return `${hello} ${trimmed}`;
 }

@@ -1,18 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import {LiveOverview} from "./live-overview";
+import {MobileHome} from "./mobile-home";
+import {ThailandClock} from "@/components/thailand-clock";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Activity, ArrowRight, BookOpen, CalendarDays, Circle, CircleAlert, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
-import { Card, IconTile, NotificationBell, ProgressBar, SectionHeader } from "@/components/ui";
-import { getTaskCourseLabel } from "@/lib/course-utils";
+import { Activity, ArrowRight, CalendarDays, Circle, CircleAlert, CircleCheck, ClipboardCheck, Clock3, MapPin, Sparkles } from "lucide-react";
+import { IconTile, NotificationBell, SectionHeader } from "@/components/ui";
+
 import { formatHomeGreeting } from "@/lib/greeting";
 import { mondayIndex } from "@/lib/schedule-date";
 import { getScheduleDisplayName, timeToMinutes } from "@/lib/schedule-utils";
-import { calculateTaskProgress, getCompletedSubtaskCount, hasTaskProgress } from "@/lib/task-progress";
+
 import { formatTodayTaskDeadline, getPendingTasksForToday, getTaskDueState, getTasksDueToday } from "@/lib/task-utils";
 import { useAppState } from "@/providers/app-state-provider";
 import { useLanguage } from "@/providers/language-provider";
 import type { ClassSchedule, Task } from "@/types";
+import { useUiText } from "@/providers/ui-language";
+
 const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
 type FreeGap = { start: number; end: number };
@@ -49,12 +54,14 @@ function getFreeGaps(classes: ClassSchedule[]) {
 }
 
 function TodayScheduleCard({ classes, nowMinutes }: { classes: ClassSchedule[]; nowMinutes: number }) {
-  const { t, language } = useLanguage();
+  const uiText = useUiText();
+
+  const { language } = useLanguage();
   const upcomingIndex = classes.findIndex((item) => timeToMinutes(item.startTime) > nowMinutes);
   const currentIndex = classes.findIndex((item) => timeToMinutes(item.startTime) <= nowMinutes && timeToMinutes(item.endTime) > nowMinutes);
   const countText = new Intl.NumberFormat(language).format(classes.length);
-  return <section className="smart-today-schedule" aria-label={language === "th" ? "ตารางเรียนวันนี้" : "Today's schedule"}>
-    <header className="smart-today-schedule-header"><IconTile tone="purple"><CalendarDays /></IconTile><div><h2>{language === "th" ? "ตารางเรียนวันนี้" : "Today's Schedule"}</h2><p>{language === "th" ? `มี ${countText} คาบเรียน` : `${countText} classes today`}</p></div><Link href="/schedule" className="smart-today-schedule-link">{language === "th" ? "ดูทั้งหมด" : "View all"} <ArrowRight aria-hidden="true" /></Link></header>
+  return <section className="smart-today-schedule" aria-label={language === "th" ? uiText("ตารางเรียนวันนี้") : "Today's schedule"}>
+    <header className="smart-today-schedule-header"><IconTile tone="purple"><CalendarDays /></IconTile><div><h2>{language === "th" ? uiText("ตารางเรียนวันนี้") : "Today's Schedule"}</h2><p>{language === "th" ? uiText("มี {0} คาบเรียน", [countText]) : `${countText} classes today`}</p></div><Link href="/schedule" className="smart-today-schedule-link">{language === "th" ? uiText("ดูทั้งหมด") : "View all"} <ArrowRight aria-hidden="true" /></Link></header>
     {classes.length ? <div className="smart-today-schedule-list">{classes.map((item, index) => {
       const ended = timeToMinutes(item.endTime) <= nowMinutes;
       const isCurrent = index === currentIndex;
@@ -62,76 +69,20 @@ function TodayScheduleCard({ classes, nowMinutes }: { classes: ClassSchedule[]; 
       const StatusIcon = isCurrent ? Activity : isNext ? Clock3 : ended ? CircleCheck : Circle;
       const statusTone = isCurrent ? "is-current" : isNext ? "is-next" : ended ? "is-completed" : "is-pending";
       const status = language === "th"
-        ? isCurrent ? "กำลังเรียน" : isNext ? "คาบถัดไป" : ended ? "เรียนแล้ว" : "ยังไม่เริ่ม"
+        ? isCurrent ? uiText("กำลังเรียน") : isNext ? uiText("คาบถัดไป") : ended ? uiText("เรียนแล้ว") : uiText("ยังไม่เริ่ม")
         : isCurrent ? "In progress" : isNext ? "Next class" : ended ? "Completed" : "Not started";
       return <article className={`smart-today-schedule-item${isCurrent || isNext ? " is-active" : ""}`} key={item.id}>
-        <div className="smart-today-schedule-meta"><span className={`smart-today-schedule-time${isCurrent || isNext ? " is-active" : ""}`}>{item.startTime}–{item.endTime}</span><span className={`smart-today-schedule-status ${statusTone}`}><StatusIcon aria-hidden="true" />{status}</span></div>
+        <div className="smart-today-schedule-meta"><span className={`smart-today-schedule-time${isCurrent || isNext ? " is-active" : ""}`}>{item.startTime}–{item.endTime}</span><span className={`smart-today-schedule-status ${statusTone}`}><StatusIcon aria-hidden="true" />{uiText(status)}</span></div>
         <strong className="smart-today-schedule-name">{getScheduleDisplayName(item)}</strong>
-        <span className="smart-today-schedule-room"><MapPin aria-hidden="true" /><span>{item.room || (language === "th" ? "ยังไม่ระบุห้อง" : "Room not set")}</span></span>
+        <span className="smart-today-schedule-room"><MapPin aria-hidden="true" /><span>{item.room || (language === "th" ? uiText("ยังไม่ระบุห้อง") : "Room not set")}</span></span>
       </article>;
-    })}</div> : <p className="smart-today-schedule-empty">{language === "th" ? "วันนี้ไม่มีคาบเรียน" : "No classes today"}</p>}
+    })}</div> : <p className="smart-today-schedule-empty">{language === "th" ? uiText("วันนี้ไม่มีคาบเรียน") : "No classes today"}</p>}
   </section>;
 }
 
-function TodayTaskCard({ task, now, schedules }: { task?: Task; now: Date; schedules: ClassSchedule[] }) {
-  if (!task) {
-    return (
-      <Card className="smart-due-card smart-empty-card">
-        <CircleCheck />
-        <div className="smart-due-copy">
-          <span>งานที่ควรทำต่อ</span>
-          <strong>ยังไม่มีงานที่ต้องทำ</strong>
-          <small>เพิ่มงานแรกเพื่อเริ่มติดตามกำหนดส่ง</small>
-        </div>
-        <div className="smart-due-actions">
-          <Link href="/tasks/new">เพิ่มงานแรก</Link>
-        </div>
-      </Card>
-    );
-  }
-
-  const subtaskTotal = task.subtasks?.length ?? 0;
-  const completed = getCompletedSubtaskCount(task);
-  const courseLabel = getTaskCourseLabel(task, schedules);
-  const deadline = formatTodayTaskDeadline(task, now);
-  const dueState = getTaskDueState(task, now);
-  const isOverdue = dueState === "overdue";
-
-  return (
-    <Card className="smart-due-card">
-      <IconTile tone={task.color === "orange" ? "orange" : "purple"}>
-        <ClipboardCheck />
-      </IconTile>
-      <div className="smart-due-copy">
-        <div className="smart-due-header-row">
-          <span>งานที่ควรทำต่อ</span>
-          <small className="smart-due-subtitle">
-            {isOverdue ? "เลยกำหนดส่งแล้ว" : "งานที่ใกล้ถึงกำหนดที่สุด"}
-          </small>
-        </div>
-        <strong>{task.title}</strong>
-        <div className="smart-due-meta">
-          {courseLabel && <span className="smart-due-course">{courseLabel}</span>}
-          {courseLabel && <span className="smart-due-meta-dot">·</span>}
-          <span className={isOverdue ? "due-overdue" : "due-normal"}>
-            {deadline}
-          </span>
-        </div>
-        {hasTaskProgress(task) && subtaskTotal > 0 && (
-          <div className="smart-task-progress-wrap">
-            <ProgressBar value={calculateTaskProgress(task)} color={task.color} />
-            <small>เหลือ {subtaskTotal - completed} จาก {subtaskTotal} ขั้นตอน</small>
-          </div>
-        )}
-      </div>
-      <div className="smart-due-actions">
-        <Link href={`/tasks/${task.id}`}>ทำงานต่อ</Link>
-      </div>
-    </Card>
-  );
-}
-
 function StudyHero({ classes, tasks, now, nowMinutes, gap }: { classes: ClassSchedule[]; tasks: Task[]; now: Date; nowMinutes: number; gap?: FreeGap }) {
+  const uiText = useUiText();
+
   const { tasks: allTasks } = useAppState();
   const [liveTime, setLiveTime] = useState(now);
   useEffect(() => {
@@ -149,70 +100,63 @@ function StudyHero({ classes, tasks, now, nowMinutes, gap }: { classes: ClassSch
     const duration = timeToMinutes(item.endTime) - start;
     return total + (duration > 0 ? Math.min(1, Math.max(0, (elapsedMinutes - start) / duration)) : elapsedMinutes >= start ? 1 : 0);
   }, 0) / classes.length : 0;
-  const date = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric" }).format(now);
-  return <section className="study-hero" aria-label="TALEVO แนะนำ">
+  const date = new Intl.DateTimeFormat(uiText.locale, { day: "numeric", month: "short", year: "numeric" }).format(now);
+  return <section className="study-hero" aria-label={uiText("TALEVO แนะนำ")}>
     <div className="study-hero-content">
-      <span className="study-hero-label"><Sparkles aria-hidden="true" /> TALEVO แนะนำ</span>
-      <p className="study-hero-eyebrow">{next ? "เตรียมตัวสำหรับคาบถัดไป" : current ? "คาบเรียนที่กำลังเรียน" : "ภาพรวมการเรียนวันนี้"}</p>
-      <h2>{lesson ? getScheduleDisplayName(lesson) : classes.length ? "เรียนครบทุกคาบของวันนี้แล้ว" : "วันนี้ไม่มีคาบเรียน"}</h2>
+      <span className="study-hero-label"><Sparkles aria-hidden="true" /> {uiText("TALEVO แนะนำ")}</span>
+      <p className="study-hero-eyebrow">{next ? uiText("เตรียมตัวสำหรับคาบถัดไป") : current ? uiText("คาบเรียนที่กำลังเรียน") : uiText("ภาพรวมการเรียนวันนี้")}</p>
+      <h2>{lesson ? getScheduleDisplayName(lesson) : classes.length ? uiText("เรียนครบทุกคาบของวันนี้แล้ว") : uiText("วันนี้ไม่มีคาบเรียน")}</h2>
       <div className="study-hero-facts">
-        <div><Clock3 aria-hidden="true" /><span><strong>{lesson ? `${lesson.startTime} – ${lesson.endTime} น.` : "ไม่มีคาบถัดไป"}</strong><small>เวลาเรียน</small></span></div>
-        <div><MapPin aria-hidden="true" /><span><strong>{lesson?.room || "ยังไม่ระบุห้อง"}</strong><small>ห้องเรียน</small></span></div>
-        <div><CalendarDays aria-hidden="true" /><span><strong>{date}</strong><small>วันที่เรียน</small></span></div>
+        <div><Clock3 aria-hidden="true" /><span><strong>{lesson ? uiText("{0} – {1} น.", [lesson.startTime, lesson.endTime]) : uiText("ไม่มีคาบถัดไป")}</strong><small>{uiText("เวลาเรียน")}</small></span></div>
+        <div><MapPin aria-hidden="true" /><span><strong>{lesson?.room || uiText("ยังไม่ระบุห้อง")}</strong><small>{uiText("ห้องเรียน")}</small></span></div>
+        <div><CalendarDays aria-hidden="true" /><span><strong>{date}</strong><small>{uiText("วันที่เรียน")}</small></span></div>
       </div>
       <div className="study-hero-summary">
-        <div className="study-hero-progress"><div className="study-hero-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" /><circle cx="60" cy="60" r="50" pathLength="100" strokeDasharray={`${percent * 100} 100`} /></svg><span><strong>{completed}<small>/{classes.length}</small></strong><small>คาบ</small></span></div><div><span>วันนี้เรียนไปแล้ว</span><strong>{completed} คาบ</strong><small>เหลืออีก {classes.length - completed} คาบ</small></div></div>
-        <div className="study-hero-tasks"><h3><ClipboardCheck aria-hidden="true" /> งานค้าง <span className={tasks.length === 0 ? "is-clear" : undefined}>{tasks.length} รายการ</span></h3>{tasks.length ? tasks.slice(0, 2).map((task) => { const overdue = getTaskDueState(task, now) === "overdue"; const StatusIcon = overdue ? CircleAlert : Circle; return <Link className={overdue ? "is-overdue" : ""} href={`/tasks/${task.id}`} key={task.id}><StatusIcon aria-hidden="true" /><span><strong>{task.title}</strong><small>{formatTodayTaskDeadline(task, now)}</small></span><ArrowRight aria-hidden="true" /></Link>; }) : <p><CircleCheck aria-hidden="true" /> ไม่มีงานค้างในวันนี้</p>}</div>
+        <div className="study-hero-progress"><div className="study-hero-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" /><circle cx="60" cy="60" r="50" pathLength="100" strokeDasharray={`${percent * 100} 100`} /></svg><span><strong>{completed}<small>/{classes.length}</small></strong><small>{uiText("คาบ")}</small></span></div><div><span>{uiText("วันนี้เรียนไปแล้ว")}</span><strong>{completed} {uiText("คาบ")}</strong><small>{uiText("เหลืออีก")}{classes.length - completed} {uiText("คาบ")}</small></div></div>
+        <div className="study-hero-tasks"><h3><ClipboardCheck aria-hidden="true" /> {uiText("งานค้าง")}<span className={tasks.length === 0 ? "is-clear" : undefined}>{tasks.length} {uiText("รายการ")}</span></h3>{tasks.length ? tasks.slice(0, 2).map((task) => { const overdue = getTaskDueState(task, now) === "overdue"; const StatusIcon = overdue ? CircleAlert : Circle; return <Link className={overdue ? "is-overdue" : ""} href={`/tasks/${task.id}`} key={task.id}><StatusIcon aria-hidden="true" /><span><strong>{task.title}</strong><small>{formatTodayTaskDeadline(task, now, uiText.language)}</small></span><ArrowRight aria-hidden="true" /></Link>; }) : <p><CircleCheck aria-hidden="true" /> {uiText("ไม่มีงานค้างในวันนี้")}</p>}</div>
       </div>
     </div>
     <div className="phone-task-totals">
-      <Link href="/tasks"><CircleCheck/><strong>{allTasks.filter(task => task.status === "completed" || task.completedAt != null).length}</strong><span>งานที่เสร็จแล้ว</span><ArrowRight/></Link>
-      <Link href="/tasks"><ClipboardCheck/><strong>{tasks.length}</strong><span>งานที่ต้องทำ</span><ArrowRight/></Link>
-      <Link href="/tasks"><Clock3/><strong>{getTasksDueToday(allTasks, now).length}</strong><span>งานใกล้ครบกำหนด</span><ArrowRight/></Link>
+      <Link href="/tasks"><CircleCheck/><strong>{allTasks.filter(task => task.status === "completed" || task.completedAt != null).length}</strong><span>{uiText("งานที่เสร็จแล้ว")}</span><ArrowRight/></Link>
+      <Link href="/tasks"><ClipboardCheck/><strong>{tasks.length}</strong><span>{uiText("งานที่ต้องทำ")}</span><ArrowRight/></Link>
+      <Link href="/tasks"><Clock3/><strong>{getTasksDueToday(allTasks, now).length}</strong><span>{uiText("งานใกล้ครบกำหนด")}</span><ArrowRight/></Link>
     </div>
-    <section className="phone-next-lesson"><Link href="/schedule" className="phone-next-lesson-card"><CalendarDays/><span><strong>{next ? getScheduleDisplayName(next) : "ไม่มีคาบเรียนถัดไป"}</strong><small>{next ? `${next.startTime}–${next.endTime} · ${next.room || "ยังไม่ระบุห้อง"}` : "ขอให้พักผ่อนให้เต็มที่นะ 🎉"}</small></span></Link></section>
-    <section className="phone-free-time"><div className="phone-free-time-card"><Clock3 aria-hidden="true" /><span><strong>{gap ? (nowMinutes >= gap.start ? `ว่างถึง ${formatMinutes(gap.end)}` : `${formatMinutes(gap.start)}–${formatMinutes(gap.end)}`) : "วันนี้ไม่มีช่วงว่าง"}</strong><small>{gap ? `${nowMinutes >= gap.start ? "เหลือ" : "ว่าง"} ${formatDuration(gap.end - Math.max(nowMinutes, gap.start))}` : "ไม่มีช่วงว่างต่อเนื่องอย่างน้อย 30 นาที"}</small></span></div></section>
-    <div className="study-hero-visual"><div className="study-hero-speech study-hero-speech-glass"><span className="study-speech-bulb" aria-hidden="true">💡</span><strong>เตรียมตัวให้พร้อม!</strong><span className="study-speech-message">วันนี้เราไปเรียนกันเลย</span><span className="study-speech-stars" aria-hidden="true"><i /><i /><i /></span></div><span className="study-hero-mascot" aria-hidden="true" /><Link href="/schedule" className="study-hero-action"><BookOpen aria-hidden="true" /> ดูคาบเรียน <ArrowRight aria-hidden="true" /></Link></div>
+    <section className="phone-next-lesson"><Link href="/schedule" className="phone-next-lesson-card"><CalendarDays/><span><strong>{next ? getScheduleDisplayName(next) : uiText("ไม่มีคาบเรียนถัดไป")}</strong><small>{next ? `${next.startTime}–${next.endTime} · ${next.room || uiText("ยังไม่ระบุห้อง")}` : uiText("ขอให้พักผ่อนให้เต็มที่นะ 🎉")}</small></span></Link></section>
+    <section className="phone-free-time"><div className="phone-free-time-card"><Clock3 aria-hidden="true" /><span><strong>{gap ? (nowMinutes >= gap.start ? uiText("ว่างถึง {0}", [formatMinutes(gap.end)]) : `${formatMinutes(gap.start)}–${formatMinutes(gap.end)}`) : uiText("วันนี้ไม่มีช่วงว่าง")}</strong><small>{gap ? `${nowMinutes >= gap.start ? uiText("เหลือ") : uiText("ว่าง")} ${formatDuration(gap.end - Math.max(nowMinutes, gap.start))}` : uiText("ไม่มีช่วงว่างต่อเนื่องอย่างน้อย 30 นาที")}</small></span></div></section>
+    <div className="study-hero-visual"><div className="study-hero-speech study-hero-speech-glass"><span className="study-speech-bulb" aria-hidden="true">💡</span><strong>{uiText("เตรียมตัวให้พร้อม!")}</strong><span className="study-speech-message">{uiText("วันนี้เราไปเรียนกันเลย")}</span><span className="study-speech-stars" aria-hidden="true"><i /><i /><i /></span></div><span className="study-hero-mascot" aria-hidden="true" /><ThailandClock className="study-hero-action"/></div>
   </section>;
 }
 
-function TodayFreeTimeCard({ gap, nowMinutes }: { gap?: FreeGap; nowMinutes: number }) {
-  const { t } = useLanguage();
-  const gapIsActive = gap !== undefined && nowMinutes >= gap.start;
-  const remainingMinutes = gap ? gap.end - Math.max(nowMinutes, gap.start) : 0;
-  const timeLabel = gap ? gapIsActive ? `ถึง ${formatMinutes(gap.end)}` : `${formatMinutes(gap.start)}–${formatMinutes(gap.end)}` : "ยังไม่มีช่วงว่าง";
-
-  return <Card className="smart-free-time smart-free-time-hero">
-    <div className="smart-free-time-hero-heading"><IconTile tone="purple"><Clock3 aria-hidden="true" /></IconTile><div><strong>{t("today.freeTime")}</strong><small>{gapIsActive ? "เวลาว่างตอนนี้" : gap ? "ช่วงว่างถัดไป" : "ภาพรวมเวลาว่างวันนี้"}</small></div></div>
-    <div className="smart-free-time-hero-detail"><span>{gapIsActive ? "คุณมีเวลาว่าง" : gap ? "ช่วงว่างถัดไป" : "วันนี้"}</span><strong>{timeLabel}</strong><small>{gap ? `เหลือ ${formatDuration(remainingMinutes)}` : "ไม่มีช่วงว่างต่อเนื่องอย่างน้อย 30 นาที"}</small></div>
-  </Card>;
-}
-
 export function TodayPage() {
-  const { profile, isAuthLoading, isHydrated, tasks, schedules, now: appNow } = useAppState();
+  const uiText = useUiText();
+
+  const { profile, isAuthLoading, isHydrated, tasks, schedules, academicTerm, now: appNow } = useAppState();
   const { t, language } = useLanguage();
   const clientReady = useSyncExternalStore(() => () => undefined, () => true, () => false);
   const referenceDate = useMemo(() => clientReady ? appNow : new Date(2000, 0, 1, 0, 0), [appNow, clientReady]);
   const view = useMemo(() => {
-    const classes = getTodayClasses(schedules, referenceDate);
+    const normalizeScope = (value: string | undefined) => value?.trim().toLocaleLowerCase("th-TH") ?? "";
+    const classes = getTodayClasses(schedules.filter(item => normalizeScope(item.academicLevel) === normalizeScope(academicTerm.level) && normalizeScope(item.academicTerm) === normalizeScope(academicTerm.term) && normalizeScope(item.academicYear) === normalizeScope(academicTerm.academicYear)), referenceDate);
     const pendingTasks = getPendingTasksForToday(tasks, referenceDate);
     const dueTodayTasks = getTasksDueToday(tasks, referenceDate);
     const nowMinutes = referenceDate.getHours() * 60 + referenceDate.getMinutes();
     const gaps = getFreeGaps(classes);
     const usefulGap = gaps.find((gap) => gap.end > nowMinutes);
     return { classes, pendingTasks, dueTodayTasks, nowMinutes, usefulGap };
-  }, [referenceDate, schedules, tasks]);
+  }, [referenceDate, schedules, tasks, academicTerm]);
   const isLoadingProfile = isAuthLoading || !isHydrated || !clientReady;
-  const greeting = formatHomeGreeting(profile.displayName, isLoadingProfile);
+  const greeting = formatHomeGreeting(profile.displayName, isLoadingProfile, language);
 
   return <div className="page today-page smart-today-page">
-    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><p className="today-tagline">ทุกเรื่องเรียนของคุณ จัดการได้ง่าย ๆ ในที่เดียว</p></div><NotificationBell /></header>
+    <MobileHome greeting={greeting} now={referenceDate} classes={view.classes} tasks={tasks} pending={view.pendingTasks}><TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes}/></MobileHome>
+    <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><p className="today-tagline">{uiText("ทุกเรื่องเรียนของคุณ จัดการได้ง่าย ๆ ในที่เดียว")}</p></div><NotificationBell glass /></header>
     <section className="smart-today-hero"><StudyHero classes={view.classes} tasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} gap={view.usefulGap} /></section>
-    <section className="smart-today-glance"><SectionHeader title={language === "th" ? "วันนี้ของคุณ" : "Today at a Glance"} />
+    {tasks.some(task=>task.status!=="completed"&&Date.parse(task.dueDate)-referenceDate.getTime()<86400000)&&<Link className="desktop-rescue-entry secondary-button" href="/rescue">{uiText("โหมดกู้สถานการณ์")}</Link>}
+    <section className="smart-today-glance"><SectionHeader title={language === "th" ? uiText("วันนี้ของคุณ") : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
       <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />
-      <TodayTaskCard task={view.pendingTasks[0]} now={referenceDate} schedules={schedules} />
-      <TodayFreeTimeCard gap={view.usefulGap} nowMinutes={view.nowMinutes} />
+      <LiveOverview kind="tasks" />
+      <LiveOverview kind="lesson" />
     </div>
     </section>
   </div>;

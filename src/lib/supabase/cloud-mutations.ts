@@ -48,6 +48,9 @@ function toClassScheduleRow(userId: string, schedule: ClassSchedule) {
     note: schedule.note ?? null,
     section: schedule.section?.trim() || null,
     credits,
+    academic_level: schedule.academicLevel?.trim() || null,
+    academic_term: schedule.academicTerm?.trim() || null,
+    academic_year: schedule.academicYear?.trim() || null,
   };
 }
 
@@ -443,6 +446,9 @@ export async function persistAppSettings(
       exam_1d: preferences.exam1d,
       exam_morning: preferences.examMorning,
       weekly_radar: preferences.weeklyRadar,
+      daily_summary_time: preferences.dailySummaryTime ?? "06:00",
+      weekly_summary_time: preferences.weeklySummaryTime ?? "06:00",
+      weekly_summary_day: preferences.weeklySummaryDay ?? 6,
       updated_at: new Date().toISOString(),
     });
     return { error: error ? new Error(error.message) : null };

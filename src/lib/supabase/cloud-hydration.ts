@@ -5,6 +5,7 @@ import {
   type PersistedAppState,
 } from "@/lib/persistence/app-state-storage";
 import type { CloudRow, CloudTables } from "@/lib/supabase/cloud-v8-repository";
+import { parseAppStateSnapshot } from "@/lib/persistence/app-state-storage";
 import type {
   AppNotification,
   ChatMessage,
@@ -122,6 +123,9 @@ export function hydrateCloudAccountToAppState(
     ...(typeof row.credits === "number" || (typeof row.credits === "string" && row.credits !== "")
       ? { credits: Number(row.credits) }
       : {}),
+    ...(optionalString(row, "academic_level") ? { academicLevel: optionalString(row, "academic_level") } : { academicLevel: academicTerm.level }),
+    ...(optionalString(row, "academic_term") ? { academicTerm: optionalString(row, "academic_term") } : { academicTerm: academicTerm.term }),
+    ...(optionalString(row, "academic_year") ? { academicYear: optionalString(row, "academic_year") } : { academicYear: academicTerm.academicYear }),
   }));
 
   const tasks: Task[] = (tables.tasks ?? []).map((row) => {
@@ -217,21 +221,9 @@ export function hydrateCloudAccountToAppState(
     personalGoal: stringValue(learningGoalsRow, "personal_goal", fallbackDefaults.goals.personalGoal),
   };
 
-  const notifications: AppNotification[] = (tables.notifications ?? []).map((row) => ({
-    id: stringValue(row, "id"),
-    type: (stringValue(row, "type") as NotificationType) || "generic",
-    priority: (stringValue(row, "priority") as NotificationPriority) || "low",
-    title: stringValue(row, "title"),
-    message: stringValue(row, "message"),
-    createdAt: stringValue(row, "created_at"),
-    ...(optionalString(row, "read_at") ? { readAt: optionalString(row, "read_at") } : {}),
-    ...(optionalString(row, "href") ? { href: optionalString(row, "href") } : {}),
-    eventKey: stringValue(row, "event_key"),
-    ...(optionalString(row, "source_id") ? { sourceId: optionalString(row, "source_id") } : {}),
-    ...(row.metadata && typeof row.metadata === "object"
-      ? { metadata: row.metadata as Record<string, string | number | boolean | null> }
-      : {}),
-  }));
+  const notifications = hydrateCloudNotifications(tables.notifications ?? []);
+
+
 
   const dismissedNotificationEventKeys = (tables.dismissed_notification_events ?? []).map((row) =>
     stringValue(row, "event_key"),
@@ -259,6 +251,9 @@ export function hydrateCloudAccountToAppState(
       exam1d: booleanValue(appSettingsRow, "exam_1d", true),
       examMorning: booleanValue(appSettingsRow, "exam_morning", true),
       weeklyRadar: booleanValue(appSettingsRow, "weekly_radar", true),
+      dailySummaryTime: String(appSettingsRow?.daily_summary_time ?? "06:00"),
+      weeklySummaryTime: String(appSettingsRow?.weekly_summary_time ?? "06:00"),
+      weeklySummaryDay: Number(appSettingsRow?.weekly_summary_day ?? 6),
     },
   };
 
@@ -271,7 +266,7 @@ export function hydrateCloudAccountToAppState(
       ...(optionalString(row, "kind") ? { kind: optionalString(row, "kind") as ChatMessage["kind"] } : {}),
     }));
 
-  return createAppStateSnapshot(
+  const snapshot = createAppStateSnapshot(
     {
       profile,
       academicTerm,
@@ -295,4 +290,24 @@ export function hydrateCloudAccountToAppState(
     options.writerId ?? "talevo-cloud-sync",
     options.now ?? new Date(),
   );
+  return parseAppStateSnapshot(JSON.stringify(snapshot), fallbackDefaults)
+    ?? createAppStateSnapshot(fallbackDefaults, options.writerId ?? "talevo-cloud-sync", options.now ?? new Date());
+}
+
+export function hydrateCloudNotifications(rows: Record<string, unknown>[]): AppNotification[] {
+  return rows.map((row) => ({
+    id: stringValue(row, "id"),
+    type: (stringValue(row, "type") as NotificationType) || "generic",
+    priority: (stringValue(row, "priority") as NotificationPriority) || "low",
+    title: stringValue(row, "title"),
+    message: stringValue(row, "message"),
+    createdAt: stringValue(row, "created_at"),
+    ...(optionalString(row, "read_at") ? { readAt: optionalString(row, "read_at") } : {}),
+    ...(optionalString(row, "href") ? { href: optionalString(row, "href") } : {}),
+    eventKey: stringValue(row, "event_key"),
+    ...(optionalString(row, "source_id") ? { sourceId: optionalString(row, "source_id") } : {}),
+    ...(row.metadata && typeof row.metadata === "object"
+      ? { metadata: row.metadata as Record<string, string | number | boolean | null> }
+      : {}),
+  }));
 }

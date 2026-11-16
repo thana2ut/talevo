@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "qa:vision": "node scripts/qa-vision.cjs",
     "qa:alerts": "node scripts/qa-smart-alerts.cjs",
     "qa:persistence": "node scripts/qa-persistence.cjs",
     "qa:notifications": "node scripts/qa-notifications.cjs",
@@ -25,20 +26,23 @@
     "qa:syllabus-import": "node scripts/qa-syllabus-import.cjs",
     "qa:security": "node scripts/qa-security.cjs",
     "qa:reliability": "node scripts/qa-reliability.cjs",
-    "qa:cloud-persistence": "node scripts/qa-cloud-persistence.cjs"
+    "qa:cloud-persistence": "node scripts/qa-cloud-persistence.cjs",
+    "qa:learning": "node scripts/qa-learning-tools.cjs",
+    "qa:learning:postgres": "node scripts/qa-learning-postgres.cjs"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",
-    "@supabase/ssr": "^0.12.5",
-    "@supabase/supabase-js": "^2.112.4",
+    "@supabase/ssr": "0.12.5",
+    "@supabase/supabase-js": "2.112.4",
     "groq-sdk": "^1.6.0",
     "lucide-react": "^1.37.0",
-    "next": "16.3.3",
+    "next": "16.4.6",
     "pdfjs-dist": "^6.3.289",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "tesseract.js": "^7.0.0",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -47,7 +51,7 @@
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
     "eslint": "^9",
-    "eslint-config-next": "16.3.3",
+    "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

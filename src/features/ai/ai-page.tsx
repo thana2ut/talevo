@@ -9,6 +9,8 @@ import { formatTaskDateTime } from "@/lib/task-utils";
 import { EMPTY_AI_CONTEXT_SELECTION, type AIChatRequest, type AIChatSuccess, type AIContextKey, type AIContextSelection, type AIErrorResponse, type AIHistoryItem, type AIUsageStatusResponse } from "@/lib/ai/types";
 import { useAppState } from "@/providers/app-state-provider";
 import type { ChatMessage, ClassSchedule, Task } from "@/types";
+import { useUiText } from "@/providers/ui-language";
+
 
 const MAX_MESSAGE_LENGTH = 8_000;
 const CHARACTER_WARNING_AT = 7_200;
@@ -17,6 +19,8 @@ const LOCAL_MODE_AVAILABLE = true;
 const CONTEXT_OPTIONS: Array<{ key: AIContextKey; label: string; description: string; icon: LucideIcon }> = [
   { key: "schedule", label: "ตารางเรียน", description: "ชื่อวิชา วัน และเวลา", icon: CalendarDays },
   { key: "tasks", label: "งาน", description: "ชื่อ กำหนดส่ง และสถานะ", icon: ListTodo },
+  { key: "grades", label: "คะแนนรายวิชา", description: "เป้าหมายและคะแนนที่บันทึกไว้", icon: GraduationCap },
+  { key: "academic", label: "ภาคเรียน", description: "ชั้นปี ภาคเรียน และปีการศึกษา", icon: CalendarDays },
   { key: "exams", label: "การสอบ", description: "วิชา วันสอบ เวลา และห้องสอบ", icon: GraduationCap },
 ];
 
@@ -123,37 +127,41 @@ function AIMessageContent({ content }: { content: string }) {
 }
 
 function TaskSummaryMessage({ tasks, schedules }: { tasks: Task[]; schedules: ClassSchedule[] }) {
+  const uiText = useUiText();
+
   const items = getPendingTasks(tasks).slice(0, 4);
   return (
     <div className="ai-summary">
-      <strong>งานที่ยังไม่เสร็จ</strong>
+      <strong>{uiText("งานที่ยังไม่เสร็จ")}</strong>
       <ol>
         {items.map((task) => (
           <li key={task.id}>
             <Link href={`/tasks/${task.id}`}>
               <span>{task.title}</span>
-              <small>{schedules.find((item) => item.courseId === task.courseId)?.name ?? "งานทั่วไป"} · {formatTaskDateTime(task)}</small>
+              <small>{schedules.find((item) => item.courseId === task.courseId)?.name ?? uiText("งานทั่วไป")} · {formatTaskDateTime(task, uiText.language)}</small>
             </Link>
           </li>
         ))}
       </ol>
-      <Link href="/tasks" className="secondary-button button-block">ดูรายละเอียดทั้งหมด</Link>
+      <Link href="/tasks" className="secondary-button button-block">{uiText("ดูรายละเอียดทั้งหมด")}</Link>
     </div>
   );
 }
 
 function ContextPanel({ selected, onToggle }: { selected: AIContextSelection; onToggle: (key: AIContextKey) => void }) {
+  const uiText = useUiText();
+
   const selectedCount = Object.values(selected).filter(Boolean).length;
   return (
     <section className="ai-context-panel" aria-labelledby="ai-context-title">
       <div className="ai-panel-heading">
         <span><Sparkles /></span>
         <div>
-          <h2 id="ai-context-title">ข้อมูลที่ให้ AI ใช้</h2>
+          <h2 id="ai-context-title">{uiText("ข้อมูลที่ให้ AI ใช้")}</h2>
           <p>
             {selectedCount === 0
-              ? "เลือกหมวด TALEVO ที่ต้องการให้ AI ใช้"
-              : `เลือกแล้ว ${selectedCount} หมวด · AI ใช้เฉพาะข้อมูลที่เลือก`}
+              ? uiText("เลือกหมวด TALEVO ที่ต้องการให้ AI ใช้")
+              : uiText("เลือกแล้ว {0} หมวด · AI ใช้เฉพาะข้อมูลที่เลือก", [selectedCount])}
           </p>
         </div>
       </div>
@@ -172,8 +180,8 @@ function ContextPanel({ selected, onToggle }: { selected: AIContextSelection; on
             >
               <span className="ai-context-icon"><Icon /></span>
               <span className="ai-context-copy">
-                <strong>{item.label}</strong>
-                <small>{item.description}</small>
+                <strong>{uiText(item.label)}</strong>
+                <small>{uiText(item.description)}</small>
               </span>
               <span className="ai-context-check" aria-hidden="true">
                 {isChecked && <Check />}
@@ -184,12 +192,12 @@ function ContextPanel({ selected, onToggle }: { selected: AIContextSelection; on
       </div>
       <div className="ai-context-summary">
         <span className="ai-context-badge">
-          {selectedCount === 0 ? "ยังไม่ได้แนบข้อมูล TALEVO" : `เลือกแล้ว ${selectedCount} หมวด`}
+          {selectedCount === 0 ? uiText("ยังไม่ได้แนบข้อมูล TALEVO") : uiText("เลือกแล้ว {0} หมวด", [selectedCount])}
         </span>
         <p className="ai-context-note">
           {selectedCount === 0
-            ? "ยังไม่เลือกหมวด · AI จะไม่ใช้ข้อมูล TALEVO"
-            : "AI ใช้เฉพาะหมวดที่เลือก · ข้อมูลส่วนตัวไม่ส่งอัตโนมัติ"}
+            ? uiText("ยังไม่เลือกหมวด · AI จะไม่ใช้ข้อมูล TALEVO")
+            : uiText("AI ใช้เฉพาะหมวดที่เลือก · ข้อมูลส่วนตัวไม่ส่งอัตโนมัติ")}
         </p>
       </div>
     </section>
@@ -197,36 +205,40 @@ function ContextPanel({ selected, onToggle }: { selected: AIContextSelection; on
 }
 
 function PrivacyPanel({ mode, onOpen }: { mode: AIChatMode; onOpen: () => void }) {
+  const uiText = useUiText();
+
   return (
     <section className="ai-privacy-panel">
-      <button className="ai-privacy-trigger" type="button" onClick={onOpen} aria-label="อ่านรายละเอียดความเป็นส่วนตัวของ TALEVO AI">
+      <button className="ai-privacy-trigger" type="button" onClick={onOpen} aria-label={uiText("อ่านรายละเอียดความเป็นส่วนตัวของ TALEVO AI")}>
         <ShieldCheck />
         <span>
-          <strong>ความเป็นส่วนตัว</strong>
-          <small>{mode === "on-device" ? "ใช้ข้อมูลที่เลือกในอุปกรณ์นี้" : "ส่งเฉพาะข้อมูลที่คุณเลือก"}</small>
+          <strong>{uiText("ความเป็นส่วนตัว")}</strong>
+          <small>{mode === "on-device" ? uiText("ใช้ข้อมูลที่เลือกในอุปกรณ์นี้") : uiText("ส่งเฉพาะข้อมูลที่คุณเลือก")}</small>
         </span>
-        <span className="ai-privacy-more">ดูรายละเอียด</span>
+        <span className="ai-privacy-more">{uiText("ดูรายละเอียด")}</span>
       </button>
     </section>
   );
 }
 
 function PrivacyDialog() {
+  const uiText = useUiText();
+
   return (
     <div className="ai-privacy-dialog">
       <span><ShieldCheck /></span>
-      <p>คุณควบคุมได้ว่าจะให้ AI ใช้ข้อมูลส่วนใดในคำถามนี้</p>
+      <p>{uiText("คุณควบคุมได้ว่าจะให้ AI ใช้ข้อมูลส่วนใดในคำถามนี้")}</p>
       <section>
-        <h3>เลือกก่อนใช้เสมอ</h3>
-        <p>ค่าเริ่มต้นจะไม่แนบข้อมูล TALEVO เพิ่มเติม คุณเลือกตารางเรียนหรืองานได้ก่อนส่งคำถามทุกครั้ง</p>
+        <h3>{uiText("เลือกก่อนใช้เสมอ")}</h3>
+        <p>{uiText("ค่าเริ่มต้นจะไม่แนบข้อมูล TALEVO เพิ่มเติม คุณเลือกตารางเรียนหรืองานได้ก่อนส่งคำถามทุกครั้ง")}</p>
       </section>
       <section>
-        <h3>เมื่อใช้ AI ออนไลน์</h3>
-        <p>ระบบจะส่งเฉพาะข้อความที่คุณพิมพ์และหมวดข้อมูลที่เลือก เพื่อสร้างคำตอบ ข้อมูลการเงิน โปรไฟล์ อีเมล การแจ้งเตือน โน้ต และไฟล์แนบจะไม่ถูกส่งอัตโนมัติ</p>
+        <h3>{uiText("เมื่อใช้ AI ออนไลน์")}</h3>
+        <p>{uiText("ระบบจะส่งเฉพาะข้อความที่คุณพิมพ์และหมวดข้อมูลที่เลือก เพื่อสร้างคำตอบ ข้อมูลการเงิน โปรไฟล์ อีเมล การแจ้งเตือน โน้ต และไฟล์แนบจะไม่ถูกส่งอัตโนมัติ")}</p>
       </section>
       <section>
-        <h3>เมื่อใช้โหมดในอุปกรณ์</h3>
-        <p>คำตอบจะประมวลผลในอุปกรณ์นี้ และใช้เฉพาะหมวดข้อมูลที่คุณเลือก โดยไม่ส่งออกไปยังบริการ AI ภายนอก</p>
+        <h3>{uiText("เมื่อใช้โหมดในอุปกรณ์")}</h3>
+        <p>{uiText("คำตอบจะประมวลผลในอุปกรณ์นี้ และใช้เฉพาะหมวดข้อมูลที่คุณเลือก โดยไม่ส่งออกไปยังบริการ AI ภายนอก")}</p>
       </section>
     </div>
   );
@@ -267,26 +279,28 @@ function UsageCard({
   isLocalMode: boolean;
   onRefresh: () => void;
 }) {
+  const uiText = useUiText();
+
   const percent = usage && !isUnconfigured && usage.limit > 0 ? Math.min(100, (usage.used / usage.limit) * 100) : 0;
   return (
-    <section className={`ai-usage-card ${onlineUnavailable || isUnconfigured ? "is-unavailable" : ""} ${isLocalMode ? "is-local-mode" : ""}`} aria-label="โควตา AI ออนไลน์">
+    <section className={`ai-usage-card ${onlineUnavailable || isUnconfigured ? "is-unavailable" : ""} ${isLocalMode ? "is-local-mode" : ""}`} aria-label={uiText("โควตา AI ออนไลน์")}>
       <div className="ai-usage-top">
         <div>
-          <span>โควตา AI ออนไลน์</span>
+          <span>{uiText("โควตา AI ออนไลน์")}</span>
           <strong>
             {loading
-              ? "กำลังตรวจสอบ"
+              ? uiText("กำลังตรวจสอบ")
               : isLocalMode
-                ? "โหมดในอุปกรณ์"
+                ? uiText("โหมดในอุปกรณ์")
                 : isUnconfigured
-                  ? "AI ออนไลน์ยังไม่ได้เชื่อมต่อ"
+                  ? uiText("AI ออนไลน์ยังไม่ได้เชื่อมต่อ")
                   : usage
-                    ? `เหลือ ${usage.remaining} ครั้ง`
-                    : "ตรวจสอบไม่ได้"}
+                    ? uiText("เหลือ {0} ครั้ง", [usage.remaining])
+                    : uiText("ตรวจสอบไม่ได้")}
           </strong>
         </div>
         {(error || onlineUnavailable) && !isUnconfigured && (
-          <button type="button" onClick={onRefresh} aria-label="ตรวจสอบโควตาอีกครั้ง">
+          <button type="button" onClick={onRefresh} aria-label={uiText("ตรวจสอบโควตาอีกครั้ง")}>
             <RefreshCw />
           </button>
         )}
@@ -297,21 +311,21 @@ function UsageCard({
       <div className="ai-usage-meta">
         <span>
           {isLocalMode
-            ? "โหมดในอุปกรณ์ไม่หักโควตา"
+            ? uiText("โหมดในอุปกรณ์ไม่หักโควตา")
             : isUnconfigured
-              ? "ระบบจะแสดงโควตาเมื่อเชื่อมต่อ AI ออนไลน์"
+              ? uiText("ระบบจะแสดงโควตาเมื่อเชื่อมต่อ AI ออนไลน์")
               : usage
-                ? `${usage.used} / ${usage.limit} คำตอบ`
-                : "ระบบจะตรวจสอบอีกครั้งเมื่อพร้อม"}
+                ? uiText("{0} / {1} คำตอบ", [usage.used, usage.limit])
+                : uiText("ระบบจะตรวจสอบอีกครั้งเมื่อพร้อม")}
         </span>
         <span>
           {isUnconfigured
-            ? "กำลังรอการตั้งค่าผู้ให้บริการ AI ใหม่"
+            ? uiText("กำลังรอการตั้งค่าผู้ให้บริการ AI ใหม่")
             : onlineUnavailable
-              ? "สิทธิ์คงเหลือจะใช้ได้เมื่อ AI ออนไลน์กลับมาพร้อม"
+              ? uiText("สิทธิ์คงเหลือจะใช้ได้เมื่อ AI ออนไลน์กลับมาพร้อม")
               : usage?.resetAt && countdown !== null
-                ? `รีเซ็ต ${formatResetDate(usage.resetAt)} · อีก ${formatCompactDuration(countdown)}`
-                : "รอบเริ่มเมื่อได้รับคำตอบแรก"}
+                ? uiText("รีเซ็ต {0} · อีก {1}", [formatResetDate(usage.resetAt), formatCompactDuration(countdown)])
+                : uiText("รอบเริ่มเมื่อได้รับคำตอบแรก")}
         </span>
       </div>
     </section>
@@ -339,6 +353,8 @@ function AIStatusCard({
   onReturnOnline: () => void;
   onRetry: () => void;
 }) {
+  const uiText = useUiText();
+
   const copy: Record<AIExperienceStatus, { title: string; detail: string; tone: string }> = {
     "online-unconfigured": {
       title: "AI ออนไลน์ยังไม่ได้เชื่อมต่อ",
@@ -387,12 +403,12 @@ function AIStatusCard({
     <section className={`ai-status-card tone-${current.tone}`} role={status === "response-error" || status === "fully-unavailable" ? "alert" : "status"}>
       <span className="ai-status-icon">{renderIcon()}</span>
       <div>
-        <strong>{current.title}</strong>
-        <p>{current.detail}</p>
+        <strong>{uiText(current.title)}</strong>
+        <p>{uiText(current.detail)}</p>
       </div>
       {showFallback && (
         <div className="ai-status-actions">
-          <button type="button" className="primary-button" onClick={onUseOnDevice} disabled={isRechecking}>ใช้โหมดในอุปกรณ์</button>
+          <button type="button" className="primary-button" onClick={onUseOnDevice} disabled={isRechecking}>{uiText("ใช้โหมดในอุปกรณ์")}</button>
           {status !== "online-unconfigured" && (
             <button
               type="button"
@@ -402,13 +418,13 @@ function AIStatusCard({
               aria-busy={isRechecking}
             >
               <RefreshCw className={isRechecking ? "is-spinning" : undefined} />
-              {isRechecking ? "กำลังตรวจสอบ..." : canRetryMessage ? "ลองส่งอีกครั้ง" : "ลองตรวจสอบอีกครั้ง"}
+              {isRechecking ? uiText("กำลังตรวจสอบ...") : canRetryMessage ? uiText("ลองส่งอีกครั้ง") : uiText("ลองตรวจสอบอีกครั้ง")}
             </button>
           )}
         </div>
       )}
       {status === "on-device-ready" && canReturnOnline && (
-        <button type="button" className="text-button ai-return-online" onClick={onReturnOnline}>กลับไปใช้ AI ออนไลน์</button>
+        <button type="button" className="text-button ai-return-online" onClick={onReturnOnline}>{uiText("กลับไปใช้ AI ออนไลน์")}</button>
       )}
     </section>
   );
@@ -427,6 +443,8 @@ function createBoundedHistory(chat: ChatMessage[]): AIHistoryItem[] {
 }
 
 export function AIPage() {
+  const uiText = useUiText();
+
   const { chat, appendChatMessages, sendChat, tasks, schedules } = useAppState();
   const [input, setInput] = useState("");
   const [selectedContext, setSelectedContext] = useState<AIContextSelection>({ ...EMPTY_AI_CONTEXT_SELECTION });
@@ -692,7 +710,7 @@ export function AIPage() {
   const statusCard = (
     <AIStatusCard
       status={experienceStatus}
-      message={errorMessage}
+      message={uiText(errorMessage)}
       isRechecking={isRechecking}
       canUseOnDevice={LOCAL_MODE_AVAILABLE}
       canReturnOnline={onlineAvailability === "ready" && mode === "on-device"}
@@ -721,12 +739,12 @@ export function AIPage() {
   return (
     <div className="page ai-premium-page">
       <header className="ai-premium-header">
-        <button className="ai-phone-context-button icon-button" type="button" onClick={() => setContextSheetOpen(true)} aria-label="เลือกบริบทที่ให้ AI ใช้" aria-haspopup="dialog" aria-expanded={contextSheetOpen}>
+        <button className="ai-phone-context-button icon-button" type="button" onClick={() => setPrivacyOpen(true)} aria-label={uiText("ความเป็นส่วนตัวของ TALEVO AI")} aria-haspopup="dialog" aria-expanded={privacyOpen}>
           <Info aria-hidden="true" />
           {selectedOptions.length > 0 && <span>{selectedOptions.length}</span>}
         </button>
         <div className="ai-header-left">
-          <Link href="/today" className="icon-button ai-back-button" aria-label="ย้อนกลับ">
+          <Link href="/today" className="icon-button ai-back-button" aria-label={uiText("ย้อนกลับ")}>
             <ChevronLeft />
           </Link>
           <div className="ai-brand-lockup">
@@ -737,26 +755,28 @@ export function AIPage() {
                 <span className={`ai-mode-badge mode-${mode} status-${experienceStatus}`}>
                   <i className="ai-badge-dot" />
                   {mode === "on-device"
-                    ? "AI ในอุปกรณ์"
+                    ? uiText("AI ในอุปกรณ์")
                     : isRechecking || onlineAvailability === "checking"
-                      ? "กำลังตรวจสอบ AI ออนไลน์..."
+                      ? uiText("กำลังตรวจสอบ AI ออนไลน์...")
                       : onlineAvailability === "unconfigured"
-                        ? "AI ออนไลน์ยังไม่ได้เชื่อมต่อ"
+                        ? uiText("AI ออนไลน์ยังไม่ได้เชื่อมต่อ")
                         : onlineAvailability === "ready"
-                          ? `${usage?.providerLabel || "Groq"} พร้อมใช้งาน`
-                          : "AI ออนไลน์ไม่พร้อมใช้งานชั่วคราว"}
+                          ? uiText("{0} พร้อมใช้งาน", [usage?.providerLabel || "Groq"])
+                          : uiText("AI ออนไลน์ไม่พร้อมใช้งานชั่วคราว")}
                 </span>
                 <button
                   className="icon-button ai-info-button"
                   type="button"
-                  aria-label="เกี่ยวกับ TALEVO AI"
-                  onClick={() => setAboutOpen(true)}
+                  aria-label={uiText("ความเป็นส่วนตัวของ TALEVO AI")}
+                  aria-haspopup="dialog"
+                  aria-expanded={privacyOpen}
+                  onClick={() => setPrivacyOpen(true)}
                 >
                   <Info />
                 </button>
               </div>
               <h1>TALEVO AI</h1>
-              <p>ผู้ช่วยวางแผนการเรียนของคุณ</p>
+              <p>{uiText("ผู้ช่วยวางแผนการเรียนของคุณ")}</p>
             </div>
           </div>
         </div>
@@ -771,22 +791,22 @@ export function AIPage() {
           {usageCard}
         </div>
 
-        <section className="ai-conversation-card" aria-label="การสนทนากับ TALEVO AI">
+        <section className="ai-conversation-card" aria-label={uiText("การสนทนากับ TALEVO AI")}>
           <div ref={chatScrollRef} className="ai-conversation-scroll" aria-live="polite">
             {(
               <div className={`ai-empty-state${chat.length > 0 || pendingMessage ? " ai-phone-welcome" : ""}`}>
                 <div className="ai-empty-orbit">
                   <TalevoMascotAvatar size="lg" priority showSparkle />
                 </div>
-                <h2>วันนี้อยากให้ <span className="ai-welcome-name">TALEVO</span> ช่วยอะไร?</h2>
-                <p>สรุปบทเรียน วางแผนอ่านหนังสือ จัดลำดับงาน หรือเตรียมสอบได้จากตรงนี้</p>
-                <p className="sr-only">ประวัติการสนทนายังว่างอยู่</p>
-                <small>{chat.length === 0 ? "ประวัติการสนทนายังว่างอยู่ · " : ""}เลือกข้อมูล TALEVO ได้ก่อนส่งคำถาม</small>
+                <h2>{uiText("วันนี้อยากให้")}<span className="ai-welcome-name">TALEVO</span> {uiText("ช่วยอะไร?")}</h2>
+                <p>{uiText("สรุปบทเรียน วางแผนอ่านหนังสือ จัดลำดับงาน หรือเตรียมสอบได้จากตรงนี้")}</p>
+                <p className="sr-only">{uiText("ประวัติการสนทนายังว่างอยู่")}</p>
+                <small>{chat.length === 0 ? uiText("ประวัติการสนทนายังว่างอยู่ · ") : ""}{uiText("เลือกข้อมูล TALEVO ได้ก่อนส่งคำถาม")}</small>
                 <div className="ai-suggestion-grid">
                   {SUGGESTIONS.map((suggestion) => (
                     <button
                       type="button"
-                      key={suggestion}
+                      key={uiText(suggestion)}
                       disabled={!canSend}
                       onClick={() => {
                         setInput(suggestion);
@@ -794,7 +814,7 @@ export function AIPage() {
                       }}
                     >
                       <Sparkles />
-                      {suggestion}
+                      {uiText(suggestion)}
                     </button>
                   ))}
                 </div>
@@ -809,7 +829,7 @@ export function AIPage() {
                 <div className="ai-premium-bubble">
                   <AIMessageContent content={message.content} />
                   {message.kind === "task-summary" && <TaskSummaryMessage tasks={tasks} schedules={schedules} />}
-                  <small>{message.role === "assistant" ? "TALEVO AI" : "คุณ"}</small>
+                  <small>{message.role === "assistant" ? "TALEVO AI" : uiText("คุณ")}</small>
                 </div>
               </div>
             ))}
@@ -819,17 +839,17 @@ export function AIPage() {
                 <div className="ai-premium-message user is-pending">
                   <div className="ai-premium-bubble">
                     <AIMessageContent content={pendingMessage} />
-                    <small>กำลังส่ง...</small>
+                    <small>{uiText("กำลังส่ง...")}</small>
                   </div>
                 </div>
                 {isLoading && (
                   <div className="ai-premium-message assistant is-loading">
                     <TalevoMascotAvatar size="xs" />
                     <div className="ai-premium-bubble">
-                      <span className="ai-thinking-dots" aria-label="AI กำลังคิด">
+                      <span className="ai-thinking-dots" aria-label={uiText("AI กำลังคิด")}>
                         <i /><i /><i />
                       </span>
-                      <small>กำลังเรียบเรียงคำตอบ</small>
+                      <small>{uiText("กำลังเรียบเรียงคำตอบ")}</small>
                     </div>
                   </div>
                 )}
@@ -839,13 +859,13 @@ export function AIPage() {
 
           <form className="ai-premium-composer" onSubmit={submit}>
             {selectedOptions.length > 0 && (
-              <div className="ai-selected-context" aria-label="บริบทที่กำลังแนบ">
+              <div className="ai-selected-context" aria-label={uiText("บริบทที่กำลังแนบ")}>
                 {selectedOptions.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <button type="button" key={item.key} onClick={() => clearContext(item.key)} aria-label={`ยกเลิก ${item.label}`}>
+                    <button type="button" key={item.key} onClick={() => clearContext(item.key)} aria-label={uiText("ยกเลิก {0}", [item.label])}>
                       <Icon />
-                      {item.label}
+                      {uiText(item.label)}
                       <X />
                     </button>
                   );
@@ -854,12 +874,12 @@ export function AIPage() {
             )}
 
             <div className="ai-composer-row">
-              <button className="ai-context-trigger" type="button" onClick={() => setContextSheetOpen(true)} aria-label="เลือกข้อมูล TALEVO ที่ให้ AI ใช้">
+              <button className="ai-context-trigger" type="button" onClick={() => setContextSheetOpen(true)} aria-label={uiText("เลือกข้อมูล TALEVO ที่ให้ AI ใช้")}>
                 <Plus />
-                <span>บริบท</span>
+                <span>{uiText("บริบท")}</span>
                 {selectedOptions.length > 0 && <b>{selectedOptions.length}</b>}
               </button>
-              <label className="sr-only" htmlFor="talevo-ai-message">พิมพ์คำถามถึง TALEVO AI</label>
+              <label className="sr-only" htmlFor="talevo-ai-message">{uiText("พิมพ์คำถามถึง TALEVO AI")}</label>
               <textarea
                 ref={textareaRef}
                 id="talevo-ai-message"
@@ -877,11 +897,11 @@ export function AIPage() {
                 }}
               />
               {isLoading ? (
-                <button className="ai-send-button is-stop" type="button" aria-label="หยุดสร้างคำตอบ" onClick={() => abortControllerRef.current?.abort()}>
+                <button className="ai-send-button is-stop" type="button" aria-label={uiText("หยุดสร้างคำตอบ")} onClick={() => abortControllerRef.current?.abort()}>
                   <Square />
                 </button>
               ) : (
-                <button className="ai-send-button" type="submit" aria-label="ส่งข้อความ" disabled={!input.trim() || !canSend}>
+                <button className="ai-send-button" type="submit" aria-label={uiText("ส่งข้อความ")} disabled={!input.trim() || !canSend}>
                   <Send />
                 </button>
               )}
@@ -890,14 +910,14 @@ export function AIPage() {
             <div className="ai-composer-meta">
               <span>
                 {mode === "on-device"
-                  ? "AI ในอุปกรณ์ใช้เฉพาะข้อมูลที่เลือก"
+                  ? uiText("AI ในอุปกรณ์ใช้เฉพาะข้อมูลที่เลือก")
                   : selectedOptions.length
-                    ? `แนบข้อมูล ${selectedOptions.length} หมวด`
-                    : "ยังไม่ได้แนบข้อมูล TALEVO"}
+                    ? uiText("แนบข้อมูล {0} หมวด", [selectedOptions.length])
+                    : uiText("ยังไม่ได้แนบข้อมูล TALEVO")}
               </span>
               {input.length >= CHARACTER_WARNING_AT && (
                 <strong className={input.length >= MAX_MESSAGE_LENGTH ? "is-limit" : ""}>
-                  {input.length.toLocaleString("th-TH")} / {MAX_MESSAGE_LENGTH.toLocaleString("th-TH")}
+                  {input.length.toLocaleString(uiText.locale)} / {MAX_MESSAGE_LENGTH.toLocaleString(uiText.locale)}
                 </strong>
               )}
             </div>
@@ -913,52 +933,50 @@ export function AIPage() {
 
       <BottomSheet
         open={contextSheetOpen}
-        title="ข้อมูลที่ให้ AI ใช้"
+        title={uiText("ข้อมูลที่ให้ AI ใช้")}
         onClose={() => setContextSheetOpen(false)}
-        closeLabel="ปิดตัวเลือกบริบท"
+        closeLabel={uiText("ปิดตัวเลือกบริบท")}
         className="ai-context-sheet"
       >
         <ContextPanel selected={selectedContext} onToggle={toggleContext} />
-        <PrivacyPanel mode={mode} onOpen={() => setPrivacyOpen(true)} />
         <button className="primary-button button-block" type="button" onClick={() => setContextSheetOpen(false)}>
-          ใช้บริบทที่เลือก ({selectedOptions.length})
+          {uiText("ใช้บริบทที่เลือก (")}{selectedOptions.length})
         </button>
       </BottomSheet>
 
       <BottomSheet
         open={privacyOpen}
-        title="ความเป็นส่วนตัวของ TALEVO AI"
+        title={uiText("ความเป็นส่วนตัวของ TALEVO AI")}
         onClose={() => setPrivacyOpen(false)}
-        closeLabel="ปิดรายละเอียด"
+        closeLabel={uiText("ปิดรายละเอียด")}
       >
         <PrivacyDialog />
       </BottomSheet>
 
       <BottomSheet
         open={aboutOpen}
-        title="เกี่ยวกับ TALEVO AI"
+        title={uiText("เกี่ยวกับ TALEVO AI")}
         onClose={() => setAboutOpen(false)}
-        closeLabel="ปิด"
+        closeLabel={uiText("ปิด")}
         className="ai-about-sheet"
       >
         <div className="ai-about-dialog">
           <TalevoMascotAvatar size="md" className="ai-about-mascot" />
-          <p className="ai-about-subtitle">TALEVO AI ช่วยวางแผนการเรียน ตอบคำถาม และให้คำแนะนำแบบอ่านอย่างเดียว</p>
+          <p className="ai-about-subtitle">{uiText("TALEVO AI ช่วยวางแผนการเรียน ตอบคำถาม และให้คำแนะนำแบบอ่านอย่างเดียว")}</p>
           <section>
-            <h3>โควตา AI ออนไลน์</h3>
-            <p>จำนวนคำตอบจะนับเมื่อได้รับคำตอบออนไลน์สำเร็จ และไม่เกี่ยวกับประวัติแชต</p>
+            <h3>{uiText("โควตา AI ออนไลน์")}</h3>
+            <p>{uiText("จำนวนคำตอบจะนับเมื่อได้รับคำตอบออนไลน์สำเร็จ และไม่เกี่ยวกับประวัติแชต")}</p>
           </section>
           <section>
-            <h3>คุณควบคุมบริบท</h3>
-            <p>ค่าเริ่มต้นไม่ใช้ข้อมูล TALEVO เพิ่มเติม และจะใช้เฉพาะหมวดที่คุณเปิดเอง</p>
+            <h3>{uiText("คุณควบคุมบริบท")}</h3>
+            <p>{uiText("ค่าเริ่มต้นไม่ใช้ข้อมูล TALEVO เพิ่มเติม และจะใช้เฉพาะหมวดที่คุณเปิดเอง")}</p>
           </section>
           <section>
-            <h3>ตรวจคำตอบสำคัญเสมอ</h3>
-            <p>คำแนะนำจาก AI อาจคลาดเคลื่อนได้ ควรตรวจสอบข้อมูลสำคัญกับแหล่งข้อมูลจริงเสมอ</p>
+            <h3>{uiText("ตรวจคำตอบสำคัญเสมอ")}</h3>
+            <p>{uiText("คำแนะนำจาก AI อาจคลาดเคลื่อนได้ ควรตรวจสอบข้อมูลสำคัญกับแหล่งข้อมูลจริงเสมอ")}</p>
           </section>
           <button className="primary-button button-block" type="button" onClick={() => setAboutOpen(false)}>
-            เข้าใจแล้ว
-          </button>
+            {uiText("เข้าใจแล้ว")}</button>
         </div>
       </BottomSheet>
     </div>

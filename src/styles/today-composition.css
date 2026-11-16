@@ -855,3 +855,13 @@ html[data-theme="dark"] .smart-today-hero .smart-free-time-hero {
 .study-speech-stars i:nth-child(2) { width: 23px; top: 15px; left: 10px; transform: rotate(-25deg); }
 .study-speech-stars i:nth-child(3) { width: 17px; top: 29px; left: 14px; transform: rotate(12deg); }
 @media(max-width:699px) { .study-hero .study-speech-stars { right: -25px; top: -5px; transform: scale(.88) rotate(3deg); transform-origin: top left; } }
+
+/* Schedule state colors stay distinct in both themes and at all sizes. */
+.smart-today-schedule-status.is-next { color:#7652d5; background:#eee8ff; }
+.smart-today-schedule-status.is-pending { color:#b56b18; background:#fff3dc; }
+.smart-today-schedule-status.is-current { color:#087d67; background:#ddf7ef; }
+.smart-today-schedule-status.is-completed { color:#438053; background:#e7f5e8; }
+html[data-theme="dark"] .smart-today-schedule-status.is-next { color:#c7b4ff; background:#392c55; }
+html[data-theme="dark"] .smart-today-schedule-status.is-pending { color:#ffd083; background:#44341f; }
+html[data-theme="dark"] .smart-today-schedule-status.is-current { color:#76e0c1; background:#173f37; }
+html[data-theme="dark"] .smart-today-schedule-status.is-completed { color:#9cdda5; background:#24412b; }

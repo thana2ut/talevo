@@ -1,19 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseConfiguration } from "@/lib/supabase/config";
+import { sessionCookieOptions } from "@/lib/supabase/cookie-options";
 
 const protectedRoutePrefixes = [
   "/academic",
   "/ai",
   "/calendar",
+  "/exams",
+  "/grade-lab",
   "/help",
   "/notifications",
   "/profile",
+  "/rescue",
   "/schedule",
   "/settings",
   "/statistics",
   "/tasks",
   "/today",
+  "/vision",
 ];
 
 // Long enough for a cold start on a mobile network. A slow check no longer
@@ -81,6 +86,7 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { url, publishableKey } = getSupabaseConfiguration();
   const supabase = createServerClient(url, publishableKey, {
+    cookieOptions: sessionCookieOptions,
     global: { fetch: fetchWithAuthTimeout },
     cookies: {
       getAll() {
@@ -96,21 +102,18 @@ export async function updateSession(request: NextRequest) {
 
   const hasSessionCookie = hasStoredSession(request);
 
-  // Start optimistic. A stored session is the normal state for someone
-  // reopening the app, and the only thing that should end it is Auth saying so
-  // - not a slow network. The app shell checks again in the browser and sends
-  // them to Login if the session really is gone, while RLS and the API routes
-  // remain the actual guard on their data.
-  let isAuthenticated = hasSessionCookie;
+  // A stored cookie is a hint only. Only Auth can establish current identity.
+  let isAuthenticated = false;
 
   if (hasSessionCookie) {
     try {
-      const { data, error } = await supabase.auth.getClaims();
-      // Only a definite answer overrides the stored session: an aborted or
-      // failed request tells us about the connection, not the account.
-      if (!error) isAuthenticated = Boolean(data?.claims?.sub);
+      const { data, error } = await supabase.auth.getUser();
+      if (!error) isAuthenticated = Boolean(data.user);
+      else if (error.status === 0 || (error.status ?? 0) >= 500) {
+        return new NextResponse("ตรวจสอบการเข้าสู่ระบบยังไม่สำเร็จ กรุณาลองโหลดหน้าใหม่ ข้อมูลของคุณยังอยู่", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "private, no-store", "Retry-After": "5" } });
+      }
     } catch {
-      // Cold start on a phone network. Let them through on the cookie.
+      return new NextResponse("ตรวจสอบการเข้าสู่ระบบยังไม่สำเร็จ กรุณาลองโหลดหน้าใหม่", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "private, no-store", "Retry-After": "5" } });
     }
   }
 

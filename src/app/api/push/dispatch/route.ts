@@ -1,8 +1,10 @@
+import { secureApi } from "@/lib/security/api-guard";
 import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import webpush from "web-push";
 import { getPushDispatchSecret, getVapidConfiguration } from "@/lib/push/config";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isTrustedPushEndpoint } from "@/lib/push/endpoint";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +32,7 @@ function fail(code: string, status: number) {
   return NextResponse.json({ code }, { status });
 }
 
-export async function POST(request: NextRequest) {
+async function handlerPOST(request: NextRequest) {
   const secret = getPushDispatchSecret();
   const vapid = getVapidConfiguration();
   if (!secret || !vapid) return fail("push_not_configured", 503);
@@ -79,10 +81,12 @@ export async function POST(request: NextRequest) {
   let delivered = 0;
 
   await Promise.all(rows.flatMap((row) => (byUser.get(row.user_id) ?? []).map(async (sub) => {
+    if (!isTrustedPushEndpoint(sub.endpoint)) return;
     try {
       await webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         JSON.stringify({ title: row.title, body: row.body, href: row.href, tag: row.event_key }),
+        { timeout: 10000, TTL: 300 },
       );
       delivered += 1;
     } catch (sendError) {
@@ -110,3 +114,5 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ sent: rows.length, delivered, removed: expired.length });
 }
+
+export const POST = secureApi(handlerPOST, "/api/push/dispatch", "POST");

@@ -5,10 +5,14 @@ import { useState } from "react";
 import { BottomSheet, Input } from "@/components/ui";
 import { getContrastTextColor, isValidTalevoHex, normalizeTalevoColor, talevoPresetColors } from "@/lib/talevo-color-utils";
 import { useLanguage } from "@/providers/language-provider";
+import { useUiText } from "@/providers/ui-language";
+
 
 type TalevoColorPickerProps = { value: string; onChange: (color: string) => void; title: string; previewLabel: string; triggerLabel: string };
 
 export function TalevoColorPicker({ value, onChange, title, previewLabel, triggerLabel }: TalevoColorPickerProps) {
+  const uiText = useUiText();
+
   const { t, language } = useLanguage();
   const selected = normalizeTalevoColor(value);
   const [open, setOpen] = useState(false);
@@ -32,26 +36,26 @@ export function TalevoColorPicker({ value, onChange, title, previewLabel, trigge
     <button className="task-color-trigger" type="button" onClick={openPicker} aria-haspopup="dialog" aria-expanded={open} aria-label={`${triggerLabel} ${previewLabel} ${currentColorLabel} ${selected}`}>
       <i aria-hidden="true" style={{ backgroundColor: selected }} />
       <span className="task-color-hex">{selected}</span>
-      <span className="task-color-action"><b>{triggerLabel}</b><ChevronDown aria-hidden="true" /></span>
+      <span className="task-color-action"><b>{uiText(triggerLabel)}</b><ChevronDown aria-hidden="true" /></span>
     </button>
-    <BottomSheet open={open} title={title} onClose={close} closeLabel={closeLabel} className="task-color-sheet">
+    <BottomSheet open={open} title={title} onClose={close} closeLabel={uiText(closeLabel)} className="task-color-sheet">
       <div className="task-color-panel">
         <section>
-          <h3>{presetLabel}</h3>
-          <div className="task-color-presets" role="radiogroup" aria-label={presetLabel}>
+          <h3>{uiText(presetLabel)}</h3>
+          <div className="task-color-presets" role="radiogroup" aria-label={uiText(presetLabel)}>
             {talevoPresetColors.map((color) => <button key={color} type="button" role="radio" aria-checked={draftColor === color} className={draftColor === color ? "selected" : ""} aria-label={`${title} ${color}`} style={{ backgroundColor: color, color: getContrastTextColor(color) }} onClick={() => setDraft(color)}>{draftColor === color && <Check aria-hidden="true" />}</button>)}
           </div>
         </section>
         <section className="task-custom-color">
-          <h3>{customColorLabel}</h3>
+          <h3>{uiText(customColorLabel)}</h3>
           <label className="task-native-color-control">
             <i aria-hidden="true" style={{ backgroundColor: draftColor }} />
-            <span><strong>{selectedColorLabel}</strong><small>{draftColor}</small></span>
-            <b>{customColorLabel}</b>
+            <span><strong>{uiText(selectedColorLabel)}</strong><small>{draftColor}</small></span>
+            <b>{uiText(customColorLabel)}</b>
             <input type="color" value={draftColor} onChange={(event) => setDraft(event.target.value)} aria-label={`${customColorLabel} ${draftColor}`} />
           </label>
-          <label className="task-hex-field"><span>{hexLabel}</span><Input value={hex} maxLength={7} aria-invalid={Boolean(error)} onChange={(event) => { const next = event.target.value; const candidate = next.startsWith("#") ? next : `#${next}`; setHex(next); setError(""); if (isValidTalevoHex(candidate)) setDraft(candidate); }} onBlur={applyHex} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); applyHex(); } }} placeholder="#7656F6" /></label>
-          {error && <p className="form-error" role="alert">{error}</p>}
+          <label className="task-hex-field"><span>{uiText(hexLabel)}</span><Input value={hex} maxLength={7} aria-invalid={Boolean(error)} onChange={(event) => { const next = event.target.value; const candidate = next.startsWith("#") ? next : `#${next}`; setHex(next); setError(""); if (isValidTalevoHex(candidate)) setDraft(candidate); }} onBlur={applyHex} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); applyHex(); } }} placeholder="#7656F6" /></label>
+          {error && <p className="form-error" role="alert">{uiText(error)}</p>}
         </section>
         <div className="task-color-actions"><button className="secondary-button" type="button" onClick={close}>{t("common.cancel")}</button><button className="primary-button" type="button" onClick={apply}>{t("tasks.applyColor")}</button></div>
       </div>

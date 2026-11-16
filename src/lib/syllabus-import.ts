@@ -6,7 +6,8 @@ import { isCorruptedScheduleTitle } from "@/lib/schedule-utils";
 export type SyllabusConfidence = "confident" | "review" | "conflict" | "missing";
 export type SyllabusSourceKind = "text" | "document";
 export type SyllabusCourse = { courseCode: string | null; courseName: string | null; section: string | null; instructor: string | null; room: string | null; credits: number | null; };
-export type SyllabusScheduleItem = { id: string; draftId: string; day: number | null; startTime: string | null; endTime: string | null; room: string | null; confidence: SyllabusConfidence; selected: boolean; courseCode?: string | null; courseName?: string | null; credits?: number | null; section?: string | null; extraLabel?: string | null; teacher?: string | null; evidence?: string[]; };
+export type ScheduleReviewField = "courseCode" | "courseName" | "day" | "startTime" | "endTime" | "room" | "credits" | "section";
+export type SyllabusScheduleItem = { id: string; draftId: string; day: number | null; startTime: string | null; endTime: string | null; room: string | null; confidence: SyllabusConfidence; selected: boolean; courseCode?: string | null; courseName?: string | null; credits?: number | null; section?: string | null; extraLabel?: string | null; teacher?: string | null; evidence?: string[]; reviewFields?: ScheduleReviewField[]; reviewedFields?: ScheduleReviewField[]; };
 export type SyllabusTaskItem = { id: string; draftId: string; title: string; dueDate: string | null; dueTime: string | null; description: string | null; weight: number | null; confidence: SyllabusConfidence; selected: boolean; };
 export type SyllabusExamItem = { id: string; draftId: string; title: string; type: ExamType; date: string | null; startTime: string | null; endTime: string | null; room: string | null; weight: number | null; confidence: SyllabusConfidence; selected: boolean; };
 export type SyllabusDocumentLayout = "WEEKLY_TIME_GRID" | "PERIOD_GRID" | "SCHOOL_SUBJECT_GRID" | "DATED_SCHEDULE_GRID" | "DATED_EVENT_GRID" | "EXAM_GRID" | "UNIVERSITY_BLOCK_GRID" | "SYLLABUS_TEXT" | "UNKNOWN";
@@ -21,7 +22,24 @@ const clean = (value: string | null | undefined, max = 160) => value?.replace(/\
 const key = (value: string) => clean(value).toLocaleLowerCase();
 
 export function updateSyllabusScheduleDraft(preview: SyllabusPreview, draftId: string, update: Partial<Omit<SyllabusScheduleItem, "draftId">>): SyllabusPreview {
-  return { ...preview, schedules: preview.schedules.map((item) => item.draftId === draftId ? { ...item, ...update, draftId: item.draftId } : item) };
+  return { ...preview, schedules: preview.schedules.map((item) => {
+    if (item.draftId !== draftId) return item;
+    const fields = (item.reviewFields ?? []).filter(field => !(field in update));
+    const reviewedFields = [...new Set([...(item.reviewedFields ?? []), ...Object.keys(update).filter(field => (item.reviewFields ?? []).includes(field as ScheduleReviewField)) as ScheduleReviewField[]])];
+    const next = { ...item, ...update, draftId: item.draftId, reviewFields: fields, reviewedFields };
+    return { ...next, confidence: getScheduleReviewFields(next).length ? "review" : "confident" };
+  }) };
+}
+
+export function getScheduleReviewFields(item: SyllabusScheduleItem): ScheduleReviewField[] {
+  const fields = new Set(item.reviewFields ?? []);
+  if (!clean(item.courseCode) && !clean(item.courseName)) fields.add("courseCode");
+  if (item.day === null || !Number.isInteger(item.day) || item.day < 0 || item.day > 6) fields.add("day");
+  if (!validStartTime(item.startTime)) fields.add("startTime");
+  if (!validEndTime(item.endTime)) fields.add("endTime");
+  if (validStartTime(item.startTime) && validEndTime(item.endTime) && !isValidAcademicTimeRange(item.startTime,item.endTime)) { fields.add("startTime"); fields.add("endTime"); }
+  if (item.credits !== undefined && item.credits !== null && (!Number.isFinite(item.credits) || item.credits < 0 || item.credits > 30)) fields.add("credits");
+  return [...fields];
 }
 
 export function setAllSyllabusPreviewSelected(preview: SyllabusPreview, selected: boolean): SyllabusPreview {
@@ -36,6 +54,7 @@ export function setAllSyllabusPreviewSelected(preview: SyllabusPreview, selected
 export function getCanonicalImportablePreview(preview: SyllabusPreview): SyllabusPreview {
   const selectedSchedules = preview.schedules.filter((item) =>
     item.selected &&
+    getScheduleReviewFields(item).length === 0 &&
     item.day !== null &&
     item.day >= 0 &&
     item.day <= 6 &&

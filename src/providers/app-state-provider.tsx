@@ -61,7 +61,7 @@ import {
 } from "@/lib/persistence/local-account-storage";
 import { createClient } from "@/lib/supabase/client";
 import { loadCloudAccountV8 } from "@/lib/supabase/cloud-v8-repository";
-import { hydrateCloudAccountToAppState } from "@/lib/supabase/cloud-hydration";
+import { hydrateCloudAccountToAppState, hydrateCloudNotifications } from "@/lib/supabase/cloud-hydration";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   persistClassSchedule,
@@ -486,6 +486,37 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     window.addEventListener("storage", synchronizeFromAnotherTab);
     return () => window.removeEventListener("storage", synchronizeFromAnotherTab);
   }, [accountDefaults, applySnapshot, isCurrentScopeHydrated, userId]);
+
+  // Grade Lab writes confirmed risk events through its atomic database RPC.
+  // Merge only those events; keep the existing alert engine and read state.
+  useEffect(() => {
+    if (!userId || !isCurrentScopeHydrated) return;
+    let active = true;
+    let inFlight = false;
+    const refreshGradeAlerts = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const { data, error } = await createClient().from("notifications").select("*").eq("user_id", userId).eq("metadata->>category", "grade_risk").order("created_at", { ascending: false }).limit(100);
+        if (error || !active || !data?.length) return;
+        const incoming = hydrateCloudNotifications(data);
+        setNotifications(current => {
+          const merged = new Map(current.map(notification => [notification.id, notification]));
+          for (const notification of incoming) {
+            const previous = merged.get(notification.id);
+            merged.set(notification.id, { ...notification, ...(previous?.readAt && !notification.readAt ? { readAt: previous.readAt } : {}) });
+          }
+          const next = [...merged.values()];
+          return JSON.stringify(next) === JSON.stringify(current) ? current : next;
+        });
+      } finally { inFlight = false; }
+    };
+    const refresh = () => { void refreshGradeAlerts().catch(() => {}); };
+    refresh();
+    window.addEventListener("talevo:notifications-refresh", refresh);
+    window.addEventListener("focus", refresh);
+    return () => { active = false; window.removeEventListener("talevo:notifications-refresh", refresh); window.removeEventListener("focus", refresh); };
+  }, [isCurrentScopeHydrated, userId]);
 
   useEffect(() => { tasksRef.current = tasks; }, [tasks]);
   useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
@@ -919,7 +950,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const color = matchingCourse?.color
           ? normalizeTalevoColor(matchingCourse.color)
           : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || courseId || input.name));
-        const newSchedule: ClassSchedule = { ...input, color, id, courseId };
+        const newSchedule: ClassSchedule = { ...input, academicLevel: input.academicLevel ?? academicTerm.level, academicTerm: input.academicTerm ?? academicTerm.term, academicYear: input.academicYear ?? academicTerm.academicYear, color, id, courseId };
         createdSchedule = newSchedule;
         return [...current, newSchedule];
       });
@@ -944,6 +975,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || input.courseId || input.name));
           return {
             ...input,
+            academicLevel: input.academicLevel ?? academicTerm.level,
+            academicTerm: input.academicTerm ?? academicTerm.term,
+            academicYear: input.academicYear ?? academicTerm.academicYear,
             id: uid("class"),
             color,
           };

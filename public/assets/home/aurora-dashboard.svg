@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200" fill="none">
+<defs>
+<linearGradient id="silk" x1="350" y1="0" x2="1600" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#c58bff" stop-opacity="0"/><stop offset=".48" stop-color="#b284f6" stop-opacity=".25"/><stop offset=".74" stop-color="#e6aaff" stop-opacity=".65"/><stop offset="1" stop-color="#a581ff" stop-opacity="0"/></linearGradient>
+<linearGradient id="edge"><stop stop-color="#e8c5ff" stop-opacity="0"/><stop offset=".6" stop-color="#fff3ff" stop-opacity=".95"/><stop offset="1" stop-color="#cb8eff" stop-opacity=".1"/></linearGradient>
+<radialGradient id="bloom"><stop stop-color="#c080ff" stop-opacity=".44"/><stop offset="1" stop-color="#b080ff" stop-opacity="0"/></radialGradient>
+<filter id="soft"><feGaussianBlur stdDeviation="35"/></filter>
+<filter id="glow"><feGaussianBlur stdDeviation="5"/></filter>
+<path id="wave" d="M-160 58C200-60 530 310 880 180S1370 36 1460-120L1700-100C1530 244 1330 127 1040 236S530 269 290 170S40 76-160 118Z"/>
+<path id="lower" d="M-100 720C200 770 280 1110 700 995S1180 880 1480 1010S1730 900 1930 870L1930 1050C1620 1190 1490 1130 1260 1060S960 1020 710 1080S170 940-100 800Z"/>
+</defs>
+<ellipse cx="1450" cy="150" rx="550" ry="250" fill="url(#bloom)" filter="url(#soft)"/>
+<ellipse cx="90" cy="930" rx="440" ry="290" fill="url(#bloom)"/>
+<use href="#wave" fill="url(#silk)"/><use href="#wave" stroke="url(#edge)" stroke-width="2"/><use href="#wave" stroke="#e4b9ff" stroke-opacity=".35" stroke-width="9" filter="url(#glow)"/>
+<use href="#lower" fill="url(#silk)"/><use href="#lower" stroke="url(#edge)" stroke-width="2"/>
+<path d="M-80 450C500 360 970 10 1880 350" stroke="url(#edge)" stroke-opacity=".35"/>
+<g fill="#fff1ff"><path d="M1370 246q0 10 10 10-10 0-10 10 0-10-10-10 10 0 10-10Z"/><path d="M1200 180q0 6 6 6-6 0-6 6 0-6-6-6 6 0 6-6Z"/><path d="M140 440q0 6 6 6-6 0-6 6 0-6-6-6 6 0 6-6Z"/><path d="M1680 820q0 9 9 9-9 0-9 9 0-9-9-9 9 0 9-9Z"/></g>
+<g fill="#c9a1ff" opacity=".7"><circle cx="1550" cy="155" r="3"/><circle cx="1570" cy="142" r="2"/><circle cx="110" cy="390" r="2"/><circle cx="1320" cy="280" r="2"/></g>
+</svg>

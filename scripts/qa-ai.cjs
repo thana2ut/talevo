@@ -221,6 +221,23 @@ async function runRuntimeContracts() {
   const { createAIChatHandler } = require("../src/lib/ai/chat-handler.ts");
   const { isAIProviderConfigured, getTalevoAIModel } = require("../src/lib/ai/config.ts");
   const { generateAIResponse, getConfiguredAIProvider } = require("../src/lib/ai/gateway.ts");
+  const { inferVoiceActions } = require("../src/lib/ai/voice-intent.ts");
+
+  // Voice command intent guard regressions
+  check(JSON.stringify(inferVoiceActions("เพิ่มงานสรุปบทที่สาม")) === JSON.stringify(["create"]), "Voice intent must recognize a Thai create command");
+  check(JSON.stringify(inferVoiceActions("เลื่อนกำหนดส่งรายงานเป็นพรุ่งนี้")) === JSON.stringify(["update"]), "Voice intent must recognize a Thai update command");
+  check(JSON.stringify(inferVoiceActions("เอางานรายงานออก")) === JSON.stringify(["delete"]), "Voice intent must recognize a colloquial Thai delete command");
+  check(JSON.stringify(inferVoiceActions("เพิ่มงานแล้วลบงานเก่า")) === JSON.stringify(["create", "delete"]), "Voice intent must flag multiple requested actions");
+  check(inferVoiceActions("วันนี้มีงานอะไรบ้าง").length === 0, "A question must not be treated as a voice mutation command");
+  check(inferVoiceActions("แก้ไขงานวิชาภาษาไทย").includes("update"), "Voice intent must recognize Thai speech command wording");
+
+  const voiceUi = read("src/features/ai/voice-command-sheet.tsx");
+  const voiceRoute = read("src/app/api/ai/voice/execute/route.ts");
+  check(voiceUi.includes("draft.action !== requestedActions[0]"), "Voice plan must match the user-requested action before preview");
+  check(voiceUi.includes('setStage("review")'), "Voice create/update commands must require user review before saving");
+  check(voiceUi.includes("clarification.command") && voiceUi.includes("คำตอบเพิ่มเติมของผู้ใช้"), "Voice clarification must preserve original command context");
+  check(voiceRoute.includes("Object.hasOwn(tables, plan.entity)"), "Voice mutation endpoint must allow only known entities");
+  check(voiceRoute.includes("plan.action === \"update\" && !Object.keys(plan.fields).length"), "Voice mutation endpoint must reject empty updates");
 
   // Test 1: Configuration check and model default
   const savedProvider = process.env.TALEVO_AI_PROVIDER;

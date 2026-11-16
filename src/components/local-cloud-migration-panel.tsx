@@ -15,8 +15,12 @@ import { readAppStateSnapshot } from "@/lib/persistence/app-state-storage";
 import { createEmptyAccountAppState } from "@/lib/app-state-defaults";
 import { useAuth } from "@/providers/auth-provider";
 import { useAppState } from "@/providers/app-state-provider";
+import { useUiText } from "@/providers/ui-language";
+
 
 export function AccountDataSettingsPanel() {
+  const uiText = useUiText();
+
   const { user } = useAuth();
   const {
     schedules,
@@ -84,7 +88,7 @@ export function AccountDataSettingsPanel() {
   return (
     <section className="account-data-settings-section" aria-labelledby="account-data-title">
       <div className="section-header">
-        <h2 id="account-data-title">ข้อมูลของบัญชี</h2>
+        <h2 id="account-data-title">{uiText("ข้อมูลของบัญชี")}</h2>
       </div>
 
       <Card className="settings-card account-data-card">
@@ -94,10 +98,10 @@ export function AccountDataSettingsPanel() {
           </span>
           <div className="account-data-status-copy">
             <div className="account-data-headline">
-              <strong>บันทึกข้อมูลอัตโนมัติ</strong>
-              <span className="account-data-badge">พร้อมใช้งาน</span>
+              <strong>{uiText("บันทึกข้อมูลอัตโนมัติ")}</strong>
+              <span className="account-data-badge">{uiText("พร้อมใช้งาน")}</span>
             </div>
-            <p>ตารางเรียน งาน และข้อมูลอื่นของคุณจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ</p>
+            <p>{uiText("ตารางเรียน งาน และข้อมูลอื่นของคุณจะบันทึกไว้ในบัญชี TALEVO อัตโนมัติ")}</p>
           </div>
         </div>
 
@@ -108,8 +112,8 @@ export function AccountDataSettingsPanel() {
                 <HardDrive />
               </span>
               <div>
-                <strong>ข้อมูลเก่าในอุปกรณ์</strong>
-                <p>พบข้อมูลจากการใช้งาน TALEVO ก่อนหน้านี้ คุณสามารถตรวจสอบและย้ายข้อมูลเข้าสู่บัญชีของคุณได้</p>
+                <strong>{uiText("ข้อมูลเก่าในอุปกรณ์")}</strong>
+                <p>{uiText("พบข้อมูลจากการใช้งาน TALEVO ก่อนหน้านี้ คุณสามารถตรวจสอบและย้ายข้อมูลเข้าสู่บัญชีของคุณได้")}</p>
               </div>
             </div>
 
@@ -119,17 +123,17 @@ export function AccountDataSettingsPanel() {
                 className="secondary-button legacy-inspect-button"
                 onClick={handleInspect}
               >
-                <span>ตรวจสอบข้อมูล</span>
+                <span>{uiText("ตรวจสอบข้อมูล")}</span>
                 <ArrowRight aria-hidden="true" />
               </button>
             ) : (
               <div className="legacy-inspection-details">
                 {legacySummary && (
                   <div className="legacy-summary-chips">
-                    <span>ตารางเรียน {legacySummary.schedules} คาบ</span>
-                    <span>งาน {legacySummary.tasks} ชิ้น</span>
-                    <span>การสอบ {legacySummary.exams} รายการ</span>
-                    <span>การเงิน {legacySummary.transactions} รายการ</span>
+                    <span>{uiText("ตารางเรียน")}{legacySummary.schedules} {uiText("คาบ")}</span>
+                    <span>{uiText("งาน")}{legacySummary.tasks} {uiText("ชิ้น")}</span>
+                    <span>{uiText("การสอบ")}{legacySummary.exams} {uiText("รายการ")}</span>
+                    <span>{uiText("การเงิน")}{legacySummary.transactions} {uiText("รายการ")}</span>
                   </div>
                 )}
 
@@ -137,8 +141,8 @@ export function AccountDataSettingsPanel() {
                   <div className="legacy-conflict-alert" role="status">
                     <AlertCircle aria-hidden="true" />
                     <div>
-                      <strong>บัญชีนี้มีข้อมูลอยู่แล้ว</strong>
-                      <p>เพื่อความปลอดภัยของข้อมูล บัญชีปัจจุบันจะไม่ถูกเขียนทับด้วยข้อมูลเก่า</p>
+                      <strong>{uiText("บัญชีนี้มีข้อมูลอยู่แล้ว")}</strong>
+                      <p>{uiText("เพื่อความปลอดภัยของข้อมูล บัญชีปัจจุบันจะไม่ถูกเขียนทับด้วยข้อมูลเก่า")}</p>
                     </div>
                   </div>
                 ) : (
@@ -149,14 +153,13 @@ export function AccountDataSettingsPanel() {
                       onClick={handleMigrate}
                     >
                       <RotateCcw aria-hidden="true" />
-                      ย้ายข้อมูลเข้าบัญชี
-                    </button>
+                      {uiText("ย้ายข้อมูลเข้าบัญชี")}</button>
                   </div>
                 )}
 
                 {actionError && (
                   <p className="form-error" role="alert">
-                    {actionError}
+                    {uiText(actionError)}
                   </p>
                 )}
               </div>
@@ -167,7 +170,7 @@ export function AccountDataSettingsPanel() {
         {migrated && (
           <div className="legacy-migrated-success" role="status">
             <CheckCircle2 aria-hidden="true" />
-            <span>ย้ายข้อมูลเข้าสู่บัญชีของคุณเรียบร้อยแล้ว</span>
+            <span>{uiText("ย้ายข้อมูลเข้าสู่บัญชีของคุณเรียบร้อยแล้ว")}</span>
           </div>
         )}
       </Card>

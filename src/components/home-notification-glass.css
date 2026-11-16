@@ -1,0 +1,24 @@
+/* A separate material: no icon-button or legacy notification background styles. */
+.home-notification-glass{--glass-rim:#ffffffa8;--glass-highlight:#ffffffe6;--glass-lowlight:#b9a0d92e;position:relative;display:grid;place-items:center;flex:none;align-self:center;width:48px;height:48px;box-sizing:border-box;margin:0;padding:0;border:1px solid var(--glass-rim);border-radius:34%;background:transparent;color:#17132c;text-decoration:none;backdrop-filter:blur(2px) saturate(108%);-webkit-backdrop-filter:blur(2px) saturate(108%);box-shadow:0 7px 17px #52318412,inset 1px 1px 2px var(--glass-highlight),inset -1px -1px 2px #ffffff80;isolation:isolate}
+.home-notification-glass::before{content:"";position:absolute;pointer-events:none;inset:2px;border-radius:inherit;background:radial-gradient(ellipse at 12% 0%,#ffffffa6,transparent 28%),radial-gradient(ellipse at 100% 100%,#f5ccff85,transparent 25%);box-shadow:inset 2px 2px 4px #ffffff29,inset -2px -2px 4px var(--glass-lowlight)}
+.home-notification-glass::after{content:"";position:absolute;pointer-events:none;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 2px #ffffff12,inset 0 -1px 3px #ffffff45}
+.home-notification-glass>svg{position:relative;z-index:1;display:block;width:29px;height:29px;overflow:visible;filter:drop-shadow(0 1px 1px #ffffff20)}
+.home-notification-glass:focus-visible{outline:3px solid var(--focus-ring);outline-offset:4px}
+.home-notification-glass:active{transform:scale(.96)}
+.home-notification-glass>.notification-unread-badge{position:absolute;z-index:2;top:-5px;right:-5px;display:grid;place-items:center;min-width:20px;height:20px;box-sizing:border-box;padding:0 4px;border:2px solid var(--surface-elevated);border-radius:999px;background:#e73750;color:#fff;font-size:10px;font-weight:800;line-height:1}
+html[data-theme=dark] .home-notification-glass{--glass-rim:#dec4ff80;--glass-highlight:#ffffffb8;--glass-lowlight:#ae79e74d;color:#fff;box-shadow:0 8px 20px #07021140,0 0 12px #bc8aff16,inset 1px 1px 2px var(--glass-highlight),inset -1px -1px 2px #d7b2ff66}
+html[data-theme=dark] .home-notification-glass::before{background:radial-gradient(ellipse at 12% 0%,#ffffff8a,transparent 28%),radial-gradient(ellipse at 100% 100%,#d2a0ff66,transparent 25%)}
+@media(min-width:700px) and (max-width:1199px){html .smart-today-header>.home-notification-glass{position:absolute;top:0;right:0;width:52px;height:52px}}
+@media(min-width:1200px){.smart-today-header>.home-notification-glass{display:none}}
+
+/* Sculpted glass for touch navigation. */
+@media(max-width:1199px),(hover:none) and (pointer:coarse){
+ html .home-notification-glass{border-color:#ffffffe0;background:linear-gradient(145deg,#ffffff59,#f2e6ff26 52%,#d9b6f542);backdrop-filter:blur(12px) saturate(135%);-webkit-backdrop-filter:blur(12px) saturate(135%);box-shadow:0 12px 25px #5b368329,0 3px 7px #6d42851a,inset 2px 2px 4px #fffffff2,inset -2px -3px 7px #ae7bcf38;transition:transform .18s,box-shadow .18s}
+ html .home-notification-glass::before{inset:3px;background:radial-gradient(ellipse at 20% 0%,#ffffffb8,transparent 48%),radial-gradient(ellipse at 90% 100%,#d6a3ef66,transparent 58%);box-shadow:inset 0 0 0 1px #ffffff40,inset 0 -3px 8px #c697e52e}
+ html .home-notification-glass::after{inset:1px;box-shadow:inset 0 2px 2px #ffffffc9,inset 0 -1px 2px #ffffff8c}
+ html .home-notification-glass>svg{filter:drop-shadow(0 2px 1px #ffffff94) drop-shadow(0 3px 3px #63337924)}
+ html[data-theme=dark] .home-notification-glass{border-color:#dbc1ff94;background:linear-gradient(145deg,#c8a4f538,#56347633 55%,#a56ad52e);box-shadow:0 12px 28px #09031870,0 2px 6px #0802134d,inset 2px 2px 4px #f3e7ff94,inset -2px -3px 7px #6b33975c}
+ html[data-theme=dark] .home-notification-glass::before{background:radial-gradient(ellipse at 20% 0%,#ffffff57,transparent 48%),radial-gradient(ellipse at 90% 100%,#b579e54a,transparent 58%)}
+ html[data-theme=dark] .home-notification-glass>svg{filter:drop-shadow(0 2px 3px #14082066)}
+}
+@media(prefers-reduced-motion:reduce){html .home-notification-glass{transition:none}}

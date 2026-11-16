@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { type AppLanguage, translate } from "@/lib/i18n";
 import {
   LEGACY_KERNOVA_LANGUAGE_STORAGE_KEY,
@@ -54,6 +54,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     getStoredLanguage,
     () => "th",
   );
+
+  useEffect(() => { applyLanguage(language); }, [language]);
 
   const setLanguage = useCallback((nextLanguage: AppLanguage) => {
     window.localStorage.setItem(TALEVO_LANGUAGE_STORAGE_KEY, nextLanguage);

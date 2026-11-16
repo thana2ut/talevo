@@ -101,7 +101,7 @@ check(types(evaluateSmartAlerts(context(dateTime("2026-09-12", "23:50"), { sched
 check(types(evaluateSmartAlerts(context(dateTime("2026-09-13", "00:30"), { schedules: weekendSchedules }))).includes("class_ending") === false, "Sunday midnight class must be active without an early end alert");
 
 const retiredFeatureAlerts = evaluateSmartAlerts(context(dateTime("2026-09-07", "06:00"), { exams: [{ id: "legacy-exam", courseId: "course-a", title: "Legacy", type: "midterm", startAt: "2026-09-07T09:00", room: "A1", topics: [], createdAt: "2026-09-01T00:00:00", updatedAt: "2026-09-01T00:00:00" }] }));
-check(!retiredFeatureAlerts.some((alert) => alert.type === "exam_today" || alert.type === "exam_upcoming"), "retired exam data must not create notifications");
+check(retiredFeatureAlerts.some((alert) => alert.type === "exam_today"), "active exam scheduling must retain its morning reminder");
 check(!retiredFeatureAlerts.some((alert) => alert.type === "academic_weather"), "retired academic weather must not create notifications");
 
 const weekly = evaluateSmartAlerts(context(dateTime("2026-09-07", "07:05")));

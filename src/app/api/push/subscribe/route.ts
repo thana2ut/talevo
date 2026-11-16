@@ -1,6 +1,7 @@
+import { secureApi } from "@/lib/security/api-guard";
 import { NextResponse, type NextRequest } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { isTrustedPushEndpoint } from "@/lib/push/endpoint";
 
 type SubscriptionPayload = {
   endpoint?: unknown;
@@ -19,18 +20,15 @@ function readSubscription(value: SubscriptionPayload) {
   // A push endpoint is a URL at the browser vendor's own service. Anything
   // else is either a mistake or an attempt to have us sign deliveries to a
   // host of the caller's choosing.
-  if (!endpoint.startsWith("https://") || endpoint.length > 1000) return null;
-  if (!p256dh || !auth || p256dh.length > 255 || auth.length > 255) return null;
+  if (!isTrustedPushEndpoint(endpoint)) return null;
+  if (!/^[A-Za-z0-9_-]{87}=?$/.test(p256dh) || !/^[A-Za-z0-9_-]{22}={0,2}$/.test(auth)) return null;
   return { endpoint, p256dh, auth };
 }
 
-export async function POST(request: NextRequest) {
+async function handlerPOST(request: NextRequest) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return fail("push_unauthorized", "กรุณาเข้าสู่ระบบก่อนเปิดการแจ้งเตือน", 401);
-
-  const admin = createAdminClient();
-  if (!admin) return fail("push_not_configured", "ระบบแจ้งเตือนยังไม่พร้อมใช้งาน", 503);
 
   const payload = await request.json().catch(() => null) as SubscriptionPayload | null;
   const subscription = payload ? readSubscription(payload) : null;
@@ -41,7 +39,8 @@ export async function POST(request: NextRequest) {
   // The endpoint is the primary key, so re-subscribing on a device the person
   // already registered updates that row rather than leaving a stale one behind
   // to receive duplicates.
-  const { error: writeError } = await admin.from("push_subscriptions").upsert({
+  // RLS checks both the existing and new owner; a guessed endpoint cannot be reassigned.
+  const { error: writeError } = await supabase.from("push_subscriptions").upsert({
     user_id: data.user.id,
     endpoint: subscription.endpoint,
     p256dh: subscription.p256dh,
@@ -53,13 +52,10 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(request: NextRequest) {
+async function handlerDELETE(request: NextRequest) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return fail("push_unauthorized", "กรุณาเข้าสู่ระบบก่อน", 401);
-
-  const admin = createAdminClient();
-  if (!admin) return fail("push_not_configured", "ระบบแจ้งเตือนยังไม่พร้อมใช้งาน", 503);
 
   const payload = await request.json().catch(() => null) as { endpoint?: unknown } | null;
   const endpoint = typeof payload?.endpoint === "string" ? payload.endpoint.trim() : "";
@@ -67,6 +63,10 @@ export async function DELETE(request: NextRequest) {
 
   // Scoped to this user as well as the endpoint, so knowing someone else's
   // endpoint is not enough to unsubscribe their device.
-  await admin.from("push_subscriptions").delete().eq("endpoint", endpoint).eq("user_id", data.user.id);
+  const { error: deleteError } = await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint).eq("user_id", data.user.id);
+  if (deleteError) return fail("push_write_failed", "ยกเลิกการแจ้งเตือนไม่สำเร็จ กรุณาลองใหม่", 503);
   return NextResponse.json({ ok: true });
 }
+
+export const POST = secureApi(handlerPOST, "/api/push/subscribe", "POST");
+export const DELETE = secureApi(handlerDELETE, "/api/push/subscribe", "DELETE");

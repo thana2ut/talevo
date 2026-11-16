@@ -100,6 +100,12 @@ export async function buildTalevoContext(
     }));
   }
 
+  if (selected.academic) {
+    const { data, error } = await supabase.from("academic_terms").select("level,term,academic_year").eq("user_id", userId).maybeSingle();
+    assertQuery(error);
+    context.academic = data ? { level: data.level, term: data.term, academicYear: data.academic_year } : null;
+  }
+
   if (selected.grades) {
     const { data: plans, error: plansError } = await supabase
       .from("grade_plans")

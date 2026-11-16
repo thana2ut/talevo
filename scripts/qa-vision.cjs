@@ -1,0 +1,58 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// Real logic tests. These are fixtures, never data shipped to the application.
+const assert=require("node:assert/strict");const fs=require("node:fs");const path=require("node:path");const ts=require("typescript");const Module=require("node:module");
+const root=path.resolve(__dirname,"..");const resolver=Module._resolveFilename;
+Module._resolveFilename=function(request,parent,isMain,options){return resolver.call(this,request.startsWith("@/")?path.join(root,"src",request.slice(2)):request,parent,isMain,options);};
+require.extensions[".ts"]=function(module,filename){module._compile(ts.transpileModule(fs.readFileSync(filename,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,filename);};
+const v=require("../src/lib/vision.ts");let passed=0;
+function check(name,run){run();passed++;console.log(`PASS ${name}`);}
+function fixture(title,date,status="ส่งแล้ว",course="0045003",kind="task",id="img-1"){
+ const values={title,courseCode:course,lesson:title.match(/\d+/)?.[0]??null,dueDate:date,dueTime:date?"23:59":null,status:status==="ส่งแล้ว"?"submitted":status==="ยังไม่ได้ส่ง"?"pending":"unknown"};
+ const rawText=[title,course,date,date?"23:59":null,status].filter(Boolean).join("\n");
+ const facts=Object.fromEntries(v.VISION_FIELDS.map(key=>[key,{value:values[key]??null,evidence:key==="status"?status:values[key]??null}]));
+ return v.normalizeExtraction({rawText,items:[{kind,facts}]},id,1)[0];
+}
+check("Thai September date requires year",()=>assert.equal(v.confirmedDate("ก.ย. 23"),null));
+check("Thai month-first September",()=>assert.equal(v.confirmedDate("ก.ย. 23","2569"),"2026-09-23"));
+check("Thai month-first October",()=>assert.equal(v.confirmedDate("ต.ค. 2","2026"),"2026-10-02"));
+check("Thai day-first September",()=>assert.equal(v.confirmedDate("16 ก.ย.","2026"),"2026-09-16"));
+check("Explicit Buddhist year",()=>assert.equal(v.confirmedDate("23 ก.ย. 2569"),"2026-09-23"));
+check("Thai digits Buddhist year",()=>assert.equal(v.confirmedDate("๒๓ ก.ย. ๒๕๖๙"),"2026-09-23"));
+check("Buddhist ISO year",()=>assert.equal(v.confirmedDate("2569-09-23"),"2026-09-23"));
+check("Invalid day isn't rolled into next month",()=>assert.equal(v.confirmedDate("31 ก.ย.","2026"),null));
+check("Leap year",()=>{assert.equal(v.confirmedDate("2024-02-29"),"2024-02-29");assert.equal(v.confirmedDate("2025-02-29"),null);});
+check("Thai 23:59",()=>assert.equal(v.confirmedTime("23:59 น."),"23:59"));
+check("24:00 rejected",()=>assert.equal(v.confirmedTime("24:00"),null));
+const nine=fixture("ใบงานท้ายบทที่ 9","ก.ย. 23");const eight=fixture("ใบงานบทที่ 8 [0045003]","ต.ค. 2");const seven=fixture("ใบงานบทที่ 7 [0045003]","ก.ย. 16");const material=fixture("เอกสารประกอบการสอนบทที่ 9",null,"","0045003","material");
+check("Three submitted assignments and material stay separate",()=>{const result=v.mergeItems([nine,eight,seven,material]);assert.equal(result.length,4);assert.equal(result.filter(i=>i.kind==="task").length,3);assert.equal(result.filter(i=>i.facts.status.value==="submitted").length,3);assert.equal(result.filter(i=>i.kind==="material").length,1);});
+check("Duplicate screenshot rows merge",()=>{const copy=structuredClone(nine);copy.id="different";copy.sources=["img-2"];const merged=v.mergeItems([nine,copy]);assert.equal(merged.length,1);assert.equal(merged[0].sources.length,2);});
+check("Same title different courses never merge",()=>assert.equal(v.mergeItems([nine,fixture(nine.facts.title.value,"ก.ย. 23","ส่งแล้ว","9999999")]).length,2));
+check("Similar chapter titles never merge",()=>assert.equal(v.mergeItems([eight,seven]).length,2));
+check("Conflicting statuses require explicit review",()=>{const merged=v.mergeItems([nine,fixture(nine.facts.title.value,"ก.ย. 23","ยังไม่ได้ส่ง")]);assert.equal(merged.length,1);assert.ok(merged[0].conflicts.includes("status"));assert.equal(merged[0].reviewed,false);});
+check("Different due dates without stable URL do not merge",()=>assert.equal(v.mergeItems([nine,fixture(nine.facts.title.value,"ก.ย. 24")]).length,2));
+check("Unreadable image fails, not fake empty work",()=>assert.throws(()=>v.normalizeExtraction({rawText:"",items:[]},"img",1),/อ่านตัวอักษร/));
+check("Legible image with no assignments returns empty items",()=>assert.deepEqual(v.normalizeExtraction({rawText:"Google Classroom",items:[]},"img",1),[]));
+check("Invented year removed when evidence has no year",()=>{const data={rawText:"ใบงาน ก.ย. 23",items:[{kind:"task",facts:{title:{value:"ใบงาน",evidence:"ใบงาน"},dueDate:{value:"2026-09-23",evidence:"ก.ย. 23"}}}]};assert.equal(v.normalizeExtraction(data,"img",1)[0].facts.dueDate.value,"ก.ย. 23");});
+check("Unsupported field has null and review issue",()=>{const item=v.normalizeExtraction({rawText:"ใบงาน",items:[{kind:"task",facts:{title:{value:"ใบงาน",evidence:"ใบงาน"},points:{value:"100",evidence:"100 คะแนน"}}}]},"img",1)[0];assert.equal(item.facts.points.value,null);assert.ok(item.issues.length);});
+check("Posted date is not copied to due date",()=>{const item=v.normalizeExtraction({rawText:"โพสต์เมื่อ 18 ก.ย.",items:[{kind:"material",facts:{postedAt:{value:"18 ก.ย.",evidence:"โพสต์เมื่อ 18 ก.ย."}}}]},"img",1)[0];assert.equal(item.facts.dueDate.value,null);assert.equal(item.facts.postedAt.value,"18 ก.ย.");});
+check("Documents have no due timestamp and need no deadline",()=>{const item={...material,reviewed:true};assert.equal(v.dueTimestamp(item),null);assert.deepEqual(v.readiness(item),[]);});
+check("Unknown task date/status blocks saving",()=>assert.ok(v.readiness(nine).length>0));
+check("Confirmed future deadline has explicit Bangkok offset",()=>{const item=structuredClone(nine);item.facts.dueDate.value="2026-09-23";item.courseId="course-1";item.reviewed=true;assert.equal(v.dueTimestamp(item),"2026-09-23T23:59:00+07:00");assert.deepEqual(v.readiness(item),[]);});
+check("Unsafe links rejected",()=>{assert.equal(v.safeLink("javascript:alert(1)"),null);assert.equal(v.safeLink("https://classroom.google.com/c/123"),"https://classroom.google.com/c/123");});
+check("Retries don't mutate extracted evidence inputs",()=>{const before=JSON.stringify(nine);v.mergeItems([nine,structuredClone(nine)]);assert.equal(JSON.stringify(nine),before);});
+check("List and detail join on canonical URL with title conflict visible",()=>{const a=structuredClone(nine),b=structuredClone(nine);a.facts.url.value=b.facts.url.value="https://classroom.google.com/c/123/a/456/details";b.facts.title.value="รายละเอียดใบงาน 9";assert.equal(v.mergeItems([a,b]).length,1);assert.ok(v.mergeItems([a,b])[0].conflicts.includes("title"));});
+check("Course code suffix doesn't split same assignment",()=>{const a=fixture("ใบงานบทที่ 8","ต.ค. 2");assert.equal(v.mergeItems([a,eight]).length,1);});
+check("Explicit year from matching detail enriches partial list date",()=>{const a=structuredClone(nine),b=structuredClone(nine);b.facts.dueDate.value="2026-09-23";assert.equal(v.mergeItems([a,b]).length,1);assert.equal(v.mergeItems([a,b])[0].facts.dueDate.value,"2026-09-23");});
+check("Same title but explicit different years remain separate",()=>{const a=structuredClone(nine),b=structuredClone(nine);a.facts.dueDate.value="2025-09-23";b.facts.dueDate.value="2026-09-23";assert.equal(v.mergeItems([a,b]).length,2);});
+const sql=fs.readFileSync(path.join(root,"supabase/migrations/20261114100000_talevo_vision.sql"),"utf8");
+check("SQL owner isolation, no service role, fixed path and account lock",()=>{assert.match(sql,/security invoker set search_path=''/);assert.match(sql,/enable row level security/g);assert.match(sql,/pg_advisory_xact_lock/);assert.match(sql,/confirmedUpdate/);assert.match(sql,/user_id=owner_id/g);assert.doesNotMatch(sql,/service_role|disable row level security/i);});
+check("Atomic RPC does not catch and swallow failures",()=>assert.doesNotMatch(sql,/exception\s+when/));
+const {evaluateSmartAlerts}=require("../src/lib/alerts/alert-engine.ts");
+const preferences={enabled:true,task24h:true,task12h:true,deadlineRisk:true,morning0600:false,daily0700:false,weeklyRadar:false,class30m:false,classEnd10m:false,exam7d:true,exam3d:true,exam1d:true,examMorning:true};
+const context={now:new Date("2026-09-22T23:59:00+07:00"),tasks:[],exams:[],schedules:[],profile:{displayName:"QA"},academicTerm:{},preferences,language:"th",existingEventKeys:new Set()};
+const importedTask={id:"vision-qa",title:"ใบงานท้ายบทที่ 9",courseId:"course-1",description:"",dueLabel:"",dueDate:"2026-09-23T23:59:00+07:00",estimate:"",color:"#7656F6",status:"completed",completedAt:"2026-09-22T20:00:00+07:00"};
+check("Submitted imported work produces zero pending alerts",()=>assert.equal(evaluateSmartAlerts({...context,tasks:[importedTask]}).length,0));
+check("Unsubmitted confirmed future work uses existing 24h alerts",()=>assert.ok(evaluateSmartAlerts({...context,tasks:[{...importedTask,status:"todo",completedAt:undefined}]}).some(a=>a.type==="task_deadline")));
+check("Past due imported work does not queue deadline reminders",()=>assert.equal(evaluateSmartAlerts({...context,now:new Date("2026-10-01T12:00:00+07:00"),tasks:[{...importedTask,status:"todo",completedAt:undefined}]}).filter(a=>a.type==="task_deadline").length,0));
+check("Submitted exam does not queue exam alerts",()=>assert.equal(evaluateSmartAlerts({...context,exams:[{id:"vision-exam",title:"สอบ",courseId:"course-1",startAt:"2026-09-23T23:59:00+07:00",completedAt:context.now.toISOString(),topics:[]}]}).length,0));
+console.log(`Talevo Vision: ${passed} checks passed. No real account data was mutated.`);

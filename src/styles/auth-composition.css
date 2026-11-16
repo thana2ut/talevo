@@ -165,7 +165,6 @@
   .auth-page-register .auth-card,
   .auth-page-forgot .auth-card { padding: clamp(24px, 2.5vw, 34px) clamp(28px, 2.7vw, 38px); }
 }
-
 @media (min-width: 900px) and (max-height: 860px) {
   .auth-page-login .auth-hero,
   .auth-page-register .auth-hero,

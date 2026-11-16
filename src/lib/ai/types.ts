@@ -1,4 +1,4 @@
-export const AI_CONTEXT_KEYS = ["schedule", "tasks", "exams", "grades"] as const;
+export const AI_CONTEXT_KEYS = ["schedule", "tasks", "exams", "grades", "academic"] as const;
 
 export type AIContextKey = (typeof AI_CONTEXT_KEYS)[number];
 
@@ -93,4 +93,5 @@ export const EMPTY_AI_CONTEXT_SELECTION: AIContextSelection = {
   tasks: false,
   exams: false,
   grades: false,
+  academic: false,
 };

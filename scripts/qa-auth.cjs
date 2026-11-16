@@ -184,10 +184,10 @@ check(/authCheckTimeoutMs = \d+/.test(proxy) && proxy.includes("fetchWithAuthTim
 check(proxy.includes("hasStoredSession") && proxy.includes("let isAuthenticated = hasSessionCookie"), "A stored session must survive an Auth check that could not complete");
 check(proxy.includes("if (!error) isAuthenticated"), "Only a definite answer from Auth may end a stored session");
 check(proxy.includes('pathname === "/"') && proxy.includes('hasStoredSession(request) ? "/today" : "/welcome"'), "A signed-in launch from the home screen must open the app, not the welcome page");
-for (const route of ["/today", "/schedule", "/tasks", "/statistics", "/ai", "/notifications", "/profile", "/settings"]) {
+for (const route of ["/today", "/schedule", "/tasks", "/statistics", "/ai", "/notifications", "/profile", "/settings", "/exams", "/grade-lab", "/rescue", "/vision"]) {
   check(proxy.includes(`"${route}"`), `Protected route missing from Proxy: ${route}`);
 }
-check(proxy.includes('matchesRoute(pathname, "/finance") || matchesRoute(pathname, "/exams")'), "Retired finance and exam routes must redirect safely");
+check(proxy.includes('matchesRoute(pathname, "/finance")') && !proxy.includes('matchesRoute(pathname, "/exams")'), "Retired finance routes must redirect while active exam routes remain available behind auth");
 check(proxy.includes('matchesRoute(pathname, "/grades")') && proxy.includes('new URL("/tasks", request.url)'), "Retired grade-planning routes must redirect safely to Tasks");
 check((migrationPlanner.match(/readyForUpload:\s*false/g) ?? []).length >= 2, "Local to Cloud upload must remain disabled in types and plans");
 check(!/readyForUpload:\s*true/.test(migrationPlanner), "Auth completion must not enable Local to Cloud upload");

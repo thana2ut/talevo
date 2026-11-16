@@ -38,6 +38,11 @@ const todayPage = read("src/features/today/today-page.tsx");
 const syllabusScanner = read("src/features/academic/syllabus-scanner.tsx");
 const syllabusCss = read("src/styles/syllabus-import-composition.css");
 const profilePages = read("src/features/profile/profile-pages.tsx");
+const portraitEditor = read("src/components/developer-portrait-editor.tsx");
+const developerSupport = read("src/components/developer-support.tsx");
+const settingsCss = read("src/styles/settings-composition.css");
+const darkMode = read("src/styles/dark-mode.css");
+const uiTranslations = JSON.parse(read("src/lib/ui-translations.en.json"));
 const taskCreatePage = read("src/features/tasks/task-create-page.tsx");
 const packageJson = JSON.parse(read("package.json"));
 
@@ -46,7 +51,7 @@ check(!/href\s*=\s*["']#["']/.test(tsxSource), "Active UI must not contain href=
 check(!/onClick\s*=\s*\{\s*\(\s*\)\s*=>\s*\{\s*\}\s*\}/.test(tsxSource), "Known empty click handler found");
 const unexplainedButtons = sourceFiles.filter((file) => file.endsWith(".tsx")).flatMap((file) => {
   const tags = read(file).match(/<button\b[^>]*>/g) ?? [];
-  return tags.filter((tag) => !/onClick=|type="submit"|type="reset"|disabled|\{\.\.\.props\}/.test(tag)).map((tag) => `${file}: ${tag}`);
+  return tags.filter((tag) => !/onClick=|onPointer(?:Down|Up|Move)=|onKeyDown=|type="submit"|type="reset"|disabled|\{\.\.\.props\}/.test(tag)).map((tag) => `${file}: ${tag}`);
 });
 check(unexplainedButtons.length === 0, `Button without action/form/disabled contract: ${unexplainedButtons.join(" | ")}`);
 
@@ -66,25 +71,34 @@ check(globals.includes("100svh") && globals.includes("100dvh"), "Stable and dyna
 check(globals.includes("input, select, textarea, .input { font-size: 16px; }"), "Mobile form controls must prevent iOS auto zoom");
 check(read("src/styles/auth-composition.css").includes(".auth-helper a") && read("src/styles/auth-composition.css").includes("min-height: 44px"), "Auth helper links need mobile-sized hit areas");
 check(globals.includes("max-height: min(720px, 92dvh)") && globals.includes("overscroll-behavior: contain"), "Bottom sheets must remain inside the viewport");
+
+check(portraitEditor.includes('step="any"') && settingsCss.includes("touch-action:auto!important"), "Profile-photo sliders must support continuous touch dragging");
+check(developerSupport.includes('useUiText') && portraitEditor.includes('useUiText'), "Newly edited profile and support controls must use the language catalog");
+for (const selector of [".developer-profile-card", ".support-report-card", ".support-admin-panel", ".developer-crop", ".help-request-card"]) {
+  check(darkMode.includes(`html[data-theme="dark"] ${selector}`), `Dark-mode styling is missing for ${selector}`);
+}
+for (const key of ["ปรับรูปภาพ", "ส่งรายงานปัญหา", "ขอความช่วยเหลือ", "ส่งข้อความขอความช่วยเหลือ"]) {
+  check(typeof uiTranslations[key] === "string", `English translation is missing: ${key}`);
+}
 check(ui.includes('document.body.style.overflow = "hidden"') && ui.includes("previousBodyOverflow"), "Open BottomSheet must lock and restore page scrolling");
 check(ui.includes('role="dialog"') && ui.includes('aria-modal="true"') && ui.includes('event.key === "Escape"'), "Dialog semantics or Escape support is missing");
 check(ui.includes("previousFocusRef.current?.focus()") && ui.includes('event.key !== "Tab"'), "BottomSheet focus trap/restoration is missing");
 
 check(ui.includes('role="alert"') && ui.includes("field-error"), "Field errors must be announced accessibly");
-check(ui.includes('aria-label={label}') && ui.includes("export function IconButton"), "Canonical icon-only button must require an accessible label");
+check(ui.includes('aria-label={uiText(label)}') && ui.includes("export function IconButton"), "Canonical icon-only button must require a localized accessible label");
 check(globals.includes(":focus-visible") && !globals.includes(":focus-visible { outline: none"), "Visible keyboard focus styling is missing");
 check(globals.includes("prefers-reduced-motion: reduce"), "Reduced-motion support is missing");
 check(appShell.includes('aria-current={active ? "page" : undefined}'), "Active navigation links must expose aria-current");
 const mobileNavSource = appShell.match(/const mobileNavigationItems = \[([\s\S]*?)\];/)?.[1] ?? "";
 check(["/today", "/schedule", "/tasks"].every((href) => mobileNavSource.includes(`href: "${href}"`)), "Mobile navigation must contain Home, Schedule, and Tasks routes");
 check(!mobileNavSource.includes('href: "/finance"'), "Finance must not appear in the mobile navigation");
-check(appShell.includes('aria-label="เพิ่มเติม"') && appShell.includes("setMoreOpen(true)"), "Mobile navigation must include 'เพิ่มเติม' button");
+check(appShell.includes('aria-label={uiText("เพิ่มเติม")}') && appShell.includes("setMoreOpen(true)"), "Mobile navigation must include a localized 'เพิ่มเติม' button");
 check(appShell.includes('aria-haspopup="dialog"') && appShell.includes('aria-expanded={quickOpen}'), "Quick Add must expose its dialog state");
 check(appShell.includes('aria-expanded={moreOpen}'), "More navigation must expose its dialog state");
 for (const href of ["/ai", "/profile", "/settings"]) {
   check(appShell.includes(`href: "${href}"`), `More navigation sheet is missing ${href}`);
 }
-check(!appShell.includes('href: "/exams"'), "Exams must not appear in the More navigation sheet or desktop sidebar");
+check(appShell.includes('href: "/exams"'), "Exam planning must remain available in the desktop navigation");
 check(!appShell.includes('href: "/finance"'), "Finance must not appear in More navigation or desktop sidebar");
 check(!appShell.includes('href: "/grades"'), "Grades should no longer be a standalone destination in More navigation or Sidebar");
 check(!appShell.includes('href: "/statistics"'), "Statistics must be completely removed from navigation");
@@ -95,33 +109,33 @@ check(!appShell.includes('href: "/exams/new"'), "Quick Add must not contain the 
 check(!appShell.includes('href: "/finance/new"'), "Quick Add must not contain finance/new");
 check(appShell.includes('grid-column: 3') || globals.includes('grid-column: 3'), "Quick Add button must occupy the centered mobile-nav grid column");
 check(globals.includes('.quick-add-button { display: grid; width: 56px; height: 56px; grid-column: 3;'), "Quick Add needs a centered 44px-or-larger touch target");
-check(schedulePages.includes('"ยังไม่ได้ตั้งค่าภาคเรียน"') && schedulePages.includes("formatAcademicTermSummary(academicTerm)"), "Empty academic-term summaries must not render stray separators");
+check(schedulePages.includes('"ยังไม่ได้ตั้งค่าภาคเรียน"') && schedulePages.includes("formatAcademicTermSummary(academicTerm, uiText.language)"), "Academic-term summaries must be localized without stray separators");
 check(!exists("src/app/attendance/page.tsx") && !exists("src/app/attendance/[courseId]/page.tsx"), "Attendance routes must be removed instead of being visually hidden");
 check(!source.includes('href={`/attendance') && !source.includes('href="/attendance') && !source.includes('"/attendance"'), "Product UI must not retain attendance navigation targets");
 check(!read("src/providers/app-state-provider.tsx").includes("addAttendance") && !read("src/providers/app-state-provider.tsx").includes("attendanceRecords"), "Attendance state and actions must not remain exposed by AppState");
-check(todayPage.includes("getTodayClasses(schedules, referenceDate)") && todayPage.includes("NextClassCard classes={view.classes}"), "Today and Next Class must continue to derive from schedule data without Attendance");
+check(todayPage.includes("getTodayClasses(schedules.filter(") && todayPage.includes("TodayScheduleCard classes={view.classes}"), "Today summary cards must continue to derive from schedule data without Attendance");
 check(schedulePages.includes("getScheduleWeekDates(selectedDate)") && schedulePages.includes("item.day === day") && schedulePages.includes("getHorizontalEventPosition(item, range)"), "Week View must render canonical weekday rows with mathematical horizontal time positions");
 check(schedulePages.includes("getHorizontalTimelinePercent(minute, range)") && schedulePages.includes("timetable-time-marker") && schedulePages.includes("timetable-grid-guide-line"), "Week View hour markers and grid guides must share the timeline positioning scale");
 check(schedulePages.includes("layoutHorizontalDay(daySchedules)") && schedulePages.includes("lanes > 1"), "Week View must preserve overlapping classes using row lanes");
-check(schedulePages.includes("getScheduleDisplayName(item)") && schedulePages.includes("formatThaiWeekday(date)"), "Week View cards need safe course-code fallback and readable canonical weekday labels");
-check(syllabusScanner.includes(">เลือกทั้งหมด</button>") && syllabusScanner.includes(">ยกเลิกทั้งหมด</button>") && !syllabusScanner.includes("เลือกเฉพาะที่อ่านชัด"), "Syllabus Preview bulk-selection labels are incorrect");
+check(schedulePages.includes("getScheduleDisplayName(item)") && schedulePages.includes("formatThaiWeekday(date, uiText.language)"), "Week View cards need safe course-code fallback and localized canonical weekday labels");
+check(syllabusScanner.includes('uiText("เลือกทั้งหมด")') && syllabusScanner.includes('uiText("ยกเลิกทั้งหมด")') && !syllabusScanner.includes("เลือกเฉพาะที่อ่านชัด"), "Syllabus Preview bulk-selection labels must be localized");
 check((syllabusScanner.match(/setAllSyllabusPreviewSelected\(preview, true\)/g) ?? []).length === 1 && (syllabusScanner.match(/setAllSyllabusPreviewSelected\(preview, false\)/g) ?? []).length === 1, "Syllabus Preview must expose one Select All and one Unselect All action");
 check(syllabusScanner.includes('className="syllabus-import-header"') && syllabusScanner.includes('className="syllabus-import-body"') && syllabusScanner.includes('className="syllabus-import-action"'), "Import modal must be partitioned into header, body, and footer");
 check(!/\.syllabus-import-action\s*\{[^}]*position:\s*fixed/i.test(syllabusCss), "Import action footer must not be viewport-fixed");
 check(syllabusCss.includes(".syllabus-import-body") && /\.syllabus-import-body\s*\{[^}]*overflow-y:\s*auto/i.test(syllabusCss), "Preview body must be independently scrollable with overflow-y: auto");
 check(/\.syllabus-import-body\s*\{[^}]*padding:[^;]*24px/i.test(syllabusCss), "Preview body must supply generous bottom padding so final row is never covered by footer");
-check(syllabusScanner.includes('disabled={readiness.importableCount === 0 || importing}') && syllabusScanner.includes('readiness.importableCount === 0 ? "ยังไม่มีรายการที่พร้อมเพิ่ม"'), "No ready records must disable Confirm button and show empty state message");
-check(syllabusScanner.includes('`ยืนยันและเพิ่ม ${readiness.importableCount} รายการ`'), "Valid selected records must enable Confirm button with accurate count");
-check(syllabusScanner.includes('`พร้อมเพิ่ม ${readiness.importableCount} รายการ`') && syllabusScanner.includes('readiness.readyCount'), "Selected and ready count indicators must accurately reflect readiness state");
+check(syllabusScanner.includes('disabled={readiness.importableCount === 0 || importing}') && syllabusScanner.includes('readiness.importableCount === 0 ? uiText("ยังไม่มีรายการที่พร้อมเพิ่ม")'), "No ready records must disable Confirm button and show localized empty state message");
+check(syllabusScanner.includes('uiText("ยืนยันและเพิ่ม {0} รายการ", [readiness.importableCount])'), "Valid selected records must enable Confirm button with accurate count");
+check(syllabusScanner.includes('uiText("พร้อมเพิ่ม {0} รายการ", [readiness.importableCount])') && syllabusScanner.includes('readiness.readyCount'), "Selected and ready count indicators must accurately reflect readiness state");
 check(/\.bottom-sheet\.syllabus-import-sheet\s*\{[^}]*max-height:\s*min\(88dvh/i.test(syllabusCss) && /\.bottom-sheet\.syllabus-import-sheet\s*\{[^}]*width:\s*min\(820px/i.test(syllabusCss), "Desktop import modal must safely constrain dimensions to viewport");
 check(/@media\s*\(max-width:\s*699px\)[\s\S]*?\.bottom-sheet\.syllabus-import-sheet\s*\{[^}]*max-height:\s*92dvh/i.test(syllabusCss), "Mobile import modal must constrain max-height to 92dvh");
 check(/\.bottom-sheet\.syllabus-import-sheet\s*\{[^}]*overflow:\s*hidden/i.test(syllabusCss), "Modal container must have overflow: hidden to prevent double vertical scrollbars");
-check(profilePages.includes("joinAcademicDetails") && profilePages.includes('academicTerm.level || "ยังไม่ได้ระบุ"'), "Empty profile academic details need readable fallbacks");
+check(profilePages.includes("joinAcademicDetails") && profilePages.includes('academicTerm.level || uiText("ยังไม่ได้ระบุ")'), "Empty profile academic details need readable localized fallbacks");
 check(taskCreatePage.includes('aria-label={t("tasks.subtasks")}'), "Task subtask input needs an accessible name");
 check(!exists("src/features/finance/finance-pages.tsx"), "Standalone finance page must be removed");
 check(!exists("src/app/finance/page.tsx") && !exists("src/app/finance/new/page.tsx"), "Retired finance routes must not exist");
 for (const route of ["src/app/exams/page.tsx", "src/app/exams/new/page.tsx", "src/app/exams/[id]/page.tsx"]) {
-  check(!exists(route), `${route} must not exist`);
+  check(exists(route), `${route} must exist as an active learning route`);
 }
 check(!todayPage.includes("smart-finance") && !todayPage.includes('t("today.finance")'), "Today page must not render finance controls");
 check(!todayPage.includes("SemesterWeather") && !todayPage.includes("semester-weather"), "Today page must not render the weather panel");
@@ -159,7 +173,7 @@ check(!appShell.includes('href: "/statistics"'), "Statistics must not be restore
 check(!appShell.includes('href: "/grades"') && !appShell.includes('key: "nav.grades"'), "Standalone Grade Planning must not appear in navigation drawer");
 check(read("src/styles/today-composition.css").includes("grid-template-columns: repeat(2, minmax(0, 1fr))"), "Today cards must support 2-column layout on tablet/desktop");
 check(read("src/styles/today-composition.css").includes(".smart-today-primary-grid > .smart-free-time") && read("src/styles/today-composition.css").includes("grid-column: 1 / -1"), "Today free-time card must span the full tablet/desktop grid row");
-check(todayPage.includes("classCount > 0") && todayPage.includes("วันนี้ไม่มีคาบเรียนถัดไป"), "Today recommendation must not show empty onboarding when today's classes already exist");
+check(todayPage.includes("classes.length ? uiText("), "Today recommendation must distinguish completed classes from an empty schedule");
 check(read("src/features/ai/ai-page.tsx").includes("ai-premium-page"), "AI page layout and workspace must remain unaffected");
 check(read("src/styles/ai-composition.css").includes(".app-main.app-main-ai") && read("src/styles/ai-composition.css").includes("min-height: 100dvh") && read("src/styles/ai-composition.css").includes("overflow: visible") && read("src/styles/ai-composition.css").includes("position: static") && read("src/styles/ai-composition.css").includes("bottom: auto"), "AI mobile/tablet layout must use one page scroll without a clipped shell or floating composer");
 check(read("src/features/ai/ai-page.tsx").includes("attempt < 2") && read("src/features/ai/ai-page.tsx").includes("8_000"), "AI status must retry once with a bounded request timeout on unstable mobile networks");

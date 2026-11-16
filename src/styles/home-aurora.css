@@ -1,0 +1,202 @@
+/* The artwork is decorative; all dashboard content remains live HTML. */
+html:has(.smart-today-page) {
+  --home-fog:rgba(247,243,255,.46);
+  --home-glass:linear-gradient(125deg,rgba(255,255,255,.34),rgba(233,219,255,.14));
+  --home-line:rgba(255,255,255,.78);
+  --home-shadow:0 16px 48px rgba(91,45,157,.14),inset 0 1px 1px rgba(255,255,255,.7);
+}
+html[data-theme=dark]:has(.smart-today-page) {
+  --home-fog:rgba(19,12,36,.52);
+  --home-glass:linear-gradient(125deg,rgba(185,153,235,.2),rgba(81,55,131,.12));
+  --home-line:rgba(215,177,255,.45);
+  --home-shadow:0 18px 48px rgba(8,2,30,.32),inset 0 1px 1px rgba(233,209,255,.2);
+}
+html:has(.smart-today-page) .app-workspace {
+  --home-wallpaper:url('/assets/home/continuous-desktop-light.webp');
+  background:#f1eafa;
+}
+html[data-theme=dark]:has(.smart-today-page) .app-workspace {
+  --home-wallpaper:url('/assets/home/continuous-desktop-dark.webp');
+  background:#170e32;
+}
+html .smart-today-page { background:transparent; }
+html .smart-today-page :is(.smart-today-schedule,.smart-due-card,.smart-free-time-hero,.mh-days,.mh-work-card,.mh-next,.mh-task-stats>a) {
+  background:var(--home-glass);border:1px solid var(--home-line);
+  box-shadow:var(--home-shadow);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+@media(min-width:700px) {
+  html:has(.smart-today-page) .app-main { max-width:1500px; }
+  html .smart-today-page {max-width:1420px;margin-inline:auto;}
+  html .smart-today-page .smart-today-header {margin-bottom:28px;}
+  html .smart-today-page .study-hero {
+    grid-template-columns:minmax(0,2.5fr) minmax(240px,1fr);gap:24px;
+    padding:clamp(24px,2vw,36px);border-radius:36px;border:1px solid var(--home-line);
+    background-color:transparent;
+    background-image:var(--home-glass);
+    background-position:center,right center;background-size:cover,auto 112%;background-repeat:no-repeat;
+    box-shadow:var(--home-shadow);backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
+  html[data-theme=dark] .smart-today-page .study-hero {
+    background-color:transparent;
+    background-image:var(--home-glass);
+    border-color:rgba(215,170,255,.72);box-shadow:var(--home-shadow);
+  }
+  html .smart-today-page .study-hero::before,
+  html[data-theme=dark] .smart-today-page .study-hero::before {
+    content:"";display:block;position:absolute;inset:0 0 auto auto;height:100%;width:auto;aspect-ratio:4/3;max-width:100%;z-index:-1;pointer-events:none;
+    background:url('/assets/dashboard/study-scene-hd-v2.webp') right center / contain no-repeat;
+    mask-image:linear-gradient(90deg,transparent,rgba(0,0,0,.12) 20%,rgba(0,0,0,.8) 60%,#000 85%);
+    -webkit-mask-image:linear-gradient(90deg,transparent,rgba(0,0,0,.12) 20%,rgba(0,0,0,.8) 60%,#000 85%);
+    border:0;box-shadow:none;
+  }
+  html[data-theme=dark] .smart-today-page .study-hero::before {filter:none;}
+  html .smart-today-page .study-hero-content {display:flex;flex-direction:column;}
+  html .smart-today-page .study-hero-facts {grid-template-columns:1.1fr .9fr 1.18fr;gap:12px;}
+  html .smart-today-page .study-hero-facts>div {grid-column:auto;min-height:80px;padding:16px;border:1px solid var(--home-line);background:var(--home-glass);box-shadow:inset 0 1px 1px #ffffff38;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+  html .smart-today-page .study-hero-summary {grid-template-columns:1fr 1.35fr;background:var(--home-glass);border:1px solid var(--home-line);box-shadow:var(--home-shadow);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin-top:16px;padding:20px;}
+  html .smart-today-page .study-hero-progress {background:transparent;box-shadow:none;border-bottom:0;border-inline-end:1px solid #b695ed;padding-bottom:0;}
+  html .smart-today-page .study-hero-visual {min-height:380px;}
+  html .smart-today-page .study-hero-speech-glass {background:var(--home-glass);border-color:var(--home-line);box-shadow:var(--home-shadow);}
+  html .smart-today-page .study-hero-label {background:var(--home-glass);border:1px solid var(--home-line);}
+  html[data-theme=dark] .smart-today-page :is(.study-hero h2,.study-hero-facts strong,.study-hero-tasks h3,.study-hero-ring>span,.study-hero-speech-glass strong) {color:#faf4ff;}
+  html[data-theme=dark] .smart-today-page :is(.study-hero-eyebrow,.study-hero-facts small,.study-hero-tasks>p,.study-speech-message,.study-hero-progress>div:last-child>span,.study-hero-progress>div:last-child>small) {color:#ded0ef;}
+  html[data-theme=dark] .smart-today-page :is(.study-hero-label,.study-hero-facts>div>svg,.study-hero-progress>div:last-child>strong) {color:#d69bff;}
+  html .smart-today-page .study-hero-tasks>a {background:var(--home-glass);}
+}
+/* Shell controls share the same translucent material as the dashboard. */
+html[data-theme]:has(.smart-today-page) :is(.desktop-hamburger-button,.desktop-topbar .notification-bell,.smart-today-header>.home-notification-glass,.mh-header>.home-notification-glass) {
+  background:linear-gradient(135deg,#ffffff20,#dbbdff0a);border:1px solid var(--home-line);
+  box-shadow:inset 0 1px 2px #ffffff90,inset 0 -1px 2px #d1aaff45,0 6px 18px #56307820;
+  backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%);
+  color:#251340;border-radius:18px;
+}
+html[data-theme=dark]:has(.smart-today-page) :is(.desktop-hamburger-button,.desktop-topbar .notification-bell,.smart-today-header>.home-notification-glass,.mh-header>.home-notification-glass) {
+  background:linear-gradient(135deg,#d9b6ff1c,#9371ca08);color:#f3e8ff;
+  box-shadow:inset 0 1px 2px #edcfff65,inset 0 -1px 2px #b07aed30,0 6px 20px #08021b40;
+}
+html[data-theme]:has(.smart-today-page) .desktop-topbar {background:transparent;box-shadow:none;border:0;}
+@media(min-width:700px) and (max-width:1100px) {
+  html .smart-today-page .study-hero {grid-template-columns:minmax(0,1.8fr) minmax(180px,1fr);gap:16px;padding:22px;}
+  html .smart-today-page .study-hero-facts {grid-template-columns:1fr;gap:8px;}
+  html .smart-today-page .study-hero-facts>div {min-height:58px;padding:10px 14px;}
+  html .smart-today-page .study-hero-summary {grid-template-columns:1fr;gap:14px;padding:16px;}
+  html .smart-today-page .study-hero-progress {border-inline-end:0;border-bottom:1px solid #b695ed;padding-bottom:14px;}
+  html .smart-today-page .study-hero-speech-glass {left:0;width:100%;max-width:100%;padding:18px 10px;}
+  html .smart-today-page .study-hero-speech-glass strong {font-size:17px;white-space:normal;}
+  html .smart-today-page .study-speech-message {white-space:normal;}
+}
+/* Portrait tablets have enough room to keep the progress and task summaries
+   balanced side by side, while the lesson facts remain easy to scan. */
+@media (min-width: 800px) and (max-width: 1100px) and (orientation: portrait) {
+  html .smart-today-page .study-hero { grid-template-columns: minmax(0, 1.8fr) minmax(180px, 1fr); gap: 14px; padding: 18px; }
+  html .smart-today-page .study-hero-facts { gap: 7px; }
+  html .smart-today-page .study-hero-facts > div { min-height: 52px; padding: 9px 12px; }
+  html .smart-today-page .study-hero-summary { grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 9px; margin-top: 12px; padding: 12px; }
+  html .smart-today-page .study-hero-progress { flex-direction: row; gap: 7px; border-bottom: 0; border-inline-end: 1px solid #b695ed; padding: 0 8px 0 0; }
+  html .smart-today-page .study-hero-ring { width: 64px; height: 64px; }
+  html .smart-today-page .study-hero-progress > div:last-child { min-width: 0; text-align: left; gap: 3px; }
+  html .smart-today-page .study-hero-progress > div:last-child > strong { font-size: 18px; }
+  html .smart-today-page .study-hero-progress > div:last-child > span,
+  html .smart-today-page .study-hero-progress > div:last-child > small { font-size: 10px; }
+  html .smart-today-page .study-hero-tasks h3 { flex-wrap: wrap; gap: 5px; font-size: 12px; }
+  html .smart-today-page .study-hero-tasks h3 > span { padding-inline: 6px; font-size: 9px; }
+  html .smart-today-page .study-hero-tasks > p { gap: 5px; padding-top: 8px; font-size: 10px; }
+  html .smart-today-page .study-hero-tasks > p svg { width: 16px; height: 16px; }
+  html .smart-today-page .study-hero-visual { min-height: 260px; }
+}
+/* Explicit theme scope takes precedence over legacy opaque night surfaces. */
+html[data-theme] .smart-today-page :is(.smart-today-schedule,.smart-due-card,.smart-free-time-hero,.smart-today-schedule-item,.mh-days,.mh-work-card,.mh-next,.mh-task-stats>a,.mh-lessons) {
+  background:var(--home-glass);border:1px solid var(--home-line);
+  box-shadow:var(--home-shadow);backdrop-filter:blur(10px) saturate(120%);-webkit-backdrop-filter:blur(10px) saturate(120%);
+}
+html[data-theme] .smart-today-page :is(.study-hero-ring,.study-hero-ring>span,.mh-ring>div) {background:transparent;box-shadow:none;}
+html[data-theme] .smart-today-page .study-hero-ring {border-radius:50%;}
+html[data-theme] .smart-today-page .study-hero-ring svg {background:transparent;}
+html[data-theme] .smart-today-page :is(.study-hero-speech-glass,.study-hero-label,.study-hero-facts>div,.study-hero-summary) {
+  background:var(--home-glass);border:1px solid var(--home-line);box-shadow:var(--home-shadow);
+  backdrop-filter:blur(8px) saturate(120%);-webkit-backdrop-filter:blur(8px) saturate(120%);
+}
+html[data-theme] .smart-today-page .study-hero-speech-glass::after {background:var(--home-glass);border-color:var(--home-line);}
+html[data-theme] .smart-today-page .study-hero-progress {background:transparent;box-shadow:none;}
+html[data-theme] .smart-today-page .study-hero-tasks>a:not(.is-overdue) {background:var(--home-glass);color:var(--text-primary);}
+html[data-theme] .smart-today-page .icon-tile {background:var(--home-glass);border:1px solid var(--home-line);box-shadow:inset 0 1px 1px #ffffff30;}
+@media(min-width:700px) {
+  html[data-theme] .smart-today-page .study-hero-content {min-width:0;}
+  html[data-theme] .smart-today-page .study-hero-summary {min-width:0;}
+  html[data-theme] .smart-today-page .study-hero-speech-glass {max-width:100%;}
+  html[data-theme] .smart-today-page .study-hero-ring {flex-shrink:0;}
+}
+@media(max-width:699px) {
+  html[data-theme] .smart-today-page .mh-lessons::after {display:none;}
+  html[data-theme] .smart-today-page .mh-ring>div {background:var(--home-glass);border:1px solid var(--home-line);}
+  html[data-theme] .smart-today-page .mh-ring {background:conic-gradient(#b18bea80,#d6baff50);}
+}
+@media(hover:hover) and (pointer:fine) {
+  html,* {scrollbar-width:thin;scrollbar-color:#9864d8 #bfa2e520;}
+  ::-webkit-scrollbar {width:10px;height:10px;}
+  ::-webkit-scrollbar-track {background:#bfa2e520;}
+  ::-webkit-scrollbar-thumb {background:linear-gradient(#b48aee,#7844bd);border:2px solid transparent;background-clip:padding-box;border-radius:20px;}
+  ::-webkit-scrollbar-thumb:hover {background-color:#7844bd;}
+}
+
+/* Match each supplied wallpaper to its intended device aspect ratio. */
+@media(min-width:700px) and (max-width:1199px) {
+  html:has(.smart-today-page) .app-workspace {--home-wallpaper:url('/assets/home/continuous-tablet-light.webp');}
+  html[data-theme=dark]:has(.smart-today-page) .app-workspace {--home-wallpaper:url('/assets/home/continuous-tablet-dark.webp');}
+}
+@media(max-width:699px) {
+  html:has(.smart-today-page) .app-workspace {--home-wallpaper:url('/assets/home/continuous-phone-light.webp');}
+  html[data-theme=dark]:has(.smart-today-page) .app-workspace {--home-wallpaper:url('/assets/home/continuous-phone-dark.webp');}
+  html:has(.smart-today-page) .mobile-home::before {display:none;}
+}
+/* A viewport-sized layer has no image bottom edge inside the scrolling page. */
+html[data-theme]:has(.smart-today-page) .app-workspace {position:relative;isolation:isolate;background-image:none;}
+html:has(.smart-today-page) .app-workspace::before {
+  content:"";position:fixed;inset:-12px;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(var(--home-fog),var(--home-fog)),var(--home-wallpaper);background-position:center;
+  background-size:cover;background-repeat:no-repeat;
+  filter:blur(4px) saturate(.78);
+}
+html[data-theme]:has(.smart-today-page) :is(.desktop-hamburger-button,.desktop-topbar .notification-bell,.home-notification-glass) {
+  background:linear-gradient(145deg,#ffffff28,#e0c4ff0c);border:1px solid var(--home-line);
+  box-shadow:inset 0 1px 2px #ffffff90,inset 0 -1px 2px #dab9ff40,0 5px 16px #3d1b6924;
+  backdrop-filter:blur(9px) saturate(140%);-webkit-backdrop-filter:blur(9px) saturate(140%);
+}
+html[data-theme=dark]:has(.smart-today-page) :is(.desktop-hamburger-button,.desktop-topbar .notification-bell,.home-notification-glass) {
+  background:linear-gradient(145deg,#b999ee30,#7350970c);color:#f5eaff;
+  border-color:#caa5ff66;box-shadow:inset 0 1px 2px #e4c6ff85,0 5px 18px #09021e40;
+}
+@media(min-width:700px) {
+  html[data-theme] .smart-today-page .study-hero {border-radius:30px;box-shadow:var(--home-shadow),inset 0 0 0 1px #e9ceff18;}
+  html[data-theme] .smart-today-page .study-hero-label {align-self:flex-start;width:fit-content;}
+  html[data-theme] .smart-today-page .study-hero-speech-glass {background:linear-gradient(135deg,#ffffff60,#d6bafa30);box-shadow:inset 0 1px 2px #ffffff90,0 8px 24px #3e17652a;}
+  html[data-theme=dark] .smart-today-page .study-hero-speech-glass {background:linear-gradient(135deg,#76539e99,#4c337666);border-color:#ead4ffb0;}
+  html[data-theme] .smart-today-page .study-hero-summary {border-color:#ffffff30;box-shadow:inset 0 1px 1px #ffffff20;}
+  html[data-theme] .smart-today-page .study-hero-progress {border-radius:0;}
+  html[data-theme] .smart-today-page .study-hero-ring {border-radius:50%;overflow:hidden;}
+  html[data-theme=dark] .smart-today-page .study-hero-ring circle {stroke:#9871cc88;}
+  html[data-theme=dark] .smart-today-page .study-hero-ring circle+circle {stroke:#d397ff;}
+  html[data-theme=light] .smart-today-page .study-hero-visual>.thailand-clock,
+  html[data-theme=light] .smart-today-page .study-hero-visual>.thailand-clock>time,
+  html[data-theme=light] .smart-today-page .study-hero-visual>.thailand-clock>svg {color:#191128;text-shadow:0 1px 1px #ffffff60;}
+  html[data-theme=dark] .smart-today-page .study-hero-visual>.thailand-clock,
+  html[data-theme=dark] .smart-today-page .study-hero-visual>.thailand-clock>time,
+  html[data-theme=dark] .smart-today-page .study-hero-visual>.thailand-clock>svg {color:#fff;text-shadow:0 1px 3px #3e176580;}
+}
+
+@media (min-width:700px) and (max-width:1199px) and (orientation:portrait) {
+ html[data-theme] .smart-today-page .study-hero-ring { position:relative; display:grid; place-items:center; flex:none; aspect-ratio:1; }
+ html[data-theme] .smart-today-page .study-hero-ring > svg { position:absolute; inset:0; width:100%; height:100%; }
+ html[data-theme] .smart-today-page .study-hero-ring > span { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; margin:0; padding:0; text-align:center; line-height:1.1; }
+ html[data-theme] .smart-today-page .study-hero-ring > span > strong { display:flex; align-items:baseline; justify-content:center; line-height:1; }
+ html[data-theme] .smart-today-page .study-hero-ring > span > small { display:block; margin:2px 0 0; line-height:1.2; }
+}
+
+/* Keep the completed/total count optically centered in portrait tablet rings. */
+@media (min-width:700px) and (max-width:1199px) and (orientation:portrait) {
+ html[data-theme] .smart-today-page .study-hero-ring { width:80px; height:80px; }
+ html[data-theme] .smart-today-page .study-hero-ring > span { width:100%; height:100%; box-sizing:border-box; transform:none; gap:4px; }
+ html[data-theme] .smart-today-page .study-hero-ring > span > strong { width:100%; margin:0; padding:0; font-size:26px; font-variant-numeric:tabular-nums; line-height:1; gap:0; }
+ html[data-theme] .smart-today-page .study-hero-ring > span > strong > small { display:inline; margin:0; padding:0; font-size:14px; line-height:1; }
+ html[data-theme] .smart-today-page .study-hero-ring > span > small { margin:0; font-size:11px; line-height:1; }
+}

@@ -12,6 +12,8 @@ import { useLanguage } from "@/providers/language-provider";
 import { getContrastTextColor, normalizeTalevoColor } from "@/lib/talevo-color-utils";
 import { formatNotificationTime, getNotificationTone } from "@/lib/alerts/notification-utils";
 import type { AppNotification, ClassSchedule, Task } from "@/types";
+import { useUiText } from "@/providers/ui-language";
+
 
 export function SubjectIcon({ color, children }: { color: string; children?: React.ReactNode }) {
   const hexColor = /^#[0-9a-f]{3,6}$/i.test(color) ? normalizeTalevoColor(color) : undefined;
@@ -19,12 +21,14 @@ export function SubjectIcon({ color, children }: { color: string; children?: Rea
 }
 
 export function TaskCard({ task, compact = false }: { task: Task; compact?: boolean }) {
+  const uiText = useUiText();
+
   const { schedules, settings, now } = useAppState();
   const { language, t } = useLanguage();
-  const showsProgress = hasTaskProgress(task); const progress = calculateTaskProgress(task); const completedSubtasks = getCompletedSubtaskCount(task); const courseLabel = getTaskCourseLabel(task, schedules);
-  const completed = task.status === "completed" && Boolean(task.completedAt); const retention = completed ? getCompletedTaskRemainingTime(task, now) : null;
+  const showsProgress = hasTaskProgress(task); const progress = calculateTaskProgress(task); const completedSubtasks = getCompletedSubtaskCount(task); const courseLabel = getTaskCourseLabel(task, schedules, uiText.language);
+  const completed = task.status === "completed" || Boolean(task.completedAt); const retention = completed && task.completedAt ? getCompletedTaskRemainingTime(task, now) : null;
   const countdownTone = retention && retention.remainingMs < 60 * 60 * 1000 ? "urgent" : retention && retention.remainingMs < 24 * 60 * 60 * 1000 ? "soon" : "";
-  return <Link href={`/tasks/${task.id}`} className="task-card-link"><Card className={`task-card ${compact ? "task-card-compact" : ""}`} style={{ "--task-color": normalizeTalevoColor(task.color) } as React.CSSProperties}>{completed ? <div className="task-completed-layout"><SubjectIcon color={task.color}><TaskTypeIcon task={task} /></SubjectIcon><div className="task-completed-content"><h3>{task.title}</h3>{task.description && <p>{task.description}</p>}<small className="task-course-label">{courseLabel}</small><div className="task-completed-meta"><div className="task-completed"><CheckCircle2 />{t("tasks.completedAt")} {formatTaskCompletionDate(task.completedAt, language, settings.yearSystem, settings.dateFormat)}</div>{retention && <div className={`task-auto-delete ${countdownTone}`}><Clock3 /><span suppressHydrationWarning>{t("tasks.autoDeleteIn")} {formatCompletedTaskRemainingTime(retention, language)}</span></div>}</div></div></div> : <><div className="task-card-top"><SubjectIcon color={task.color}><TaskTypeIcon task={task} /></SubjectIcon>{task.status === "doing" ? <StatusPill tone="orange">{language === "th" ? "กำลังทำ" : "In progress"}</StatusPill> : <StatusPill tone="blue">{language === "th" ? "ยังไม่เริ่ม" : "Not started"}</StatusPill>}</div><h3>{task.title}</h3><p>{task.description}</p><small className="task-course-label">{courseLabel}</small><div className="task-due"><Clock3 />{task.dueLabel}</div>{showsProgress && <ProgressBar value={progress} color={task.color} label={`${completedSubtasks}/${task.subtasks?.length ?? 0} ${language === "th" ? "ขั้นตอน" : "steps"} · ${progress}%`} />}</>}</Card></Link>;
+  return <Link href={`/tasks/${task.id}`} className="task-card-link"><Card className={`task-card ${compact ? "task-card-compact" : ""}`} style={{ "--task-color": normalizeTalevoColor(task.color) } as React.CSSProperties}>{completed ? <div className="task-completed-layout"><SubjectIcon color={task.color}><TaskTypeIcon task={task} /></SubjectIcon><div className="task-completed-content"><h3>{task.title}</h3>{task.description && <p>{task.description}</p>}<small className="task-course-label">{courseLabel}</small><div className="task-completed-meta"><div className="task-completed"><CheckCircle2 />{t("tasks.completedAt")} {task.completedAt ? formatTaskCompletionDate(task.completedAt, language, settings.yearSystem, settings.dateFormat) : (language === "th" ? uiText("เสร็จแล้ว") : "Completed")}</div>{retention && <div className={`task-auto-delete ${countdownTone}`}><Clock3 /><span suppressHydrationWarning>{t("tasks.autoDeleteIn")} {formatCompletedTaskRemainingTime(retention, language)}</span></div>}</div></div></div> : <><div className="task-card-top"><SubjectIcon color={task.color}><TaskTypeIcon task={task} /></SubjectIcon>{task.status === "doing" ? <StatusPill tone="orange">{language === "th" ? uiText("กำลังทำ") : "In progress"}</StatusPill> : <StatusPill tone="blue">{language === "th" ? uiText("ยังไม่เริ่ม") : "Not started"}</StatusPill>}</div><h3>{task.title}</h3><p>{task.description}</p><small className="task-course-label">{courseLabel}</small><div className="task-due"><Clock3 />{uiText(task.dueLabel)}</div>{showsProgress && <ProgressBar value={progress} color={task.color} label={`${completedSubtasks}/${task.subtasks?.length ?? 0} ${language === "th" ? uiText("ขั้นตอน") : "steps"} · ${progress}%`} />}</>}</Card></Link>;
 }
 
 export function TaskTypeIcon({ task }: { task: Pick<Task, "title" | "description"> }) {
@@ -58,16 +62,18 @@ export function NotificationIcon({ type }: { type: AppNotification["type"] }) {
  * and following the link threw that away before it could be read.
  */
 export function NotificationCard({ item, onClick, onOpen, onDelete, deleteLabel }: { item: AppNotification; onClick: () => void; onOpen?: () => void; onDelete?: () => void; deleteLabel?: string }) {
+  const uiText = useUiText();
+
   const { language } = useLanguage();
   const tone = getNotificationTone(item);
   // The unread dot and the chevron share one trailing cell. Loose in the grid
   // they each claimed a column, which is what pushed the chevron to the top
   // corner and left the row looking lopsided.
-  const content = <><span className="notification-icon"><NotificationIcon type={item.type} /></span><span className="notification-copy"><strong>{item.title}</strong><span>{item.message}</span><small>{formatNotificationTime(item.createdAt, language)}</small></span><span className="notification-trailing">{!item.readAt && <i aria-label={language === "th" ? "ยังไม่อ่าน" : "Unread"} />}{(onOpen || item.href) && <ChevronRight className="notification-chevron" aria-hidden="true" />}</span></>;
+  const content = <><span className="notification-icon"><NotificationIcon type={item.type} /></span><span className="notification-copy"><strong>{uiText(item.title)}</strong><span>{uiText(item.message)}</span><small>{formatNotificationTime(item.createdAt, language)}</small></span><span className="notification-trailing">{!item.readAt && <i aria-label={language === "th" ? uiText("ยังไม่อ่าน") : "Unread"} />}{(onOpen || item.href) && <ChevronRight className="notification-chevron" aria-hidden="true" />}</span></>;
   const className = `notification-card notification-${tone} ${item.readAt ? "is-read" : "is-unread"}`;
   const openLabel = language === "th" ? "เปิดอ่านการแจ้งเตือน" : "Open notification";
   const renderMain = (mainClassName: string) => {
-    if (onOpen) return <button className={mainClassName} type="button" onClick={onOpen} aria-label={`${openLabel}: ${item.title}`}>{content}</button>;
+    if (onOpen) return <button className={mainClassName} type="button" onClick={onOpen} aria-label={`${openLabel}: ${uiText(item.title)}`}>{content}</button>;
     if (item.href) return <Link href={item.href} className={mainClassName} onClick={onClick}>{content}</Link>;
     return <button className={mainClassName} type="button" onClick={onClick}>{content}</button>;
   };
@@ -77,7 +83,7 @@ export function NotificationCard({ item, onClick, onOpen, onDelete, deleteLabel 
       event.stopPropagation();
       onDelete();
     };
-    return <article className={`${className} notification-card-with-delete`}>{renderMain("notification-card-main")}<button className="notification-delete-button" type="button" onClick={deleteNotification} aria-label={deleteLabel ?? (language === "th" ? "ลบการแจ้งเตือน" : "Delete notification")}><Trash2 aria-hidden="true" /></button></article>;
+    return <article className={`${className} notification-card-with-delete`}>{renderMain("notification-card-main")}<button className="notification-delete-button" type="button" onClick={deleteNotification} aria-label={deleteLabel ?? (language === "th" ? uiText("ลบการแจ้งเตือน") : "Delete notification")}><Trash2 aria-hidden="true" /></button></article>;
   }
   return renderMain(className);
 }

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Noto_Sans_Thai } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import { PwaRuntime } from "@/components/pwa-runtime";
@@ -7,6 +8,9 @@ import { SupabaseAuthProvider } from "@/providers/auth-provider";
 import { LanguageProvider } from "@/providers/language-provider";
 import { LEGACY_KERNOVA_LANGUAGE_STORAGE_KEY, TALEVO_LANGUAGE_STORAGE_KEY } from "@/lib/talevo-storage-keys";
 import "./globals.css";
+import "@/styles/dark-mode.css";
+import "@/styles/desktop-polish.css";
+import "@/styles/home-aurora.css";
 
 const notoSansThai = Noto_Sans_Thai({
   variable: "--font-noto-thai",
@@ -34,6 +38,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   themeColor: "#6843ee",
   colorScheme: "light dark",
@@ -41,7 +47,8 @@ export const viewport: Viewport = {
 
 const languageBootstrapScript = `try { const current = localStorage.getItem(${JSON.stringify(TALEVO_LANGUAGE_STORAGE_KEY)}); const legacy = current === null ? localStorage.getItem(${JSON.stringify(LEGACY_KERNOVA_LANGUAGE_STORAGE_KEY)}) : null; const language = current === "th" || current === "en" ? current : legacy === "th" || legacy === "en" ? legacy : "th"; if (current === null && (legacy === "th" || legacy === "en")) localStorage.setItem(${JSON.stringify(TALEVO_LANGUAGE_STORAGE_KEY)}, legacy); document.documentElement.lang = language; } catch { document.documentElement.lang = "th"; }`;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html
       lang="th"
@@ -49,7 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${notoSansThai.variable} h-full antialiased`}
     >
-      <head><script dangerouslySetInnerHTML={{ __html: `try { document.documentElement.dataset.theme = localStorage.getItem("talevo-theme") === "dark" ? "dark" : "light"; } catch { document.documentElement.dataset.theme = "light"; }` }} /><script dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} /></head>
+      <head><script nonce={nonce} dangerouslySetInnerHTML={{ __html: `try { document.documentElement.dataset.theme = localStorage.getItem("talevo-theme") === "dark" ? "dark" : "light"; } catch { document.documentElement.dataset.theme = "light"; }` }} /><script nonce={nonce} dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} /></head>
       <body className="min-h-full"><PwaRuntime /><LanguageProvider><SupabaseAuthProvider><AppStateProvider><AppShell>{children}</AppShell></AppStateProvider></SupabaseAuthProvider></LanguageProvider></body>
     </html>
   );

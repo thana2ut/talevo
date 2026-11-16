@@ -12,8 +12,12 @@ import { initialRegistrationDraft, registrationDataFromDraft, validateRegistrati
 import { useAppState } from "@/providers/app-state-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
+import { useUiText } from "@/providers/ui-language";
+
 
 export function WelcomePage() {
+  const uiText = useUiText();
+
   const { sessionNotice, clearSessionNotice } = useAppState();
   useEffect(() => {
     if (!sessionNotice) return;
@@ -35,33 +39,33 @@ export function WelcomePage() {
         <span className="welcome-background-spark welcome-background-spark-two" />
         <span className="welcome-background-spark welcome-background-spark-three" />
       </div>
-      {sessionNotice && <div className="session-notice" role="status">{sessionNotice}</div>}
+      {sessionNotice && <div className="session-notice" role="status">{uiText(sessionNotice)}</div>}
       <header className="welcome-brand"><TalevoBrand /></header>
       <div className="welcome-grid">
         <section className="welcome-copy">
-          <span className="eyebrow"><Sparkles /> {APP_BRAND.tagline}</span>
-          <h1>จัดการการเรียน<br /><em>ให้โฟกัสสิ่งสำคัญ</em></h1>
-          <p>รวมตารางเรียน งาน และเป้าหมายไว้ในที่เดียว<br className="desktop-only-break" /> เพื่อให้ทุกวันเรียนได้อย่างมั่นใจ</p>
+          <span className="eyebrow"><Sparkles /> {uiText(APP_BRAND.tagline)}</span>
+          <h1>{uiText("จัดการการเรียน")}<br /><em>{uiText("ให้โฟกัสสิ่งสำคัญ")}</em></h1>
+          <p>{uiText("รวมตารางเรียน งาน และเป้าหมายไว้ในที่เดียว")}<br className="desktop-only-break" /> {uiText("เพื่อให้ทุกวันเรียนได้อย่างมั่นใจ")}</p>
           <div className="welcome-actions desktop-welcome-actions">
-            <Link className="primary-button" href="/register">เริ่มต้นใช้งาน <span className="round-arrow"><ArrowRight /></span></Link>
-            <Link className="secondary-button" href="/login">เข้าสู่ระบบ</Link>
+            <Link className="primary-button" href="/register">{uiText("เริ่มต้นใช้งาน")}<span className="round-arrow"><ArrowRight /></span></Link>
+            <Link className="secondary-button" href="/login">{uiText("เข้าสู่ระบบ")}</Link>
           </div>
         </section>
-        <section className="welcome-visual" aria-label="ภาพประกอบ TALEVO">
+        <section className="welcome-visual" aria-label={uiText("ภาพประกอบ TALEVO")}>
           <span className="welcome-mascot-glow" aria-hidden="true" />
           <span className="welcome-orbit-line" aria-hidden="true" />
           <TalevoMascot variant="happy" crop="full" size="hero" decorative priority />
         </section>
       </div>
       <div className="welcome-actions mobile-welcome-actions">
-        <Link className="primary-button" href="/register">เริ่มต้นใช้งาน <span className="round-arrow"><ArrowRight /></span></Link>
-        <Link className="secondary-button" href="/login">เข้าสู่ระบบ</Link>
+        <Link className="primary-button" href="/register">{uiText("เริ่มต้นใช้งาน")}<span className="round-arrow"><ArrowRight /></span></Link>
+        <Link className="secondary-button" href="/login">{uiText("เข้าสู่ระบบ")}</Link>
       </div>
-      <section className="welcome-benefits" aria-label="ความสามารถของ TALEVO">
-        <article className="welcome-benefit"><CalendarDays aria-hidden="true" /><span><strong>จัดการตารางเรียน</strong><small>เห็นภาพเรียนชัดเจน</small></span></article>
-        <article className="welcome-benefit"><ClipboardCheck aria-hidden="true" /><span><strong>ติดตามงาน</strong><small>ไม่พลาดกำหนดส่ง</small></span></article>
-        <article className="welcome-benefit"><Bot aria-hidden="true" /><span><strong>AI ช่วยวางแผน</strong><small>เริ่มวันได้ง่ายขึ้น</small></span></article>
-        <article className="welcome-benefit"><BellRing aria-hidden="true" /><span><strong>แจ้งเตือนอัจฉริยะ</strong><small>ไม่พลาดทุกคาบสำคัญ</small></span></article>
+      <section className="welcome-benefits" aria-label={uiText("ความสามารถของ TALEVO")}>
+        <article className="welcome-benefit"><CalendarDays aria-hidden="true" /><span><strong>{uiText("จัดการตารางเรียน")}</strong><small>{uiText("เห็นภาพเรียนชัดเจน")}</small></span></article>
+        <article className="welcome-benefit"><ClipboardCheck aria-hidden="true" /><span><strong>{uiText("ติดตามงาน")}</strong><small>{uiText("ไม่พลาดกำหนดส่ง")}</small></span></article>
+        <article className="welcome-benefit"><Bot aria-hidden="true" /><span><strong>{uiText("AI ช่วยวางแผน")}</strong><small>{uiText("เริ่มวันได้ง่ายขึ้น")}</small></span></article>
+        <article className="welcome-benefit"><BellRing aria-hidden="true" /><span><strong>{uiText("แจ้งเตือนอัจฉริยะ")}</strong><small>{uiText("ไม่พลาดทุกคาบสำคัญ")}</small></span></article>
       </section>
     </main>
   );
@@ -76,6 +80,8 @@ type RecoveryStage = "email" | "code" | "password";
 const RECOVERY_CODE_LENGTH = 8;
 
 export function AuthPage({ mode }: { mode: AuthMode }) {
+  const uiText = useUiText();
+
   const router = useRouter();
   const { registerLocalAccount } = useAppState();
   const { signIn, signUp, resendConfirmation, resetPassword, verifyRecoveryCode, updatePassword } = useAuth();
@@ -316,79 +322,78 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         <span className="auth-star auth-star-three" aria-hidden="true" />
         <span className="auth-star auth-star-four" aria-hidden="true" />
         <Link href="/welcome"><TalevoBrand variant="compact" /></Link>
-        <div className="auth-hero-copy"><span className="eyebrow"><Sparkles /> {APP_BRAND.thaiTagline}</span><h2>ทุกเป้าหมายการเรียน<br />เริ่มต้นได้อย่างมั่นใจ</h2><p>พื้นที่ที่ช่วยให้ตารางเรียน งาน และเป้าหมายของคุณเป็นเรื่องง่ายขึ้น</p></div><TalevoMascot variant="neutral" crop="full" size="lg" decorative priority />
+        <div className="auth-hero-copy"><span className="eyebrow"><Sparkles /> {uiText(APP_BRAND.thaiTagline)}</span><h2>{uiText("ทุกเป้าหมายการเรียน")}<br />{uiText("เริ่มต้นได้อย่างมั่นใจ")}</h2><p>{uiText("พื้นที่ที่ช่วยให้ตารางเรียน งาน และเป้าหมายของคุณเป็นเรื่องง่ายขึ้น")}</p></div><TalevoMascot variant="neutral" crop="full" size="lg" decorative priority />
       </aside>
       <section className="auth-panel">
         <div className="auth-mobile-brand"><Link href="/welcome"><TalevoBrand variant="compact" /></Link></div>
         <div className="auth-card">
           <span className="auth-kicker">TALEVO</span>
-          <h1>{title}</h1><p>{subtitle}</p>
+          <h1>{uiText(title)}</h1><p>{uiText(subtitle)}</p>
           {isRegisterSuccess ? (
             <div className="register-success-transition" role="status">
               <div className="register-success-icon-wrap">
                 <CheckCircle2 className="register-success-check" aria-hidden="true" />
               </div>
               <TalevoMascot variant="neutral" crop="head" size="sm" decorative priority />
-              <h2>สร้างบัญชีสำเร็จ</h2>
-              <p className="register-success-preparing">กำลังเตรียมพื้นที่ของคุณ...</p>
-              <small className="register-success-sub">ใช้เวลาเพียงครู่เดียว</small>
+              <h2>{uiText("สร้างบัญชีสำเร็จ")}</h2>
+              <p className="register-success-preparing">{uiText("กำลังเตรียมพื้นที่ของคุณ...")}</p>
+              <small className="register-success-sub">{uiText("ใช้เวลาเพียงครู่เดียว")}</small>
             </div>
           ) : sent ? (
             <div className="success-message">
               <Mail />
-              <h3>{mode === "forgot" ? "ส่งลิงก์ตั้งรหัสผ่านแล้ว" : "ตรวจสอบอีเมลเพื่อยืนยันบัญชี"}</h3>
-              <p>{mode === "forgot" ? <>กรุณาตรวจสอบกล่องจดหมายของ <strong>{form.email}</strong> และทำตามขั้นตอนในอีเมล</> : <>เราได้ส่งลิงก์ยืนยันไปที่ <strong>{form.email}</strong> แล้ว กรุณากดลิงก์ก่อนเข้าสู่ระบบ และตรวจโฟลเดอร์สแปมหากยังไม่พบอีเมล</>}</p>
+              <h3>{mode === "forgot" ? uiText("ส่งลิงก์ตั้งรหัสผ่านแล้ว") : uiText("ตรวจสอบอีเมลเพื่อยืนยันบัญชี")}</h3>
+              <p>{mode === "forgot" ? <>{uiText("กรุณาตรวจสอบกล่องจดหมายของ")}<strong>{form.email}</strong> {uiText("และทำตามขั้นตอนในอีเมล")}</> : <>{uiText("เราได้ส่งลิงก์ยืนยันไปที่")}<strong>{form.email}</strong> {uiText("แล้ว กรุณากดลิงก์ก่อนเข้าสู่ระบบ และตรวจโฟลเดอร์สแปมหากยังไม่พบอีเมล")}</>}</p>
               {mode !== "forgot" && (
                 <>
                   <button className="secondary-button button-block" type="button" onClick={resendSignupConfirmation} disabled={isResending || resendCooldown > 0}>
-                    {isResending ? "กำลังส่งอีกครั้ง..." : resendCooldown > 0 ? `ส่งอีกครั้งได้ใน ${resendCooldown} วินาที` : "ส่งอีเมลยืนยันอีกครั้ง"}
+                    {isResending ? uiText("กำลังส่งอีกครั้ง...") : resendCooldown > 0 ? uiText("ส่งอีกครั้งได้ใน {0} วินาที", [resendCooldown]) : uiText("ส่งอีเมลยืนยันอีกครั้ง")}
                   </button>
-                  {resendFeedback && <p className="auth-status-message" role="status">{resendFeedback}</p>}
-                  {resendError && <p className="form-error" role="alert">{resendError}</p>}
+                  {resendFeedback && <p className="auth-status-message" role="status">{uiText(resendFeedback)}</p>}
+                  {resendError && <p className="form-error" role="alert">{uiText(resendError)}</p>}
                 </>
               )}
-              <Link className="primary-button button-block" href="/login">ไปหน้าเข้าสู่ระบบ</Link>
+              <Link className="primary-button button-block" href="/login">{uiText("ไปหน้าเข้าสู่ระบบ")}</Link>
             </div>
           ) : (
             mode === "forgot" && recoveryStage === "code" ? (
             <div className="auth-recovery-stage">
-              <p className="auth-recovery-target">ส่งรหัสไปที่ <strong>{form.email}</strong></p>
+              <p className="auth-recovery-target">{uiText("ส่งรหัสไปที่")}<strong>{form.email}</strong></p>
               <VerificationCodeInput
                 length={RECOVERY_CODE_LENGTH}
                 value={recoveryCode}
                 onChange={(next) => { setRecoveryCode(next); setLoginError(""); setResendFeedback(""); }}
                 onComplete={submitRecoveryCode}
                 disabled={isVerifyingCode}
-                label="รหัสยืนยัน"
+                label={uiText("รหัสยืนยัน")}
                 invalid={Boolean(loginError)}
               />
-              {loginError && <p className="form-error" role="alert">{loginError}</p>}
-              {resendFeedback && <p className="auth-status-message" role="status">{resendFeedback}</p>}
+              {loginError && <p className="form-error" role="alert">{uiText(loginError)}</p>}
+              {resendFeedback && <p className="auth-status-message" role="status">{uiText(resendFeedback)}</p>}
               <button className="primary-button button-block" type="button" disabled={isVerifyingCode || recoveryCode.length < RECOVERY_CODE_LENGTH} onClick={() => submitRecoveryCode(recoveryCode)}>
-                {isVerifyingCode ? "กำลังตรวจสอบรหัส..." : "ยืนยันรหัส"}
+                {isVerifyingCode ? uiText("กำลังตรวจสอบรหัส...") : uiText("ยืนยันรหัส")}
               </button>
               <button className="secondary-button button-block" type="button" onClick={resendRecoveryCode} disabled={isResending || resendCooldown > 0}>
-                {isResending ? "กำลังส่งรหัสใหม่..." : resendCooldown > 0 ? `ขอรหัสใหม่ได้ใน ${resendCooldown} วินาที` : "ขอรหัสใหม่"}
+                {isResending ? uiText("กำลังส่งรหัสใหม่...") : resendCooldown > 0 ? uiText("ขอรหัสใหม่ได้ใน {0} วินาที", [resendCooldown]) : uiText("ขอรหัสใหม่")}
               </button>
               <button className="auth-recovery-back" type="button" onClick={() => { setRecoveryStage("email"); setRecoveryCode(""); setLoginError(""); setResendFeedback(""); }}>
-                <ArrowLeft aria-hidden="true" /> เปลี่ยนอีเมล
-              </button>
+                <ArrowLeft aria-hidden="true" /> {uiText("เปลี่ยนอีเมล")}</button>
             </div>
             ) : mode === "forgot" && recoveryStage === "password" ? (
             <form className="form-grid auth-form" onSubmit={submitNewPassword} noValidate>
-              <Field label="รหัสผ่านใหม่ *">
+              <Field label={uiText("รหัสผ่านใหม่ *")}>
                 <div className="input-with-icon password-input">
                   <LockKeyhole />
                   <Input type={showPassword ? "text" : "password"} value={recoveryPassword} onChange={(event) => { setRecoveryPassword(event.target.value); setLoginError(""); }} placeholder={t("auth.passwordPlaceholder")} autoComplete="new-password" />
                   <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}>{showPassword ? <EyeOff /> : <Eye />}</button>
                 </div>
               </Field>
-              <Field label="ยืนยันรหัสผ่านใหม่ *">
+              <Field label={uiText("ยืนยันรหัสผ่านใหม่ *")}>
                 <Input type="password" value={recoveryConfirmPassword} onChange={(event) => { setRecoveryConfirmPassword(event.target.value); setLoginError(""); }} placeholder={t("auth.confirmPasswordPlaceholder")} autoComplete="new-password" />
               </Field>
-              {loginError && <p className="form-error" role="alert">{loginError}</p>}
+              {loginError && <p className="form-error" role="alert">{uiText(loginError)}</p>}
               <button className="primary-button button-block" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "กำลังบันทึกรหัสผ่าน..." : "บันทึกและเข้าสู่ระบบ"}
+                {isSubmitting ? uiText("กำลังบันทึกรหัสผ่าน...") : uiText("บันทึกและเข้าสู่ระบบ")}
               </button>
             </form>
             ) : (
@@ -414,13 +419,13 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
                 </div>
                 <Field label={`${t("auth.academicYear")} *`} error={errors.academicYear ? errorMessage(errors.academicYear) : undefined}><Input inputMode="numeric" maxLength={4} value={form.academicYear} onChange={(event) => updateForm("academicYear", event.target.value.replace(/\D/g, ""))} placeholder="2569" /></Field>
               </>}
-              {mode === "login" && <><p className="auth-local-notice">จัดการตารางเรียน งาน และเป้าหมายของคุณต่อได้อย่างเป็นระบบ</p>{loginNotice && <p className="auth-status-message" role="status">{loginNotice}</p>}{loginError && <><p className="form-error" role="alert">{loginError}</p>{showConfirmationResend && <Link className="auth-resend-link" href="/resend-confirmation">ขออีเมลยืนยันฉบับใหม่</Link>}</>}<div className="auth-helper"><span>เข้าสู่ระบบเพื่อกลับไปยังพื้นที่การเรียนของคุณ</span><Link href="/forgot-password">ลืมรหัสผ่าน?</Link></div></>}
-              {mode !== "login" && loginError && <p className="form-error" role="alert">{loginError}</p>}
-              {mode === "register" && registrationStep === 1 ? <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{t("auth.next")} <ArrowRight /></button> : mode === "register" ? <div className="auth-registration-actions"><button className="secondary-button button-block auth-back-button" type="button" disabled={isSubmitting} onClick={() => setRegistrationStep(1)}><ArrowLeft />{t("auth.back")}</button><button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังสร้างบัญชี..." : t("auth.createAccount")}</button></div> : <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังเชื่อมต่อ..." : mode === "login" ? t("auth.signIn") : mode === "resend" ? "ส่งอีเมลยืนยัน" : "ส่งรหัสยืนยัน"}</button>}
+              {mode === "login" && <><p className="auth-local-notice">{uiText("จัดการตารางเรียน งาน และเป้าหมายของคุณต่อได้อย่างเป็นระบบ")}</p>{loginNotice && <p className="auth-status-message" role="status">{uiText(loginNotice)}</p>}{loginError && <><p className="form-error" role="alert">{uiText(loginError)}</p>{showConfirmationResend && <Link className="auth-resend-link" href="/resend-confirmation">{uiText("ขออีเมลยืนยันฉบับใหม่")}</Link>}</>}<div className="auth-helper"><span>{uiText("เข้าสู่ระบบเพื่อกลับไปยังพื้นที่การเรียนของคุณ")}</span><Link href="/forgot-password">{uiText("ลืมรหัสผ่าน?")}</Link></div></>}
+              {mode !== "login" && loginError && <p className="form-error" role="alert">{uiText(loginError)}</p>}
+              {mode === "register" && registrationStep === 1 ? <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{t("auth.next")} <ArrowRight /></button> : mode === "register" ? <div className="auth-registration-actions"><button className="secondary-button button-block auth-back-button" type="button" disabled={isSubmitting} onClick={() => setRegistrationStep(1)}><ArrowLeft />{t("auth.back")}</button><button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? uiText("กำลังสร้างบัญชี...") : t("auth.createAccount")}</button></div> : <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? uiText("กำลังเชื่อมต่อ...") : mode === "login" ? t("auth.signIn") : mode === "resend" ? uiText("ส่งอีเมลยืนยัน") : uiText("ส่งรหัสยืนยัน")}</button>}
             </form>
             )
           )}
-          {!sent && !isRegisterSuccess && <div className="auth-switch">{mode === "login" ? <>ยังไม่มีบัญชี? <Link href="/register">สมัครใช้งาน</Link></> : mode === "register" ? <>มีบัญชีแล้ว? <Link href="/login">เข้าสู่ระบบ</Link></> : <Link href="/login">กลับไปเข้าสู่ระบบ</Link>}</div>}
+          {!sent && !isRegisterSuccess && <div className="auth-switch">{mode === "login" ? <>{uiText("ยังไม่มีบัญชี?")}<Link href="/register">{uiText("สมัครใช้งาน")}</Link></> : mode === "register" ? <>{uiText("มีบัญชีแล้ว?")}<Link href="/login">{uiText("เข้าสู่ระบบ")}</Link></> : <Link href="/login">{uiText("กลับไปเข้าสู่ระบบ")}</Link>}</div>}
         </div>
       </section>
     </main>
@@ -428,6 +433,8 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 }
 
 export function PasswordResetPage() {
+  const uiText = useUiText();
+
   const { isAuthenticated, isLoading, signOut, updatePassword } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -469,19 +476,19 @@ export function PasswordResetPage() {
       <aside className="auth-hero">
         <span className="auth-aurora" aria-hidden="true" />
         <Link href="/welcome"><TalevoBrand variant="compact" /></Link>
-        <div className="auth-hero-copy"><span className="eyebrow"><Sparkles /> {APP_BRAND.thaiTagline}</span><h2>ตั้งรหัสผ่านใหม่<br />เพื่อกลับมาใช้งานอย่างปลอดภัย</h2><p>ลิงก์กู้คืนใช้ได้ครั้งเดียวและมีเวลาจำกัด</p></div>
+        <div className="auth-hero-copy"><span className="eyebrow"><Sparkles /> {uiText(APP_BRAND.thaiTagline)}</span><h2>{uiText("ตั้งรหัสผ่านใหม่")}<br />{uiText("เพื่อกลับมาใช้งานอย่างปลอดภัย")}</h2><p>{uiText("ลิงก์กู้คืนใช้ได้ครั้งเดียวและมีเวลาจำกัด")}</p></div>
         <TalevoMascot variant="neutral" crop="full" size="lg" decorative priority />
       </aside>
       <section className="auth-panel">
         <div className="auth-mobile-brand"><Link href="/welcome"><TalevoBrand variant="compact" /></Link></div>
         <div className="auth-card">
           <span className="auth-kicker">TALEVO</span>
-          <h1>ตั้งรหัสผ่านใหม่</h1>
-          {isLoading ? <p role="status">กำลังตรวจสอบลิงก์กู้คืน...</p> : updated ? <div className="success-message"><LockKeyhole /><h3>ตั้งรหัสผ่านใหม่สำเร็จแล้ว</h3><p>เซสชันกู้คืนถูกออกจากระบบแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่</p><Link className="primary-button button-block" href="/login?password-updated=1">ไปหน้าเข้าสู่ระบบ</Link></div> : !isAuthenticated ? <div className="success-message"><TriangleAlert /><h3>ลิงก์กู้คืนไม่พร้อมใช้งาน</h3><p>ลิงก์อาจหมดอายุ ถูกใช้ไปแล้ว หรือเปิดไม่ครบ กรุณาขอลิงก์ใหม่</p><Link className="primary-button button-block" href="/forgot-password">ขอลิงก์ใหม่</Link></div> : <form className="form-grid auth-form" onSubmit={submit} noValidate>
-            <Field label="รหัสผ่านใหม่ *"><div className="input-with-icon password-input"><LockKeyhole /><Input type={showPassword ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setError(""); }} autoComplete="new-password" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}>{showPassword ? <EyeOff /> : <Eye />}</button></div></Field>
-            <Field label="ยืนยันรหัสผ่านใหม่ *"><Input type="password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setError(""); }} autoComplete="new-password" /></Field>
-            {error && <p className="form-error" role="alert">{error}</p>}
-            <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? "กำลังตั้งรหัสผ่าน..." : "ตั้งรหัสผ่านใหม่"}</button>
+          <h1>{uiText("ตั้งรหัสผ่านใหม่")}</h1>
+          {isLoading ? <p role="status">{uiText("กำลังตรวจสอบลิงก์กู้คืน...")}</p> : updated ? <div className="success-message"><LockKeyhole /><h3>{uiText("ตั้งรหัสผ่านใหม่สำเร็จแล้ว")}</h3><p>{uiText("เซสชันกู้คืนถูกออกจากระบบแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่")}</p><Link className="primary-button button-block" href="/login?password-updated=1">{uiText("ไปหน้าเข้าสู่ระบบ")}</Link></div> : !isAuthenticated ? <div className="success-message"><TriangleAlert /><h3>{uiText("ลิงก์กู้คืนไม่พร้อมใช้งาน")}</h3><p>{uiText("ลิงก์อาจหมดอายุ ถูกใช้ไปแล้ว หรือเปิดไม่ครบ กรุณาขอลิงก์ใหม่")}</p><Link className="primary-button button-block" href="/forgot-password">{uiText("ขอลิงก์ใหม่")}</Link></div> : <form className="form-grid auth-form" onSubmit={submit} noValidate>
+            <Field label={uiText("รหัสผ่านใหม่ *")}><div className="input-with-icon password-input"><LockKeyhole /><Input type={showPassword ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setError(""); }} autoComplete="new-password" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? uiText("ซ่อนรหัสผ่าน") : uiText("แสดงรหัสผ่าน")}>{showPassword ? <EyeOff /> : <Eye />}</button></div></Field>
+            <Field label={uiText("ยืนยันรหัสผ่านใหม่ *")}><Input type="password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setError(""); }} autoComplete="new-password" /></Field>
+            {error && <p className="form-error" role="alert">{uiText(error)}</p>}
+            <button className="primary-button button-block" type="submit" disabled={isSubmitting}>{isSubmitting ? uiText("กำลังตั้งรหัสผ่าน...") : uiText("ตั้งรหัสผ่านใหม่")}</button>
           </form>}
         </div>
       </section>

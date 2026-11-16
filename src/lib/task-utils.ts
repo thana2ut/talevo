@@ -71,20 +71,21 @@ export function getPendingTasksForToday(tasks: Task[], referenceDate = new Date(
   });
 }
 
-export function formatTodayTaskDeadline(task: Task, referenceDate = new Date()): string {
+export function formatTodayTaskDeadline(task: Task, referenceDate = new Date(), language: "th" | "en" = "th"): string {
   const due = parseLocalTaskDate(task.dueDate);
-  if (!due) return "ไม่มีกำหนดส่ง";
+  if (!due) return language === "en" ? "No deadline" : "ไม่มีกำหนดส่ง";
 
   const state = getTaskDueState(task, referenceDate);
-  if (state === "overdue") return "เลยกำหนด";
+  if (state === "overdue") return language === "en" ? "Overdue" : "เลยกำหนด";
 
   const timeStr = `${pad(due.getHours())}:${pad(due.getMinutes())}`;
   if (state === "urgent" || state === "today") {
-    return `ส่งวันนี้ • ${timeStr}`;
+    return language === "en" ? `Due today • ${timeStr}` : `ส่งวันนี้ • ${timeStr}`;
   }
 
   const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
   const thaiYear = due.getFullYear() + 543;
+  if (language === "en") return `${new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",year:"numeric"}).format(due)} • ${timeStr}`;
   return `${due.getDate()} ${thaiMonths[due.getMonth()]} ${thaiYear} • ${timeStr}`;
 }
 
@@ -99,10 +100,15 @@ export function getTaskDueState(task: Task, referenceDate = new Date()): TaskDue
   return isSameLocalDate(dueDate, referenceDate) ? "today" : "future";
 }
 
-export function formatTaskDueTime(task: Task, referenceDate = new Date()) {
+export function formatTaskDueTime(task: Task, referenceDate = new Date(), language: "th" | "en" = "th") {
   const dueDate = parseLocalTaskDate(task.dueDate);
   if (!dueDate) return task.dueLabel;
   const state = getTaskDueState(task, referenceDate);
+  if (language === "en") {
+    if (state === "overdue") return "Overdue";
+    if (state === "urgent") return `${Math.max(0,Math.ceil((dueDate.getTime()-referenceDate.getTime())/60000))} min left`;
+    return new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(dueDate);
+  }
   if (state === "overdue") return "เกินกำหนด";
   if (state === "urgent") {
     const minutes = Math.max(0, Math.ceil((dueDate.getTime() - referenceDate.getTime()) / 60_000));
@@ -111,9 +117,10 @@ export function formatTaskDueTime(task: Task, referenceDate = new Date()) {
   return `วันนี้ ${pad(dueDate.getHours())}:${pad(dueDate.getMinutes())}`;
 }
 
-export function formatTaskDateTime(task: Task) {
+export function formatTaskDateTime(task: Task, language: "th" | "en" = "th") {
   const dueDate = parseLocalTaskDate(task.dueDate);
   if (!dueDate) return task.dueLabel;
+  if (language === "en") return new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(dueDate);
   return `${dueDate.getDate()} ${["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."][dueDate.getMonth()]} ${dueDate.getFullYear() + 543} ${pad(dueDate.getHours())}:${pad(dueDate.getMinutes())}`;
 }
 
