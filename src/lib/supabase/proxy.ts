@@ -12,7 +12,6 @@ const protectedRoutePrefixes = [
   "/help",
   "/notifications",
   "/profile",
-  "/rescue",
   "/schedule",
   "/settings",
   "/statistics",

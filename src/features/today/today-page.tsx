@@ -151,7 +151,6 @@ export function TodayPage() {
     <MobileHome greeting={greeting} now={referenceDate} classes={view.classes} tasks={tasks} pending={view.pendingTasks}><TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes}/></MobileHome>
     <header className="today-header smart-today-header"><div><span>{t("today.title")}</span><h1>{greeting} <span aria-hidden="true">👋</span></h1><p className="today-tagline">{uiText("ทุกเรื่องเรียนของคุณ จัดการได้ง่าย ๆ ในที่เดียว")}</p></div><NotificationBell glass /></header>
     <section className="smart-today-hero"><StudyHero classes={view.classes} tasks={view.pendingTasks} now={referenceDate} nowMinutes={view.nowMinutes} gap={view.usefulGap} /></section>
-    {tasks.some(task=>task.status!=="completed"&&Date.parse(task.dueDate)-referenceDate.getTime()<86400000)&&<Link className="desktop-rescue-entry secondary-button" href="/rescue">{uiText("โหมดกู้สถานการณ์")}</Link>}
     <section className="smart-today-glance"><SectionHeader title={language === "th" ? uiText("วันนี้ของคุณ") : "Today at a Glance"} />
     <div className="smart-today-primary-grid">
       <TodayScheduleCard classes={view.classes} nowMinutes={view.nowMinutes} />

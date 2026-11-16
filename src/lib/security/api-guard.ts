@@ -23,7 +23,6 @@ const policies: Record<string, Policy> = {
   "/api/vision/analyze": { body: 3500000, multipart: true },
   "/api/vision/import": { body: 1500000, schema: apiPayloadSchemas.visionImport },
   "/api/vision/records": {},
-  "/api/learning/rescue": { body: 150000, schema: apiPayloadSchemas.rescue },
   "/api/push/subscribe": { body: 4096, schema: apiPayloadSchemas.push },
   "/api/push/queue": { body: 500000, schema: z.object({ rows: z.array(z.record(z.string(), z.unknown())).max(500) }).strict() },
 };

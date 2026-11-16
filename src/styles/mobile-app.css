@@ -587,8 +587,6 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
 }
 
 @media (max-width: 699px) {
-  html .rescue-task-entry { display:flex; width:100%; max-width:100%; min-height:48px; margin:0 0 14px; padding:10px 16px; border-radius:16px; align-items:center; justify-content:center; gap:9px; font-size:13px; line-height:1.25; box-shadow:var(--shadow-small); }
-  html .rescue-task-entry svg { width:18px; height:18px; flex:none; }
 }
 
 @media (min-width: 700px) and (max-width: 1023px) {
@@ -926,7 +924,6 @@ html .tasks-page .tabs button{min-width:0;white-space:nowrap;padding:9px 5px;gap
 
 /* Balance tablet and desktop schedule and task controls. */
 @media (min-width:700px) {
-  html .tasks-page .rescue-task-entry { display:flex; width:100%; max-width:none; box-sizing:border-box; min-height:52px; justify-content:center; align-items:center; gap:10px; margin:0 0 14px; padding:12px 18px; border-radius:16px; }
   html .schedule-page .selected-date-agenda .schedule-event-card { display:flex; align-items:center; gap:14px; min-width:0; padding:14px 16px; }
   html .schedule-page .selected-date-agenda .schedule-event-card > .subject-icon { flex:none; }
   html .schedule-page .selected-date-agenda .schedule-event-copy { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:16px; flex:1; min-width:0; }

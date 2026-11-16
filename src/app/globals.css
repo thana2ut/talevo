@@ -1227,6 +1227,3 @@ img { -webkit-user-drag: none; }
 @media (max-width: 1199px) {
   .quick-add-sheet .quick-options-create > .voice-quick-entry { display: none; }
 }
-
-.rescue-home-entry{display:flex;width:100%;margin:0 0 14px;justify-content:center;gap:8px}.desktop-rescue-entry{margin:14px 0}
-@media(max-width:699px){.desktop-rescue-entry{display:none!important}}

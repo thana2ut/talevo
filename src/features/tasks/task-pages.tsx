@@ -119,7 +119,6 @@ export function TasksPage() {
               </Link>
             </div>
           </header>
-          <Link className="secondary-button rescue-task-entry" href="/rescue"><Clock3 size={18}/>{uiText("โหมดกู้สถานการณ์")}</Link>
           {actionNotice && <div className="task-action-toast" role="status">{actionNotice === "deleted" ? t("tasks.taskDeleted") : t("tasks.taskUpdated")}</div>}
           {searchOpen && (
             <div className="search-field">

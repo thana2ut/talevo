@@ -31,7 +31,6 @@ export const apiPayloadSchemas = {
     z.object({ operation: z.literal("settings"), revision, settings: record }).strict(),
     z.object({ operation: z.enum(["save", "delete"]), course: record }).strict(),
   ]),
-  rescue: z.object({ operation: z.enum(["plan", "save"]), preferences: record, plan: record.optional(), revision: revision.optional() }).strict(),
   push: z.object({ endpoint: z.string().min(1).max(1000), keys: z.object({ p256dh: z.string().min(1).max(255), auth: z.string().min(1).max(255) }).strict() }).strict(),
   pushDelete: z.object({ endpoint: z.string().min(1).max(1000) }).strict(),
 };

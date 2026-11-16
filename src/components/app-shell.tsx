@@ -240,7 +240,7 @@ function AppShellContent({ children }: { children: ReactNode }) {
         </button>
       </nav>
 
-      <AiAssistiveTouch hidden={voiceOpen || quickOpen || moreOpen || desktopDrawerOpen || pathname === "/rescue"} onOpen={() => setVoiceOpen(true)} />
+      <AiAssistiveTouch hidden={voiceOpen || quickOpen || moreOpen || desktopDrawerOpen} onOpen={() => setVoiceOpen(true)} />
 
       <BottomSheet open={quickOpen} title={uiText("เพิ่มรายการ")} onClose={() => setQuickOpen(false)} className="quick-add-sheet">
         <div className="quick-options quick-options-create">
