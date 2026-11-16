@@ -1,4 +1,5 @@
--- REVIEW BEFORE RUNNING. This file has NOT been applied to any database.
+-- Approved by the user and applied to talevo-sg on 16 November 2026.
+-- Recorded migration: 20261116073903_remove_course_syllabus_import.sql.
 -- Permanently removes only the retired course syllabus import feature:
 --   * import_learning_syllabus RPC
 --   * learning_syllabi history, weekly topics, and source document metadata
