@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { StartupScreen } from "@/components/startup-screen";
+import { AppLoadingIndicator, StartupScreen } from "@/components/startup-screen";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft, Bot, CalendarDays, ChevronRight, ClipboardList, GraduationCap, Home, Menu, MoreHorizontal, Plus, Settings, UserRound } from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
@@ -46,7 +46,7 @@ function NavLink({ href, label, icon: Icon, active }: { href: string; label: str
 
 export function AppShell({ children }: { children: ReactNode }) {
 
-  return <Suspense fallback={<StartupScreen />}><PwaInstallNotice /><AppShellContent>{children}</AppShellContent></Suspense>;
+  return <Suspense fallback={<AppLoadingIndicator />}><PwaInstallNotice /><AppShellContent>{children}</AppShellContent></Suspense>;
 }
 
 function AppShellContent({ children }: { children: ReactNode }) {
@@ -102,7 +102,8 @@ function AppShellContent({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, isAuthLoading, isPublicRoute, pathname, router]);
 
-  if (isAuthLoading || !isHydrated || !startupComplete) return <StartupScreen authReady={!isAuthLoading} dataReady={isHydrated} />;
+  if (!startupComplete) return <StartupScreen authReady={!isAuthLoading} dataReady={isHydrated} />;
+  if (isAuthLoading || !isHydrated) return <AppLoadingIndicator />;
   if (isPublicRoute) return <>{children}</>;
   if (!isAuthenticated) return null;
 
