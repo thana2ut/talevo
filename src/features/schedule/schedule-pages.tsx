@@ -204,7 +204,7 @@ function ScheduleWeekView({ selectedDate, schedules, onSelectDate, onSelectItem 
               const isWeekend = day === 5 || day === 6;
               const hasCurrentClass = isToday && dayEvents.some(({ item }) => timeToMinutes(item.startTime) <= currentMinute && currentMinute < timeToMinutes(item.endTime));
               const maxLanes = dayEvents.length ? Math.max(...dayEvents.map((e) => e.lanes)) : 1;
-              const rowHeightStyle = maxLanes > 1 ? { minHeight: `${Math.max(76, maxLanes * 44)}px` } : undefined;
+              const rowHeightStyle = maxLanes > 1 ? { minHeight: `${Math.max(124, maxLanes * 124)}px` } : undefined;
 
               return (
                 <div
@@ -272,8 +272,7 @@ function ScheduleWeekView({ selectedDate, schedules, onSelectDate, onSelectItem 
                               <span>{item.startTime}–{item.endTime}</span>
                               {item.room && !compact && <small>· {item.room}</small>}
                             </div>
-                            {item.room && <span className="phone-class-room"><MapPin aria-hidden="true" />{item.room}</span>}
-                            {isCurrent && <span className="class-block-badge">{uiText("กำลังเรียน")}</span>}
+                            <div className="class-block-location-row">{item.room && <span className="phone-class-room"><MapPin aria-hidden="true" />{item.room}</span>}{isCurrent && <span className="class-block-badge">{uiText("กำลังเรียน")}</span>}</div>
                           </div>
                         </button>
                       );
