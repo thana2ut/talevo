@@ -60,7 +60,7 @@ html[data-theme=dark] .startup-screen footer { color: #ad93ca; }
 @media (prefers-reduced-motion: reduce) { .startup-progress i { animation: none; } .startup-progress > span { transition: none; } }
 @media (min-aspect-ratio: 1/1) { .startup-screen { --startup-width: min(460px, 65dvh); } }
 /* Keep all content in normal flow: image intrinsic dimensions cannot overlap text. */
-.startup-screen{box-sizing:border-box;height:100%;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:max(20px,env(safe-area-inset-top)) 24px max(20px,env(safe-area-inset-bottom));}
+.startup-screen{box-sizing:border-box;height:auto;min-height:0;display:flex;flex-direction:column;align-items:center;padding:max(20px,env(safe-area-inset-top)) 24px max(20px,env(safe-area-inset-bottom));}
 .startup-content{position:relative;inset:auto;display:flex;flex:1;min-height:0;flex-direction:column;align-items:center;justify-content:center;width:min(100%,430px);margin:0 auto;padding:12px 0 18px;}
 .startup-art{position:relative;top:auto;left:auto;flex:none;width:100%;height:clamp(150px,39dvh,440px);margin:0 0 clamp(18px,3dvh,32px);display:block;}
 .startup-art img{position:absolute;inset:0;display:block;width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain;}
