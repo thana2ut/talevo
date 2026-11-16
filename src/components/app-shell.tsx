@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { StartupScreen } from "@/components/startup-screen";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft, Bot, CalendarDays, ChevronRight, ClipboardList, GraduationCap, Home, Menu, MoreHorizontal, Plus, Settings, UserRound } from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
@@ -44,9 +45,8 @@ function NavLink({ href, label, icon: Icon, active }: { href: string; label: str
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const uiText = useUiText();
 
-  return <Suspense fallback={<div className="app-hydration-screen" role="status">{uiText("กำลังโหลด TALEVO...")}</div>}><PwaInstallNotice /><AppShellContent>{children}</AppShellContent></Suspense>;
+  return <Suspense fallback={<StartupScreen />}><PwaInstallNotice /><AppShellContent>{children}</AppShellContent></Suspense>;
 }
 
 function AppShellContent({ children }: { children: ReactNode }) {
@@ -96,7 +96,7 @@ function AppShellContent({ children }: { children: ReactNode }) {
   }, [isAuthenticated, isAuthLoading, isPublicRoute, pathname, router]);
 
   if (isPublicRoute) return <>{children}</>;
-  if (isAuthLoading || !isHydrated) return <div className="app-hydration-screen" role="status" aria-live="polite">{uiText("กำลังโหลดข้อมูล TALEVO...")}</div>;
+  if (isAuthLoading || !isHydrated) return <StartupScreen authReady={!isAuthLoading} dataReady={isHydrated} />;
   if (!isAuthenticated) return null;
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
