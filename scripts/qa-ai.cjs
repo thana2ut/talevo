@@ -233,8 +233,8 @@ async function runRuntimeContracts() {
 
   const voiceUi = read("src/features/ai/voice-command-sheet.tsx");
   const voiceRoute = read("src/app/api/ai/voice/execute/route.ts");
-  check(voiceUi.includes("draft.action !== requestedActions[0]"), "Voice plan must match the user-requested action before preview");
-  check(voiceUi.includes('setStage("review")'), "Voice create/update commands must require user review before saving");
+  check(voiceUi.includes("draft.action !== requestedActions[0]"), "Voice plan must match the user-requested action before executing");
+  check(!voiceUi.includes('setStage("review")') && voiceUi.includes("await persistPlan(draft, abort.signal)"), "Voice commands must execute directly after validating the requested action");
   check(voiceUi.includes("clarification.command") && voiceUi.includes("คำตอบเพิ่มเติมของผู้ใช้"), "Voice clarification must preserve original command context");
   check(voiceRoute.includes("Object.hasOwn(tables, plan.entity)"), "Voice mutation endpoint must allow only known entities");
   check(voiceRoute.includes("plan.action === \"update\" && !Object.keys(plan.fields).length"), "Voice mutation endpoint must reject empty updates");
