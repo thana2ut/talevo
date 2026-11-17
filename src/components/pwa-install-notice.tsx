@@ -11,7 +11,7 @@ import "./pwa-install-notice.css";
 
 export function PwaInstallNotice() {
   const [open, setOpen] = useState(false);
-  const [ios, setIos] = useState(false);
+  const [platform, setPlatform] = useState<"ios" | "android">("android");
   const { language } = useLanguage();
   const { isAuthenticated } = useAppState();
   const router = useRouter();
@@ -25,7 +25,7 @@ export function PwaInstallNotice() {
         || (navigator as Navigator & { standalone?: boolean }).standalone === true;
       const mobile = apple || /Android/.test(navigator.userAgent)
         || matchMedia("(max-width: 1199px) and (pointer: coarse)").matches;
-      setIos(apple);
+      setPlatform(apple ? "ios" : "android");
       setOpen(mobile && !installed);
     };
     // Deliberately no saved dismissal: every new browser visit shows the guide.
@@ -46,15 +46,25 @@ export function PwaInstallNotice() {
   };
 
   return <BottomSheet open={open} onClose={dismiss} dismissible={false} title={en ? "Install Talevo" : "ติดตั้งแอป Talevo"} className="pwa-install-sheet">
-    <div className="pwa-install-logo"><Image src="/icon.png" alt="Talevo" width={76} height={76} priority /></div>
+    <div className="pwa-install-platform" role="group" aria-label={en ? "Choose your device" : "เลือกระบบของอุปกรณ์"}>
+      <button type="button" aria-pressed={platform === "ios"} onClick={() => setPlatform("ios")}>iOS</button>
+      <button type="button" aria-pressed={platform === "android"} onClick={() => setPlatform("android")}>Android</button>
+    </div>
+    <div className="pwa-install-logo"><Image src="/apple-icon.png" alt="Talevo" width={76} height={76} priority unoptimized /></div>
     <div className="pwa-install-content">
-      <p className="pwa-install-intro">{en ? "Your study planner, one tap away from your Home Screen." : "เพิ่ม Talevo ไว้บนหน้าจอโฮม\nเปิดใช้งานสะดวกเหมือนแอป"}</p>
+      <p className="pwa-install-intro">{en ? (platform === "ios" ? "Add Talevo to your Home Screen for quick access." : "Install Talevo on your Android device for quick access.") : (platform === "ios" ? "เพิ่ม Talevo ไว้บนหน้าจอโฮม\nเปิดใช้งานได้สะดวกเหมือนแอป" : "ติดตั้ง Talevo บน Android\nแล้วเปิดใช้ได้จากหน้าจอหลัก")}</p>
       <ol className="pwa-install-steps">
-        <li><span className="pwa-step-number">1</span><span>{en ? "Tap " : "แตะปุ่ม "}<strong>{ios ? (en ? "Share" : "แชร์") : (en ? "Menu" : "เมนู")}</strong>{ios ? <Share aria-hidden="true" /> : <MoreVertical aria-hidden="true" />}{en ? (ios ? " in your browser." : " at the top right of Chrome.") : (ios ? " ในเบราว์เซอร์" : " มุมขวาบนของ Chrome")}</span></li>
-        <li><span className="pwa-step-number">2</span><span>{en ? "Choose " : "เลือก "}<strong>{en ? "Add to Home Screen" : "เพิ่มไปยังหน้าจอโฮม"}</strong><PlusSquare aria-hidden="true" />{!ios && (en ? " or Install app." : " หรือ ติดตั้งแอป")}</span></li>
-        <li><span className="pwa-step-number">3</span><span>{en ? "Tap " : "แตะ "}<strong>{en ? "Add" : "เพิ่ม"}</strong>{en ? ", then open Talevo from its icon." : " แล้วเปิด Talevo จากไอคอนบนหน้าจอ"}</span></li>
+        {platform === "ios" ? <>
+          <li><span className="pwa-step-number">1</span><span>{en ? "Tap " : "แตะปุ่ม "}<strong>{en ? "Share" : "แชร์"}</strong><Share aria-hidden="true" />{en ? " in Safari." : " ใน Safari"}</span></li>
+          <li><span className="pwa-step-number">2</span><span>{en ? "Choose " : "เลือก "}<strong>{en ? "Add to Home Screen" : "เพิ่มไปยังหน้าจอโฮม"}</strong><PlusSquare aria-hidden="true" /></span></li>
+          <li><span className="pwa-step-number">3</span><span>{en ? "Tap " : "แตะ "}<strong>{en ? "Add" : "เพิ่ม"}</strong>{en ? ", then open Talevo from its icon." : " แล้วเปิด Talevo จากไอคอนบนหน้าจอ"}</span></li>
+        </> : <>
+          <li><span className="pwa-step-number">1</span><span>{en ? "Open the " : "แตะเมนู "}<strong>{en ? "⋮ Menu" : "⋮"}</strong><MoreVertical aria-hidden="true" />{en ? " in Chrome." : " มุมขวาบนของ Chrome"}</span></li>
+          <li><span className="pwa-step-number">2</span><span>{en ? "Choose " : "เลือก "}<strong>{en ? "Install app" : "ติดตั้งแอป"}</strong>{en ? " or " : " หรือ "}<strong>{en ? "Add to Home screen" : "เพิ่มในหน้าจอหลัก"}</strong><PlusSquare aria-hidden="true" /></span></li>
+          <li><span className="pwa-step-number">3</span><span>{en ? "Tap " : "แตะ "}<strong>{en ? "Install" : "ติดตั้ง"}</strong>{en ? ", then open Talevo from its icon." : " แล้วเปิด Talevo จากไอคอนบนหน้าจอ"}</span></li>
+        </>}
       </ol>
-      <p className="pwa-install-note">{en ? "If the option is missing, use Safari or Chrome. You may need to sign in again after installation." : "ไม่พบเมนู? เปิดผ่าน Safari หรือ Chrome\nหลังติดตั้ง อาจต้องเข้าสู่ระบบอีกครั้ง"}</p>
+      <p className="pwa-install-note">{en ? (platform === "ios" ? "If you opened this in an in-app browser, open the page in Safari first." : "If you opened this in an in-app browser, open the page in Chrome first.") : (platform === "ios" ? "หากเปิดจากแอปอื่น ให้เปิดหน้านี้ใน Safari ก่อน" : "หากเปิดจากแอปอื่น ให้เปิดหน้านี้ใน Chrome ก่อน")}</p>
       <button type="button" className="primary-button pwa-install-understood" onClick={dismiss}>{en ? "Got it" : "เข้าใจแล้ว"}</button>
     </div>
   </BottomSheet>;
