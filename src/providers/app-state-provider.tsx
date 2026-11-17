@@ -93,6 +93,7 @@ interface AppStateValue {
   localOwnershipStatus: LocalOwnershipStatus;
   createMigrationSnapshot: () => PersistedAppState;
   refreshCurrentAccountFromStorage: () => PersistedAppState | null;
+  refreshCurrentAccountFromCloud: () => Promise<boolean>;
   profile: UserProfile;
   tasks: Task[];
   tasksHydrated: boolean;
@@ -697,6 +698,33 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return result.state;
   }, [accountDefaults, applySnapshot, userId]);
 
+  const refreshCurrentAccountFromCloud = useCallback(async () => {
+    if (!userId) return false;
+    try {
+      const result = await loadCloudAccountV8(createClient());
+      if (result.status === "error") return false;
+      const next = hydrateCloudAccountToAppState(result.tables, {
+        email: userEmail ?? "",
+        defaults: accountDefaults,
+        writerId: tabIdRef.current,
+      });
+      const accountStorage = createAccountStateStorage(window.localStorage, userId);
+      const current = createAppStateSnapshot(persistableState, tabIdRef.current);
+      const refreshed = { ...current, tasks: next.tasks, exams: next.exams };
+      writeAppStateSnapshot(accountStorage, refreshed);
+      activeStorageRef.current = accountStorage;
+      setTasks(next.tasks);
+      setExams(next.exams);
+      setLocalOwnershipStatus("ready");
+      setHydratedScope(userId);
+      setIsHydrated(true);
+      return true;
+    } catch (error) {
+      console.warn("[TALEVO] Cloud refresh after import failed", error);
+      return false;
+    }
+  }, [accountDefaults, persistableState, userEmail, userId]);
+
   const value = useMemo<AppStateValue>(() => ({
     isAuthenticated,
     isAuthLoading,
@@ -704,6 +732,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     localOwnershipStatus,
     createMigrationSnapshot: () => createAppStateSnapshot(persistableState, tabIdRef.current),
     refreshCurrentAccountFromStorage,
+    refreshCurrentAccountFromCloud,
     profile,
     tasks,
     tasksHydrated: isCurrentScopeHydrated,
@@ -1266,7 +1295,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         runCloudMutation((client, uid) => persistGradePlan(client, uid, gp));
       }
     },
-  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, deviceNotificationsEnabled, pushRegistration, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
+  }), [academicTerm, adoptExistingLocalData, applySnapshot, browserNotificationPermission, browserNotificationTestStatus, chat, deviceNotificationsEnabled, pushRegistration, deleteAccount, dismissedNotificationEventKeys, exams, financeCategories, financeSettings, financeTransactions, goals, gradePlans, isAuthenticated, isAuthLoading, isCurrentScopeHydrated, language, localOwnershipStatus, notifications, now, persistableState, profile, projects, refreshCurrentAccountFromCloud, refreshCurrentAccountFromStorage, runCloudMutation, savingGoals, schedules, selectedFinanceMonth, sessionNotice, settings, signOut, startFreshLocalData, taskCompletionHistory, tasks, userId]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

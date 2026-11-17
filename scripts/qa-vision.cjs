@@ -5,6 +5,7 @@ const root=path.resolve(__dirname,"..");const resolver=Module._resolveFilename;
 Module._resolveFilename=function(request,parent,isMain,options){return resolver.call(this,request.startsWith("@/")?path.join(root,"src",request.slice(2)):request,parent,isMain,options);};
 require.extensions[".ts"]=function(module,filename){module._compile(ts.transpileModule(fs.readFileSync(filename,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,filename);};
 const v=require("../src/lib/vision.ts");let passed=0;
+const {parseLocalTaskDate}=require("../src/lib/task-utils.ts");
 function check(name,run){run();passed++;console.log(`PASS ${name}`);}
 function fixture(title,date,status="ส่งแล้ว",course="0045003",kind="task",id="img-1"){
  const values={title,courseCode:course,lesson:title.match(/\d+/)?.[0]??null,dueDate:date,dueTime:date?"23:59":null,status:status==="ส่งแล้ว"?"submitted":status==="ยังไม่ได้ส่ง"?"pending":"unknown"};
@@ -22,6 +23,7 @@ check("Buddhist ISO year",()=>assert.equal(v.confirmedDate("2569-09-23"),"2026-0
 check("Invalid day isn't rolled into next month",()=>assert.equal(v.confirmedDate("31 ก.ย.","2026"),null));
 check("Leap year",()=>{assert.equal(v.confirmedDate("2024-02-29"),"2024-02-29");assert.equal(v.confirmedDate("2025-02-29"),null);});
 check("Thai 23:59",()=>assert.equal(v.confirmedTime("23:59 น."),"23:59"));
+check("Cloud UTC deadline displays as 23:59 in Bangkok",()=>{process.env.TZ="Asia/Bangkok";const date=parseLocalTaskDate("2026-11-23T16:59:00.000Z");assert.ok(date);assert.equal(date.getFullYear(),2026);assert.equal(date.getMonth(),10);assert.equal(date.getDate(),23);assert.equal(date.getHours(),23);assert.equal(date.getMinutes(),59);});
 check("24:00 rejected",()=>assert.equal(v.confirmedTime("24:00"),null));
 const nine=fixture("ใบงานท้ายบทที่ 9","ก.ย. 23");const eight=fixture("ใบงานบทที่ 8 [0045003]","ต.ค. 2");const seven=fixture("ใบงานบทที่ 7 [0045003]","ก.ย. 16");const material=fixture("เอกสารประกอบการสอนบทที่ 9",null,"","0045003","material");
 check("Three submitted assignments and material stay separate",()=>{const result=v.mergeItems([nine,eight,seven,material]);assert.equal(result.length,4);assert.equal(result.filter(i=>i.kind==="task").length,3);assert.equal(result.filter(i=>i.facts.status.value==="submitted").length,3);assert.equal(result.filter(i=>i.kind==="material").length,1);});

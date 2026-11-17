@@ -6,6 +6,14 @@ function pad(value: number) {
 
 /** Parses the app's datetime-local value without converting it to UTC. */
 export function parseLocalTaskDate(value: string) {
+  // Cloud timestamps include an explicit timezone (for example, Supabase's
+  // `...Z`). Parse those as instants so the browser converts them to the
+  // user's local time. Datetime-local values have no timezone and must keep
+  // their displayed wall-clock fields as-is.
+  if (/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)) {
+    const timestamp = new Date(value);
+    return Number.isNaN(timestamp.getTime()) ? null : timestamp;
+  }
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
   if (!match) return null;
   const [, year, month, day, hour, minute] = match;
