@@ -12,6 +12,7 @@ const policies: Record<string, Policy> = {
   "/api/time": { public: true },
   "/api/push/dispatch": { service: true },
   "/api/account": {},
+  "/api/profile/avatar": {},
   "/api/ai/status": {},
   "/api/ai/chat": { body: 32768, schema: apiPayloadSchemas.chat },
   "/api/ai/chat/probe": { developmentOnly: true, body: 32768 },

@@ -16,6 +16,7 @@ export function DeveloperSupport() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [admin, setAdmin] = useState(false);
+  const [hasMfa, setHasMfa] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -23,6 +24,8 @@ export function DeveloperSupport() {
     const load = async () => {
       const { data: profile } = await db.from("developer_profile").select("avatar").eq("id", true).maybeSingle();
       if (active && profile?.avatar) setAvatar(profile.avatar);
+      const { data: auth } = await db.auth.getUser();
+      if (active) setHasMfa(Boolean(auth.user?.factors?.some(factor => factor.status === "verified")));
       const { data: allowed } = await db.rpc("is_support_admin");
       if (!active || allowed !== true) return;
       setAdmin(true);
@@ -82,6 +85,7 @@ export function DeveloperSupport() {
       </form>
     </Card>
 
+    {(admin || hasMfa) && <Link href="/profile/security" className="support-admin-entry"><span className="support-admin-entry-icon"><ShieldCheck aria-hidden="true" /></span><span><strong>{uiText("ความปลอดภัยบัญชี")}</strong><small>{uiText("ตั้งค่าหรือยืนยันรหัสจากแอปยืนยันตัวตน")}</small></span><ChevronRight aria-hidden="true" /></Link>}
     {admin && <Link href="/admin" className="support-admin-entry">
       <span className="support-admin-entry-icon"><ShieldCheck aria-hidden="true" /></span>
       <span><strong>{uiText("แอดมิน")}</strong><small>{uiText("จัดการรายงานปัญหาและข้อความขอความช่วยเหลือ")}</small></span>

@@ -23,6 +23,15 @@ async function handlerDELETE(request: NextRequest) {
     return fail("unauthorized", "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่", 401);
   }
 
+  // A password-only session must not bypass admin deletion protection after
+  // admin membership RPCs begin requiring a verified second factor.
+  if (data.user.factors?.some(factor => factor.status === "verified")) {
+    const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (assuranceError || assurance?.currentLevel !== "aal2") {
+      return fail("mfa_required", "กรุณายืนยันรหัสสองขั้นตอนในหน้าความปลอดภัยบัญชีก่อนดำเนินการ", 403);
+    }
+  }
+
   const { data: protectedAdmin, error: adminCheckError } = await supabase.rpc("is_support_admin");
   if (adminCheckError || typeof protectedAdmin !== "boolean") {
     return fail("account_check_failed", "ตรวจสอบบัญชีไม่สำเร็จ กรุณาลองใหม่", 503);

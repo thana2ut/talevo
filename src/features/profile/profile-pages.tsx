@@ -9,14 +9,19 @@ import { PortraitImageEditor } from "@/components/developer-portrait-editor";
 import { createClient } from "@/lib/supabase/client";
 import { useAppState } from "@/providers/app-state-provider";
 import { useUiText } from "@/providers/ui-language";
+import { getSupabaseConfiguration } from "@/lib/supabase/config";
+import { privateProfileAvatarUrl, profileAvatarPath } from "@/lib/security/profile-avatar";
 
 
 export function ProfileAvatar({ name, imageUrl, size = "normal" }: { name: string; imageUrl?: string; size?: "normal" | "large" }) {
   const uiText = useUiText();
 
-  // Older versions persisted session-only blob URLs. They are invalid after a reload.
+  const path = imageUrl ? profileAvatarPath(imageUrl, getSupabaseConfiguration().url) : null;
+  const source = path ? privateProfileAvatarUrl(path)
+    : imageUrl && /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(imageUrl) ? imageUrl : "";
+  // Legacy public references are translated locally; no arbitrary external fetch.
   // eslint-disable-next-line @next/next/no-img-element
-  if (imageUrl && !imageUrl.startsWith("blob:")) return <img className={`profile-avatar-image profile-avatar-${size}`} src={imageUrl} alt={uiText("รูปโปรไฟล์ {0}", [name])} />;
+  if (source) return <img className={`profile-avatar-image profile-avatar-${size}`} src={source} alt={uiText("รูปโปรไฟล์ {0}", [name])} />;
   return <span className={`profile-avatar-fallback profile-avatar-${size}`} aria-label={uiText("รูปโปรไฟล์ {0}", [name])}>{name.trim().slice(0, 1) || uiText("ค")}</span>;
 }
 
@@ -58,18 +63,17 @@ function useProfileAvatar(initialAvatarUrl: string) {
       if (error.message.toLowerCase().includes("size")) throw new Error(uiText("รูปที่ปรับแล้วยังมีขนาดใหญ่เกินไป กรุณาเลือกรูปอื่น"));
       throw new Error(uiText("อัปโหลดรูปไม่สำเร็จ กรุณาตรวจการเชื่อมต่อแล้วลองอีกครั้ง"));
     }
-    const { data } = db.storage.from("profile-avatars").getPublicUrl(path);
-    const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
-    const { error: profileError } = await db.from("user_profile_avatars").upsert({ user_id: auth.user.id, avatar_url: publicUrl, updated_at: new Date().toISOString() });
+    const privateUrl = privateProfileAvatarUrl(path);
+    const { error: profileError } = await db.from("user_profile_avatars").upsert({ user_id: auth.user.id, avatar_url: privateUrl, updated_at: new Date().toISOString() });
     if (profileError) {
       console.error("Profile avatar reference update failed", profileError);
       await db.storage.from("profile-avatars").remove([path]);
       throw new Error(uiText("รูปถูกอัปโหลดแล้ว แต่บันทึกโปรไฟล์ไม่สำเร็จ กรุณาลองอีกครั้ง"));
     }
-    const storagePrefix = "/storage/v1/object/public/profile-avatars/";
-    const previousPath = previousAvatar?.avatar_url.split(storagePrefix)[1]?.split("?")[0];
-    if (previousPath?.startsWith(`${auth.user.id}/`)) await db.storage.from("profile-avatars").remove([previousPath]);
-    setAvatarUrl(publicUrl);
+    const previousPath = previousAvatar?.avatar_url
+      ? profileAvatarPath(previousAvatar.avatar_url, getSupabaseConfiguration().url, auth.user.id) : null;
+    if (previousPath) await db.storage.from("profile-avatars").remove([previousPath]);
+    setAvatarUrl(privateUrl);
   };
   return { avatarUrl, saveAvatar };
 }

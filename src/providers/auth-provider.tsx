@@ -34,6 +34,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function authErrorMessage(code?: string) {
   switch (code) {
+    case "mfa_required":
+      return "กรุณายืนยันรหัสสองขั้นตอนในหน้าความปลอดภัยบัญชีก่อนดำเนินการ";
     case "invalid_credentials":
       return "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
     case "email_not_confirmed":
