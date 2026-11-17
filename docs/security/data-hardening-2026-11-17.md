@@ -24,9 +24,13 @@
 - Supabase advisor: คำเตือน anon internal function หายแล้ว;
   ยังคงมี 19 authenticated SECURITY DEFINER notices, 6 RLS/no-policy INFO,
   และ leaked-password-protection ปิดตามข้อจำกัดแผนฟรี
-- MFA factor ของบัญชีแอดมินยังเป็น 0 ณ การตรวจหลัง SQL:
-  เจ้าของต้องสมัครและยืนยันเองที่ https://talevo.pages.dev/profile/security
-  จนกว่าจะทำเสร็จ ยังไม่ถือว่าแอดมินได้รับการยืนยันสองขั้นตอนครบ
+- เจ้าของสมัครและยืนยัน TOTP ที่ /profile/security เรียบร้อยแล้ว
+  อ่านกลับยืนยัน admin_verified_totp_factors=1; support_admin_count=1
+  จึงเข้าเงื่อนไขบังคับ aal2 ของ admin helper ที่ติดตั้งแล้ว
+- รอบบันทึก migration 2a76ea5 เผยแพร่ Cloudflare ผ่าน workflow 44021109572 ครบ:
+  https://github.com/thana2ut/talevo/actions/runs/44021109572
+- สถานะ 2FA บัญชีเจ้าของ GitHub/Supabase/Vercel ยังไม่มีหลักฐานยืนยันจาก API รอบนี้
+  เจ้าของควรตรวจในหน้า account security ของแต่ละบริการ; ไม่ได้ปิดหรือเปิดแทนเจ้าของ
 
 รายละเอียดถัดไปเป็นบันทึกก่อนนำขึ้นใช้ ให้ยึดผลข้างต้นเป็นสถานะล่าสุด
 
