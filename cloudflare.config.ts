@@ -5,7 +5,7 @@ export default defineConfig({
   accountId: "5a001ddfb0da267963f6df23e61a3e34",
   worker: defineWorker({
     name: "talevo",
-    entrypoint: "vinext/server/fetch-handler",
+    entrypoint: "./workers/app-entry.mjs",
     compatibilityDate: "2026-11-16",
     compatibilityFlags: ["nodejs_compat"],
     workersDev: true,
@@ -22,6 +22,7 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
+      API_BURST_LIMITER: bindings.rateLimit({ namespace: "1001", simple: { limit: 300, period: 60 } }),
       NEXT_PUBLIC_SUPABASE_URL: bindings.secret(),
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: bindings.secret(),
       SUPABASE_SECRET_KEY: bindings.secret(),

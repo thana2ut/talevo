@@ -26,7 +26,12 @@ const ownerBinding = z.object({ version: z.literal(1), userId: z.string().min(1)
 
 export function parseVisionSession(value: unknown, expectedOwner: string, now = Date.now()) {
   if (!isSafeJSON(value, 100_000)) return null;
-  const parsed = visionSession.safeParse(value);
+  // Version 0 stored the same fields without a version marker. Migrate in
+  // memory, then validate; never overwrite or delete an unreadable original.
+  const candidate = value && typeof value === "object" && !("schemaVersion" in value)
+    ? { ...value, schemaVersion: LOCAL_DATA_SCHEMA_VERSION }
+    : value;
+  const parsed = visionSession.safeParse(candidate);
   if (!parsed.success || parsed.data.owner !== expectedOwner || parsed.data.expires <= now) return null;
   return parsed.data as unknown as VisionSession;
 }

@@ -76,6 +76,7 @@ export function secureApi(handler: Handler, route: string, method: string): Hand
     try {
       const policy = policies[route];
       if (!policy) return deny(404);
+      if (request.method !== method) return deny(405);
       if (policy.developmentOnly && process.env.NODE_ENV !== "development") return deny(404);
       const burst = takeLocalLimit(`${trustedClientAddress(request.headers)}:${route}`, policy.public ? 600 : 300);
       if (!burst.allowed) return deny(429, burst.retryAfter);
@@ -108,7 +109,7 @@ export function secureApi(handler: Handler, route: string, method: string): Hand
         } else if (body.length) return deny(400);
         const headers = new Headers(request.headers);
         headers.set("content-length", String(body.length));
-        request = new NextRequest(request.url, { method, headers, ...(body.length ? { body } : {}) });
+        request = new NextRequest(request.url, { method, headers, signal: request.signal, ...(body.length ? { body } : {}) });
       }
       const response = await handler(request);
       response.headers.set("Cache-Control", "private, no-store");
