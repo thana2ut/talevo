@@ -47,6 +47,7 @@ if (process.argv.includes("--push-secrets-only")) {
   console.log("เตรียมการตั้งค่า Cloudflare แล้ว โดยใช้กุญแจสาธารณะและตัวส่งแจ้งเตือนเดิมร่วมกับ Vercel");
 } else {
   if (!process.argv.includes("--skip-build")) run("node_modules/vite/bin/vite.js", ["build"]);
+  if (process.argv.includes("--build-only")) process.exit(0);
   if (ciDeployment) {
     // Existing Worker secrets remain on Cloudflare; CI needs no database admin or AI keys.
     run("node_modules/cf/bin/cf", ["deploy", "--prebuilt", "--mode", "production"]);
