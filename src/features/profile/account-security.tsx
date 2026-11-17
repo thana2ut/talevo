@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
@@ -55,11 +54,11 @@ export function AccountSecurity({ verifiedFactorId, verifiedSession, canManageSu
     finally { setBusy(false); }
   };
 
-  return <div className="page account-security-page"><PageHeader title={uiText("ความปลอดภัยบัญชี")} backHref="/settings" />
-    <Card className="account-security-card"><span className="account-security-icon"><ShieldCheck aria-hidden="true" /></span><h2>{uiText("ยืนยันตัวตนสองขั้นตอน")}</h2><p>{uiText("ใช้รหัส 6 หลักจากแอปยืนยันตัวตน เพิ่มอีกชั้นก่อนเข้าใช้งานแอดมิน")}</p>
-      {secure ? <><p className="account-security-confirmed">{uiText("เซสชันนี้ผ่านการยืนยันสองขั้นตอนแล้ว")}</p><Link href={canManageSupport ? "/admin" : "/settings"} className="primary-button">{uiText(canManageSupport ? "กลับหน้าแอดมิน" : "กลับการตั้งค่า")}</Link></> : <>
-        {!verifiedFactorId && !pending && <><p>{uiText("เตรียมแอปยืนยันตัวตนบนอุปกรณ์ที่คุณควบคุมเอง เก็บสำเนาสำรองของแอปไว้ในที่ปลอดภัย")}</p><p>{uiText("เมื่อยืนยันการตั้งค่าครั้งแรกสำเร็จ Supabase จะให้อุปกรณ์อื่นเข้าสู่ระบบใหม่")}</p><button type="button" className="primary-button" disabled={busy} onClick={() => void enroll()}>{uiText(busy ? "กำลังดำเนินการ…" : "เริ่มตั้งค่ารหัสยืนยัน")}</button></>}
-        {pending && <div className="account-security-qr"><p>{uiText("สแกนรหัสนี้ด้วยแอปยืนยันตัวตน แล้วกรอกรหัส 6 หลักด้านล่าง ห้ามส่งภาพรหัสนี้ให้ผู้อื่น")}</p>{/* Image data stays in memory on this page; never persisted or logged. */}
+  return <div className="page account-security-page"><PageHeader title={uiText("ความปลอดภัยบัญชี")} backHref={canManageSupport ? "/admin" : "/settings"} />
+    <Card className={`account-security-card${secure ? " is-secure" : ""}`}><div className="account-security-heading"><span className="account-security-icon"><ShieldCheck aria-hidden="true" /></span><div><h2>{uiText("ยืนยันตัวตนสองขั้นตอน")}</h2><p>{uiText("เพิ่มความปลอดภัยให้บัญชีแอดมิน")}</p></div></div>
+      {secure ? <><p className="account-security-confirmed">{uiText("ยืนยันสองขั้นตอนแล้ว")}</p><button type="button" className="primary-button" onClick={() => router.push(canManageSupport ? "/admin" : "/settings")}>{uiText("ปิด")}</button></> : <>
+        {!verifiedFactorId && !pending && <><p>{uiText("ใช้แอปยืนยันตัวตนสแกน QR แล้วกรอกรหัส 6 หลัก")}</p><button type="button" className="primary-button" disabled={busy} onClick={() => void enroll()}>{uiText(busy ? "กำลังดำเนินการ…" : "เริ่มตั้งค่า")}</button></>}
+        {pending && <div className="account-security-qr"><p>{uiText("สแกน QR ด้วยแอปยืนยันตัวตน แล้วกรอกรหัส 6 หลัก")}</p>{/* Image data stays in memory on this page; never persisted or logged. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pending.qr} alt={uiText("รหัสสำหรับตั้งค่าแอปยืนยันตัวตน")} width={220} height={220} /></div>}
         {factorId && <form onSubmit={event => { event.preventDefault(); void verify(); }}><label htmlFor="account-mfa-code">{uiText("รหัสจากแอปยืนยันตัวตน")}</label><input className="input" id="account-mfa-code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required value={code} onChange={event => setCode(event.target.value.replace(/[^0-9]/g, ""))} disabled={busy} aria-describedby="mfa-code-hint" /><small id="mfa-code-hint">{uiText("ใช้รหัสล่าสุดจากแอป รหัสจะเปลี่ยนเป็นระยะ")}</small><button className="primary-button" type="submit" disabled={busy || code.length !== 6}>{uiText(busy ? "กำลังยืนยัน…" : "ยืนยันรหัส")}</button>{pending && <button type="button" className="secondary-button" disabled={busy} onClick={() => void cancel()}>{uiText("ยกเลิกการตั้งค่า")}</button>}</form>}
