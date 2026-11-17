@@ -12,7 +12,7 @@ import { VoiceCommandSheet } from "@/features/ai/voice-command-sheet";
 import { AiAssistiveTouch } from "@/features/ai/ai-assistive-touch";
 import { Mic, ScanLine, Calculator } from "lucide-react";
 import { useUiText } from "@/providers/ui-language";
-import { PwaInstallNotice } from "@/components/pwa-install-notice";
+import { NotificationWelcome, PwaInstallNotice } from "@/components/pwa-install-notice";
 
 
 // Shared ordering and Thai labels across desktop, tablet and phone menus.
@@ -46,7 +46,7 @@ function NavLink({ href, label, icon: Icon, active }: { href: string; label: str
 
 export function AppShell({ children }: { children: ReactNode }) {
 
-  return <Suspense fallback={null}><PwaInstallNotice /><AppShellContent>{children}</AppShellContent></Suspense>;
+  return <Suspense fallback={null}><PwaInstallNotice /><NotificationWelcome /><AppShellContent>{children}</AppShellContent></Suspense>;
 }
 
 function AppShellContent({ children }: { children: ReactNode }) {
