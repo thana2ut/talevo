@@ -9,6 +9,7 @@ import { useLanguage } from "@/providers/language-provider";
 import { useAppState } from "@/providers/app-state-provider";
 import "./pwa-install-notice.css";
 import { useAuth } from "@/providers/auth-provider";
+import { createClient } from "@/lib/supabase/client";
 
 export function NotificationWelcome() {
   const { user } = useAuth();
@@ -17,10 +18,12 @@ export function NotificationWelcome() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const key = user ? `talevo:notification-welcome:v1:${user.id}` : null;
+  const completed = user?.user_metadata?.notification_welcome_completed === true;
   useEffect(() => {
     const timer = window.setTimeout(() => {
     setOpen(false);
     if (!key || !isHydrated || !("Notification" in window)) return;
+    if (completed) return;
     const mobile = /iPhone|iPad|iPod|Android/.test(navigator.userAgent)
       || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const installed = matchMedia("(display-mode: standalone)").matches
@@ -30,14 +33,22 @@ export function NotificationWelcome() {
     try {
       if (deviceNotificationsEnabled || Notification.permission !== "default") {
         localStorage.setItem(key, "done");
+        void createClient().auth.updateUser({ data: { notification_welcome_completed: true } });
         return;
       }
-      setOpen(localStorage.getItem(key) !== "done");
+      if (localStorage.getItem(key) === "done") {
+        void createClient().auth.updateUser({ data: { notification_welcome_completed: true } });
+      } else setOpen(true);
     } catch { /* Storage may be unavailable in private browsing. */ }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [key, isHydrated, deviceNotificationsEnabled]);
-  const finish = () => {
+  }, [key, isHydrated, deviceNotificationsEnabled, completed]);
+  const finish = async () => {
+    const { error: saveError } = await createClient().auth.updateUser({ data: { notification_welcome_completed: true } });
+    if (saveError) {
+      setError("ยังบันทึกสถานะลงบัญชีไม่สำเร็จ กรุณาลองอีกครั้ง");
+      return;
+    }
     if (key) { try { localStorage.setItem(key, "done"); } catch { /* Keep this visit usable. */ } }
     setOpen(false);
   };
@@ -49,17 +60,17 @@ export function NotificationWelcome() {
       await setBrowserNotificationsEnabled(true);
       if (Notification.permission === "granted") {
         updateNotificationPreferences({ enabled: true, task24h: true, task12h: true, deadlineRisk: true, morning0600: true, daily0700: true, class30m: true, classEnd10m: true, exam7d: true, exam3d: true, exam1d: true, examMorning: true, weeklyRadar: true });
-        finish();
-      } else if (Notification.permission === "denied") finish();
+        await finish();
+      } else if (Notification.permission === "denied") await finish();
       else setError("ยังไม่ได้อนุญาต สามารถลองอีกครั้งหรือตั้งค่าภายหลังได้");
     } catch { setError("เปิดแจ้งเตือนไม่สำเร็จ กรุณาลองอีกครั้ง"); }
     finally { setBusy(false); }
   };
-  return <BottomSheet open={open} onClose={finish} title="เปิดการแจ้งเตือน" dismissible={!busy}>
+  return <BottomSheet open={open} onClose={() => { void finish(); }} title="เปิดการแจ้งเตือน" dismissible={!busy}>
     <p>รับการเตือนงาน คาบเรียน และการสอบ เมื่ออนุญาตจะเปิดการแจ้งเตือนทุกประเภทและส่งข้อความทดสอบ 1 ครั้ง</p>
     {error && <p role="alert">{error}</p>}
     <button type="button" className="primary-button" disabled={busy} onClick={() => void enable()}>{busy ? "กำลังเปิดแจ้งเตือน…" : "อนุญาตการแจ้งเตือน"}</button>
-    <button type="button" className="secondary-button" disabled={busy} onClick={finish}>ไว้ภายหลัง</button>
+    <button type="button" className="secondary-button" disabled={busy} onClick={() => { void finish(); }}>ไว้ภายหลัง</button>
   </BottomSheet>;
 }
 
