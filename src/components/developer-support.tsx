@@ -1,24 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, GraduationCap, Layers, MessageCircleWarning, Send, ShieldCheck, Trash2, Users } from "lucide-react";
-import { BottomSheet, Card } from "@/components/ui";
+import Link from "next/link";
+import { CalendarDays, ChevronRight, GraduationCap, Layers, MessageCircleWarning, Send, ShieldCheck } from "lucide-react";
+import { Card } from "@/components/ui";
 import { DeveloperPortraitEditor } from "@/components/developer-portrait-editor";
 import { createClient } from "@/lib/supabase/client";
 import { useUiText } from "@/providers/ui-language";
-
-type SupportMessage = {
-  id: string;
-  category?: "problem" | "help";
-  message: string;
-  created_at: string;
-  read_at: string | null;
-  display_name?: string;
-  email?: string;
-  major?: string;
-  university?: string;
-  user_id?: string;
-};
+import "./admin-workspace.css";
 
 export function DeveloperSupport() {
   const uiText = useUiText();
@@ -26,23 +15,6 @@ export function DeveloperSupport() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const [reports, setReports] = useState<SupportMessage[]>([]);
-  const [helpRequests, setHelpRequests] = useState<SupportMessage[]>([]);
-  const [accountCount, setAccountCount] = useState<number | null>(null);
-  const [unread, setUnread] = useState(0);
-  const [problemUnread, setProblemUnread] = useState(0);
-  const [helpUnread, setHelpUnread] = useState(0);
-  const [dashboardError, setDashboardError] = useState("");
-  const [inbox, setInbox] = useState<"problem" | "help" | null>(null);
-  const [selected, setSelected] = useState<SupportMessage | null>(null);
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [reply, setReply] = useState("");
-  const [replyBusy, setReplyBusy] = useState(false);
-  const [replySentId, setReplySentId] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<SupportMessage | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const [deleteStatus, setDeleteStatus] = useState("");
   const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
@@ -54,70 +26,10 @@ export function DeveloperSupport() {
       const { data: allowed } = await db.rpc("is_support_admin");
       if (!active || allowed !== true) return;
       setAdmin(true);
-      const { data, error } = await db.rpc("support_admin_dashboard");
-      if (!active) return;
-      if (error) { setDashboardError(uiText("ยังโหลดข้อมูลผู้ดูแลไม่ได้ กรุณาลองใหม่ภายหลัง")); return; }
-      setDashboardError("");
-      setAccountCount(data.account_count);
-      setUnread(data.unread_count);
-      setProblemUnread(data.unread_problem_count ?? data.unread_count);
-      setHelpUnread(data.unread_help_count ?? 0);
-      setReports(data.reports ?? []);
-      setHelpRequests(data.help_requests ?? []);
     };
-    void load();
-    const timer = setInterval(() => void load(), 30000);
-    return () => { active = false; clearInterval(timer); };
+    void load().catch(() => { if (active) setAdmin(false); });
+    return () => { active = false; };
   }, [uiText]);
-
-  const markRead = async (item: SupportMessage) => {
-    const read_at = new Date().toISOString();
-    const { error } = await createClient().from("support_reports").update({ read_at }).eq("id", item.id);
-    if (error) { setDashboardError(uiText("เปลี่ยนสถานะไม่สำเร็จ กรุณาลองใหม่")); return; }
-    const setItems = item.category === "help" ? setHelpRequests : setReports;
-    setItems((items) => items.map((current) => current.id === item.id ? { ...current, read_at } : current));
-    setUnread((count) => Math.max(0, count - 1));
-    if (item.category === "help") setHelpUnread((count) => Math.max(0, count - 1));
-    else setProblemUnread((count) => Math.max(0, count - 1));
-  };
-
-  const deleteReport = async () => {
-    if (!deleteTarget || deleteBusy) return;
-    const target = deleteTarget;
-    setDeleteBusy(true);
-    setDeleteStatus("");
-    try {
-      const { error } = await createClient().rpc("support_admin_delete_report", { target_report_id: target.id });
-      if (error) throw error;
-      const wasUnread = !target.read_at;
-      const updateItems = (current: SupportMessage[]) => current.filter((item) => item.id !== target.id);
-      if (target.category === "help") setHelpRequests(updateItems);
-      else setReports(updateItems);
-      if (selected?.id === target.id) setSelected(null);
-      if (wasUnread) {
-        setUnread((count) => Math.max(0, count - 1));
-        if (target.category === "help") setHelpUnread((count) => Math.max(0, count - 1));
-        else setProblemUnread((count) => Math.max(0, count - 1));
-      }
-      setDeleteTarget(null);
-      setDeleteStatus(uiText("ลบรายการแล้ว"));
-    } catch (error) {
-      console.error("Support report delete failed", error);
-      setDeleteStatus(uiText("ลบรายการไม่สำเร็จ กรุณาลองใหม่"));
-    } finally {
-      setDeleteBusy(false);
-    }
-  };
-
-  const items = inbox === "help" ? helpRequests : reports;
-  const visible = items.filter(item => (filter === "all" || (filter === "new" ? !item.read_at : Boolean(item.read_at))) && `${item.display_name} ${item.message}`.toLowerCase().includes(search.toLowerCase()));
-  const detail = selected && <Card className="support-detail">
-    <header><span className="support-avatar">{(selected.display_name || "?").slice(0,1)}</span><div><h3>{selected.display_name || uiText("ไม่ได้ระบุชื่อ")}</h3><time>{new Date(selected.created_at).toLocaleString(uiText.locale)}</time></div><span className={`support-report-state ${selected.read_at ? "is-read" : "is-new"}`}>{uiText(selected.read_at ? "อ่านแล้ว" : "ใหม่")}</span></header>
-    <dl><div><dt>{uiText("อีเมล")}</dt><dd>{selected.email || "—"}</dd></div><div><dt>{uiText("สาขา / มหาวิทยาลัย")}</dt><dd>{[selected.major,selected.university].filter(Boolean).join(" · ") || "—"}</dd></div></dl>
-    <p>{uiText(inbox === "help" ? "ข้อความขอความช่วยเหลือ" : "ปัญหาที่พบ")}</p><div className="support-message-body">{selected.message}</div>
-    <div className="support-detail-actions"><button type="button" className="secondary-button" disabled={Boolean(selected.read_at)} onClick={async()=>{await markRead(selected);setSelected({...selected,read_at:new Date().toISOString()});}}>{uiText("อ่านแล้ว")}</button><button type="button" className="primary-button" onClick={()=>document.getElementById("support-reply")?.focus()}>{uiText("ตอบกลับ")}</button><button type="button" className="danger-button support-delete-button" onClick={()=>{setDeleteStatus("");setDeleteTarget(selected);}}><Trash2 size={18} aria-hidden="true"/>{uiText("ลบรายการ")}</button></div>
-    <form onSubmit={async event=>{event.preventDefault();if(replyBusy || !reply.trim())return;setReplyBusy(true);setReplySentId("");setDashboardError("");const {error}=await createClient().rpc("support_admin_reply",{report_id:selected.id,reply_message:reply.trim()});setReplyBusy(false);if(error){setDashboardError(uiText("ส่งข้อความตอบกลับไม่สำเร็จ กรุณาลองใหม่"));return;}setReply("");setReplySentId(selected.id);}}>{replySentId===selected.id && <p role="status" aria-live="polite" className="support-reply-success">{uiText("ส่งข้อความตอบกลับแล้ว")}</p>}<label className="sr-only" htmlFor="support-reply">{uiText("ตอบกลับ")}</label><textarea id="support-reply" className="input" maxLength={2000} required value={reply} onChange={event=>{setReply(event.target.value);setReplySentId("");}} placeholder={uiText("พิมพ์ข้อความตอบกลับ...")}/><button type="submit" className="primary-button" disabled={replyBusy || !reply.trim()}><Send size={18}/>{uiText(replyBusy ? "กำลังส่ง…" : replySentId===selected.id ? "ส่งแล้ว" : "ส่ง")}</button></form>
-  </Card>;
 
   return <section className="developer-support">
     <h2>{uiText("ข้อมูลผู้พัฒนา")}</h2>
@@ -170,20 +82,10 @@ export function DeveloperSupport() {
       </form>
     </Card>
 
-    {deleteStatus && !deleteTarget && <p role="status" className="support-delete-status">{deleteStatus}</p>}
-    {admin && <details className="support-admin-panel">
-      <summary><ShieldCheck aria-hidden="true" />{uiText("แอดมิน")}<span>{uiText("ใหม่ {0}", [unread])}</span></summary>
-      <div className="support-admin-content">
-        <Card><h3><Users size={22} aria-hidden="true" /> {uiText("จำนวนผู้ใช้งานแอป")}</h3><strong className="support-account-count">{uiText("{0} บัญชี", [accountCount === null ? "—" : accountCount.toLocaleString(uiText.locale)])}</strong><p>{uiText("จำนวนบัญชีปัจจุบันในระบบ")}</p></Card>
-        {dashboardError && <p role="alert">{dashboardError}</p>}
-        {!inbox ? <div className="support-menu">{(["help","problem"] as const).map(category=><button type="button" key={category} className="secondary-button" onClick={()=>{setInbox(category);setSelected(null);setFilter("all");setSearch("");}}><MessageCircleWarning/>{uiText(category === "help" ? "ขอความช่วยเหลือ" : "รายงานปัญหา")}<span>{category === "help" ? helpUnread : problemUnread}</span></button>)}</div> : <section className="support-workspace">
-          <header><button type="button" className="secondary-button" onClick={()=>{setInbox(null);setSelected(null);}}>{uiText("ย้อนกลับ")}</button><h2>{uiText(inbox === "help" ? "กล่องข้อความช่วยเหลือ" : "กล่องรายงานปัญหา")}</h2></header>
-          <div className={`support-inbox-layout ${selected ? "has-selection" : ""}`}><div className="support-inbox-list"><div className="support-inbox-tabs">{["all","new","read"].map((key,index)=><button type="button" key={key} aria-pressed={filter===key} onClick={()=>setFilter(key)}>{uiText(["ทั้งหมด","ใหม่","อ่านแล้ว"][index])} {items.filter(item=>key==="all" || (key==="new" ? !item.read_at : Boolean(item.read_at))).length}</button>)}</div><input className="input" aria-label={uiText("ค้นหา")} placeholder={uiText("ค้นหาจากชื่อหรือหัวข้อ...")} value={search} onChange={event=>setSearch(event.target.value)}/>{!visible.length && <p>{uiText("ยังไม่มีข้อความ")}</p>}{visible.map(item=><article key={item.id} className={`support-inbox-card ${selected?.id===item.id ? "is-selected" : ""}`}><button type="button" onClick={()=>{setSelected(item);setReply("");}}><span className="support-avatar">{(item.display_name || "?").slice(0,1)}</span><span><strong>{item.display_name || uiText("ไม่ได้ระบุชื่อ")}</strong><span>{item.message}</span><time>{new Date(item.created_at).toLocaleString(uiText.locale)}</time></span><span className={`support-report-state ${item.read_at ? "is-read" : "is-new"}`}>{uiText(item.read_at ? "อ่านแล้ว" : "ใหม่")}</span></button><footer><button type="button" onClick={()=>setSelected(item)}>{uiText("ดูรายละเอียด")} ›</button><button type="button" onClick={()=>{setSelected(item);setReply("");}}>{uiText("ตอบกลับ")}</button><button type="button" className="support-list-delete" aria-label={uiText("ลบรายการของ {0}",[item.display_name || uiText("ผู้ใช้")])} onClick={()=>{setDeleteStatus("");setDeleteTarget(item);}}><Trash2 size={16} aria-hidden="true"/>{uiText("ลบรายการ")}</button></footer></article>)}</div>{selected && <div className="support-detail-wrap"><button type="button" className="secondary-button support-back-list" onClick={()=>setSelected(null)}>{uiText("ย้อนกลับ")}</button>{detail}</div>}</div>
-        </section>}
-      </div>
-    </details>}
-    <BottomSheet open={Boolean(deleteTarget)} title={uiText("ยืนยันการลบรายการ")} onClose={()=>{if(!deleteBusy)setDeleteTarget(null);}} className="support-delete-sheet">
-      <div className="support-delete-dialog"><p>{uiText("ต้องการลบข้อความนี้ใช่หรือไม่? ข้อความตอบกลับและการแจ้งเตือนในกระดิ่งที่เกี่ยวข้องจะถูกลบด้วย และไม่สามารถกู้คืนได้")}</p>{deleteStatus && <p role="alert" className="support-delete-error">{deleteStatus}</p>}<div className="support-delete-actions"><button type="button" className="secondary-button" disabled={deleteBusy} onClick={()=>setDeleteTarget(null)}>{uiText("ยกเลิก")}</button><button type="button" className="danger-button" disabled={deleteBusy} onClick={()=>void deleteReport()}><Trash2 size={18} aria-hidden="true"/>{uiText(deleteBusy ? "กำลังลบ…" : "ลบรายการ")}</button></div></div>
-    </BottomSheet>
+    {admin && <Link href="/admin" className="support-admin-entry">
+      <span className="support-admin-entry-icon"><ShieldCheck aria-hidden="true" /></span>
+      <span><strong>{uiText("แอดมิน")}</strong><small>{uiText("จัดการรายงานปัญหาและข้อความขอความช่วยเหลือ")}</small></span>
+      <ChevronRight aria-hidden="true" />
+    </Link>}
   </section>;
 }

@@ -105,6 +105,9 @@ function AppShellContent({ children }: { children: ReactNode }) {
   if (!startupComplete) return <StartupScreen authReady={!isAuthLoading} dataReady={isHydrated} />;
   if (isPublicRoute) return <>{children}</>;
   if (!isAuthenticated) return null;
+  if (pathname === "/admin") {
+    return <div className="admin-app-shell"><main className="admin-app-main">{children}</main></div>;
+  }
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
