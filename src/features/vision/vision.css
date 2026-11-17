@@ -41,15 +41,16 @@ html .page.vision-page { --vision-tint:color-mix(in srgb,var(--purple-100) 45%,v
 .vision-image-card { min-width:0; overflow:hidden; padding:5px; border:1px solid var(--border); border-radius:14px; background:var(--surface-elevated); }
 .vision-image-open { display:block; width:100%; overflow:hidden; padding:0; border:0; border-radius:9px; background:var(--surface-soft); cursor:zoom-in; }
 .vision-image-card img { display:block; width:100%; height:130px; object-fit:contain; }
-.vision-image-caption { display:grid; grid-template-columns:minmax(0,1fr) 32px; align-items:center; gap:0 3px; padding:5px 2px 2px; }
+.vision-image-caption { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:center; gap:0 3px; padding:5px 2px 2px; }
 .vision-image-caption b { min-width:0; font-size:11px; line-height:1.5; }
-.vision-image-caption .icon-button { grid-column:2; grid-row:1/3; width:32px; height:36px; border:0; border-radius:10px; background:transparent; color:var(--text-muted); }
+.vision-image-caption .icon-button { grid-column:2; grid-row:1/3; justify-self:center; width:44px; min-width:44px; height:44px; min-height:44px; padding:0; border:0!important; border-radius:50%; background:transparent!important; box-shadow:none!important; color:var(--danger); }
+.vision-image-caption .icon-button:hover { background:transparent!important; box-shadow:none!important; color:var(--danger); }
+.vision-image-caption .icon-button svg { width:20px; height:20px; }
 .vision-image-state { grid-column:1; display:flex; align-items:center; gap:3px; min-width:0; font-size:10px; line-height:1.6; color:var(--text-secondary); }
 .state-done .vision-image-state { color:#15803d; }.state-error .vision-image-state { color:#b45309; }
 .vision-image-state svg { flex:none; }
 .vision-image-state { padding:0!important; border:0!important; border-radius:0!important; background:transparent!important; }
 .state-done .vision-image-state { color:#16834b!important; font-weight:700; }
-.vision-image-caption .icon-button { width:34px; height:36px; border:1px solid color-mix(in srgb,var(--danger) 48%,transparent); color:var(--danger); }
 .vision-ai-ready { display:flex; align-items:center; gap:8px; margin:10px 0; padding:11px 12px; color:#16834b; font-size:13px; font-weight:700; }
 .vision-image-card .form-error { margin:5px 2px; font-size:10px; overflow-wrap:anywhere; }
 .vision-page .primary-button,.vision-page .secondary-button { max-width:100%; font-size:13px; }
@@ -138,7 +139,7 @@ html .page.vision-page { --vision-tint:color-mix(in srgb,var(--purple-100) 45%,v
  .vision-stats { gap:7px; margin-bottom:14px; }.vision-stats>div { padding:11px 7px; column-gap:7px; border-radius:14px; }.vision-stats strong { font-size:20px; }.vision-stats svg { width:20px; height:20px; }.vision-stats span { font-size:10px; }
  .vision-sources,.vision-results,.vision-summary { padding:15px; border-radius:19px; }
  .vision-image-list { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }.vision-image-card img { height:120px; }
- .vision-image-caption { grid-template-columns:minmax(0,1fr) 28px; }.vision-image-caption .icon-button { width:28px; }.vision-image-caption b,.vision-image-state { font-size:10px; }
+ .vision-image-caption { grid-template-columns:minmax(0,1fr) 44px; }.vision-image-caption b,.vision-image-state { font-size:10px; }
  .vision-item { padding:12px 10px; gap:8px; }.vision-edit-button { grid-column:3; padding:6px; min-width:36px; min-height:40px; }
  .vision-item strong { font-size:14px; }.vision-item p { font-size:11px; }.vision-year>div { gap:6px; }
  .vision-course h4 { font-size:13px; padding:10px; }.vision-empty { min-height:175px; }
