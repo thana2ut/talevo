@@ -37,7 +37,7 @@ html[data-theme="dark"] :is(
   .chat-input .input, .day-picker, .mini-month, .class-detail-icon,
   .smart-empty-card, .academic-highlight, .academic-detail, .grade-summary-card,
   .grade-summary-metrics > div, .verification-code-box, .welcome-benefits > a,
-  .float-card, .welcome-benefit, .ai-status-card, .ai-usage-card, .ai-premium-composer,
+  .float-card, .welcome-benefit, .ai-usage-card, .ai-premium-composer,
   .ai-suggestion-grid button, .ai-message-avatar, .ai-premium-bubble:not(.user),
   .ai-composer-row, .ai-context-item, .ai-context-sheet .ai-privacy-panel,
   .ai-privacy-dialog section, .ai-about-dialog section, .syllabus-privacy,
@@ -56,7 +56,7 @@ html[data-theme="dark"] :is(
   .profile-identity, .profile-hero, .profile-completeness, .goals-summary .card,
   .summary-navigation, .subject-breakdown, .academic-highlight, .academic-detail,
   .grade-summary-card, .grade-summary-metrics > div, .welcome-benefits > a,
-  .float-card, .welcome-benefit, .ai-status-card, .ai-usage-card, .ai-premium-composer,
+  .float-card, .welcome-benefit, .ai-usage-card, .ai-premium-composer,
   .syllabus-privacy, .syllabus-course-card, .syllabus-preview-section,
   .syllabus-schedule-card
 ) { background: var(--surface-elevated); }
@@ -154,17 +154,12 @@ html[data-theme="dark"] .settings-page .toggle span { background: #cbc3d8; box-s
 html[data-theme="dark"] .settings-page .toggle.on span { background: #fff; }
 
 /* AI surfaces use quieter lavender panels while preserving user message bubbles and artwork. */
-html[data-theme="dark"] :is(.ai-mode-badge.mode-online, .ai-mode-badge.mode-on-device, .ai-mode-badge.status-online-ready, .ai-mode-badge.status-online-unavailable, .ai-mode-badge.status-online-unconfigured, .ai-mode-badge.status-online-loading, .ai-status-card, .ai-usage-card, .ai-suggestion-grid button, .ai-message-avatar, .ai-premium-bubble:not(.user), .ai-composer-row, .ai-context-trigger, .ai-context-item, .ai-privacy-panel, .ai-privacy-dialog section, .ai-about-dialog section) { border-color: var(--border); background: var(--surface-soft); color: var(--text-primary); }
+html[data-theme="dark"] :is(.ai-mode-badge.mode-online, .ai-mode-badge.mode-on-device, .ai-mode-badge.status-online-ready, .ai-mode-badge.status-online-unavailable, .ai-mode-badge.status-online-unconfigured, .ai-mode-badge.status-online-loading, .ai-usage-card, .ai-suggestion-grid button, .ai-message-avatar, .ai-premium-bubble:not(.user), .ai-composer-row, .ai-context-trigger, .ai-context-item, .ai-privacy-panel, .ai-privacy-dialog section, .ai-about-dialog section) { border-color: var(--border); background: var(--surface-soft); color: var(--text-primary); }
 html[data-theme="dark"] .ai-premium-page .ai-conversation-card { border-color: #c7a2f044; background: linear-gradient(145deg,rgba(51,39,72,.72),rgba(29,25,43,.58)); box-shadow: 0 18px 50px #08051245,inset 0 1px 0 #eedcff16; backdrop-filter: blur(18px) saturate(125%); -webkit-backdrop-filter: blur(18px) saturate(125%); }
 html[data-theme="dark"] .ai-premium-page .ai-empty-state { border: 0; outline: 0; background: radial-gradient(ellipse at 50% 25%,rgba(139,92,246,.12),transparent 64%); box-shadow: none; }
 html .ai-premium-page .ai-conversation-card .ai-conversation-scroll > .ai-empty-state { background: transparent; border: 0; border-radius: 0; box-shadow: none; outline: 0; }
 html[data-theme="dark"] .ai-premium-page .ai-conversation-card .ai-conversation-scroll > .ai-empty-state { background: transparent; }
-html[data-theme="dark"] :is(.ai-status-card.tone-ready .ai-status-icon, .ai-status-card.tone-checking .ai-status-icon) { color: #d0b8ff; background: linear-gradient(145deg, #49336b, #302747); }
-html[data-theme="dark"] .ai-status-card.tone-unconfigured .ai-status-icon { color: #c2c7d8; background: linear-gradient(145deg, #3a3c4c, #2d2e3a); }
-html[data-theme="dark"] .ai-status-card.tone-warning .ai-status-icon { color: #ffc18a; background: linear-gradient(145deg, #50351f, #35281f); }
-html[data-theme="dark"] .ai-status-card.tone-blocked .ai-status-icon { color: #ff9eaa; background: linear-gradient(145deg, #50303b, #382630); }
-html[data-theme="dark"] .ai-status-card.tone-local .ai-status-icon { color: #8de1b0; background: linear-gradient(145deg, #244638, #20372f); }
-html[data-theme="dark"] :is(.ai-mode-badge, .ai-status-card, .ai-usage-card) :is(strong, small, p, span) { color: inherit; }
+html[data-theme="dark"] :is(.ai-mode-badge, .ai-usage-card) :is(strong, small, p, span) { color: inherit; }
 html[data-theme="dark"] .ai-usage-card.is-local-mode { background: linear-gradient(135deg, #1b2d27, #1d2928); }
 html[data-theme="dark"] .ai-usage-card.is-local-mode .ai-usage-top strong { color: #62d995; }
 html[data-theme="dark"] .ai-composer-row textarea { color: var(--text-primary); }

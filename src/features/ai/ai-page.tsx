@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, GraduationCap, CalendarDays, Check, ChevronLeft, Info, ListTodo, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, WifiOff, X, type LucideIcon } from "lucide-react";
+import { GraduationCap, CalendarDays, Check, ChevronLeft, Info, ListTodo, Plus, Send, ShieldCheck, Sparkles, Square, X, type LucideIcon } from "lucide-react";
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { BottomSheet, TalevoMascotAvatar } from "@/components/ui";
 import { getPendingTasks } from "@/lib/local-ai";
@@ -264,20 +264,16 @@ function UsageCard({
   usage,
   countdown,
   loading,
-  error,
   onlineUnavailable,
   isUnconfigured,
   isLocalMode,
-  onRefresh,
 }: {
   usage: AIUsageStatusResponse | null;
   countdown: number | null;
   loading: boolean;
-  error: string;
   onlineUnavailable: boolean;
   isUnconfigured: boolean;
   isLocalMode: boolean;
-  onRefresh: () => void;
 }) {
   const uiText = useUiText();
 
@@ -299,11 +295,6 @@ function UsageCard({
                     : uiText("ตรวจสอบไม่ได้")}
           </strong>
         </div>
-        {(error || onlineUnavailable) && !isUnconfigured && (
-          <button type="button" onClick={onRefresh} aria-label={uiText("ตรวจสอบโควตาอีกครั้ง")}>
-            <RefreshCw />
-          </button>
-        )}
       </div>
       <div className="ai-usage-track" role="progressbar" aria-valuemin={0} aria-valuemax={usage?.limit ?? 20} aria-valuenow={isUnconfigured ? 0 : (usage?.used ?? 0)}>
         <span style={{ width: `${percent}%` }} />
@@ -332,100 +323,16 @@ function UsageCard({
   );
 }
 
-function AIStatusCard({
-  status,
-  message,
-  isRechecking = false,
-  canUseOnDevice,
-  canReturnOnline,
-  canRetryMessage,
-  onUseOnDevice,
-  onReturnOnline,
-  onRetry,
-}: {
-  status: AIExperienceStatus;
-  message: string;
-  isRechecking?: boolean;
-  canUseOnDevice: boolean;
-  canReturnOnline: boolean;
-  canRetryMessage: boolean;
-  onUseOnDevice: () => void;
-  onReturnOnline: () => void;
-  onRetry: () => void;
-}) {
+function QuotaUnavailableNotice() {
   const uiText = useUiText();
 
-  const copy: Record<AIExperienceStatus, { title: string; detail: string; tone: string }> = {
-    "online-unconfigured": {
-      title: "AI ออนไลน์ยังไม่ได้เชื่อมต่อ",
-      detail: "กำลังรอการตั้งค่าผู้ให้บริการ AI ใหม่",
-      tone: "unconfigured",
-    },
-    "online-ready": { title: "AI ออนไลน์พร้อมใช้งาน", detail: "พร้อมช่วยสรุปบทเรียน วางแผน และเตรียมสอบ", tone: "ready" },
-    "online-loading": {
-      title: "กำลังตรวจสอบ AI ออนไลน์",
-      detail: "กำลังเชื่อมต่อเพื่อตรวจสอบความพร้อมของระบบ...",
-      tone: "checking",
-    },
-    "online-unavailable": {
-      title: "AI ออนไลน์ไม่พร้อมใช้งานชั่วคราว",
-      detail: message ? "ส่งคำถามล่าสุดไม่สำเร็จ คุณสามารถใช้โหมดในอุปกรณ์หรือลองใหม่ได้" : "คุณยังสามารถใช้โหมดในอุปกรณ์ได้",
-      tone: "warning",
-    },
-    "on-device-ready": { title: "AI ในอุปกรณ์พร้อมใช้งาน", detail: "ช่วยตอบคำถามการเรียนจากข้อมูลที่คุณเลือก โดยไม่ส่งข้อมูลออกไป", tone: "local" },
-    "fully-unavailable": { title: "AI ยังไม่พร้อมใช้งาน", detail: message || "ขณะนี้ยังไม่สามารถเริ่มคำถามได้ กรุณาลองใหม่ภายหลัง", tone: "blocked" },
-    sending: { title: "กำลังส่งคำถาม", detail: "TALEVO กำลังเรียบเรียงคำตอบให้คุณ", tone: "checking" },
-    "response-error": { title: "ส่งคำถามไม่สำเร็จ", detail: message || "ลองอีกครั้ง หรือใช้โหมดในอุปกรณ์แทนได้", tone: "warning" },
-  };
-  const current = copy[status];
-  const showFallback = (status === "online-unavailable" || status === "response-error" || status === "online-unconfigured" || (status === "online-loading" && isRechecking)) && canUseOnDevice;
-
-  const renderIcon = () => {
-    switch (status) {
-      case "online-ready":
-        return <Sparkles />;
-      case "online-loading":
-      case "sending":
-        return <RefreshCw className="is-spinning" />;
-      case "on-device-ready":
-        return <ShieldCheck />;
-      case "response-error":
-        return <AlertCircle />;
-      case "online-unconfigured":
-      case "online-unavailable":
-      case "fully-unavailable":
-      default:
-        return <WifiOff />;
-    }
-  };
-
   return (
-    <section className={`ai-status-card tone-${current.tone}`} role={status === "response-error" || status === "fully-unavailable" ? "alert" : "status"}>
-      <span className="ai-status-icon">{renderIcon()}</span>
+    <section className="ai-quota-notice" role="status" aria-live="polite">
       <div>
-        <strong>{uiText(current.title)}</strong>
-        <p>{uiText(current.detail)}</p>
+        <strong>{uiText("โควตาใช้งานไม่พร้อมใช้งาน")}</strong>
+        <p>{uiText("ใช้ AI ออนไลน์ครบโควตาแล้ว ระบบจะเปิดให้ใช้อีกครั้งเมื่อเริ่มรอบถัดไป")}</p>
       </div>
-      {showFallback && (
-        <div className="ai-status-actions">
-          <button type="button" className="primary-button" onClick={onUseOnDevice} disabled={isRechecking}>{uiText("ใช้โหมดในอุปกรณ์")}</button>
-          {status !== "online-unconfigured" && (
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={onRetry}
-              disabled={isRechecking}
-              aria-busy={isRechecking}
-            >
-              <RefreshCw className={isRechecking ? "is-spinning" : undefined} />
-              {isRechecking ? uiText("กำลังตรวจสอบ...") : canRetryMessage ? uiText("ลองส่งอีกครั้ง") : uiText("ลองตรวจสอบอีกครั้ง")}
-            </button>
-          )}
-        </div>
-      )}
-      {status === "on-device-ready" && canReturnOnline && (
-        <button type="button" className="text-button ai-return-online" onClick={onReturnOnline}>{uiText("กลับไปใช้ AI ออนไลน์")}</button>
-      )}
+      <span className="ai-quota-notice-count">0 {uiText("ครั้ง")}</span>
     </section>
   );
 }
@@ -452,13 +359,11 @@ export function AIPage() {
   const [isRechecking, setIsRechecking] = useState(false);
   const [pendingMessage, setPendingMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [retryRequest, setRetryRequest] = useState<AIChatRequest | null>(null);
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [usage, setUsage] = useState<AIUsageStatusResponse | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
-  const [usageError, setUsageError] = useState("");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [onlineAvailability, setOnlineAvailability] = useState<OnlineAvailability>("checking");
   const [mode, setMode] = useState<AIChatMode>("online");
@@ -471,7 +376,6 @@ export function AIPage() {
     setIsRechecking(true);
     setOnlineAvailability("checking");
     setErrorMessage("");
-    setUsageError("");
     setUsageLoading(true);
     try {
       let payload: AIUsageStatusResponse | AIErrorResponse | null = null;
@@ -505,7 +409,6 @@ export function AIPage() {
       }
       return { ready: isReady, payload };
     } catch {
-      setUsageError("ตรวจสอบสถานะ AI ออนไลน์ไม่สำเร็จ");
       setOnlineAvailability("unavailable");
       setErrorMessage("AI ออนไลน์ไม่พร้อมใช้งานชั่วคราว");
       return { ready: false, payload: null };
@@ -601,7 +504,6 @@ export function AIPage() {
     setIsLoading(true);
     setPendingMessage(requestBody.message);
     setErrorMessage("");
-    setRetryRequest(requestBody);
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
@@ -631,7 +533,6 @@ export function AIPage() {
       setUsage({ ...success.usage, providerConfigured: true });
       setCountdown(success.usage.resetAt ? success.usage.retryAfterSeconds : null);
       setOnlineAvailability("ready");
-      setRetryRequest(null);
     } catch (error) {
       const wasCancelled = error instanceof DOMException && error.name === "AbortError";
       setErrorMessage(wasCancelled ? "หยุดการสร้างคำตอบแล้ว คุณสามารถลองอีกครั้งได้" : "เชื่อมต่อ AI ออนไลน์ไม่สำเร็จ กรุณาลองใหม่");
@@ -649,7 +550,6 @@ export function AIPage() {
     if (!LOCAL_MODE_AVAILABLE) return;
     setMode("on-device");
     setErrorMessage("");
-    setRetryRequest(null);
     const localMessage = message?.trim();
     if (!localMessage) return;
     sendChat(localMessage, { ...selectedContext });
@@ -695,44 +595,15 @@ export function AIPage() {
 
   const toggleContext = (key: AIContextKey) => setSelectedContext((current) => ({ ...current, [key]: !current[key] }));
   const clearContext = (key: AIContextKey) => setSelectedContext((current) => ({ ...current, [key]: false }));
-  const retryOnline = async () => {
-    if (isRechecking || isLoading) return;
-    if (retryRequest) {
-      const { ready } = await recheckOnlineStatus();
-      if (ready) {
-        void sendOnlineRequest(retryRequest, true);
-      }
-      return;
-    }
-    void recheckOnlineStatus();
-  };
-  const switchToOnDevice = () => activateOnDeviceMode(retryRequest?.message);
-  const statusCard = (
-    <AIStatusCard
-      status={experienceStatus}
-      message={uiText(errorMessage)}
-      isRechecking={isRechecking}
-      canUseOnDevice={LOCAL_MODE_AVAILABLE}
-      canReturnOnline={onlineAvailability === "ready" && mode === "on-device"}
-      canRetryMessage={Boolean(retryRequest)}
-      onUseOnDevice={switchToOnDevice}
-      onReturnOnline={() => {
-        setMode("online");
-        setErrorMessage("");
-      }}
-      onRetry={() => void retryOnline()}
-    />
-  );
+  const quotaNotice = quotaReached && !usageLoading ? <QuotaUnavailableNotice /> : null;
   const usageCard = (
     <UsageCard
       usage={usage}
       countdown={countdown}
       loading={usageLoading}
-      error={usageError}
       onlineUnavailable={experienceStatus === "online-unavailable" || experienceStatus === "response-error"}
       isUnconfigured={onlineAvailability === "unconfigured" || usage?.providerConfigured === false}
       isLocalMode={mode === "on-device"}
-      onRefresh={() => void refreshUsage()}
     />
   );
 
@@ -752,17 +623,19 @@ export function AIPage() {
             <div className="ai-brand-info">
               <div className="ai-title-row">
                 <span className="ai-brand-kicker">LEARN • PLAN • GROW</span>
-                <span className={`ai-mode-badge mode-${mode} status-${experienceStatus}`}>
+                <span className={`ai-mode-badge mode-${mode} ${onlineAvailability === "ready" && !quotaReached ? "status-online-ready" : isRechecking || onlineAvailability === "checking" ? "status-online-loading" : ""}`}>
                   <i className="ai-badge-dot" />
                   {mode === "on-device"
                     ? uiText("AI ในอุปกรณ์")
-                    : isRechecking || onlineAvailability === "checking"
+                    : quotaReached
+                      ? uiText("โควตาออนไลน์หมดแล้ว")
+                      : isRechecking || onlineAvailability === "checking"
                       ? uiText("กำลังตรวจสอบ AI ออนไลน์...")
                       : onlineAvailability === "unconfigured"
                         ? uiText("AI ออนไลน์ยังไม่ได้เชื่อมต่อ")
                         : onlineAvailability === "ready"
                           ? uiText("{0} พร้อมใช้งาน", [usage?.providerLabel || "Groq"])
-                          : uiText("AI ออนไลน์ไม่พร้อมใช้งานชั่วคราว")}
+                          : uiText("AI ออนไลน์")}
                 </span>
                 <button
                   className="icon-button ai-info-button"
@@ -787,7 +660,7 @@ export function AIPage() {
 
       <div className="ai-workbench">
         <div className="ai-mobile-summary">
-          {experienceStatus !== "online-ready" && statusCard}
+          {quotaNotice}
           {usageCard}
         </div>
 
@@ -925,7 +798,7 @@ export function AIPage() {
         </section>
 
         <aside className="ai-desktop-sidebar">
-          {experienceStatus !== "online-ready" && statusCard}
+          {quotaNotice}
           <ContextPanel selected={selectedContext} onToggle={toggleContext} />
           <PrivacyPanel mode={mode} onOpen={() => setPrivacyOpen(true)} />
         </aside>

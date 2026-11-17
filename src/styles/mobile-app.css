@@ -482,7 +482,7 @@ input.input[type="datetime-local"]::-webkit-date-and-time-value {
  html .ai-phone-context-button > span { position:absolute; right:-3px; top:-3px; display:grid; place-items:center; width:17px; height:17px; border-radius:50%; color:white; background:var(--purple-600); font-size:10px; }
  html .ai-header-right { display:none; }
  html .ai-workbench { display:flex; flex-direction:column; gap:12px; min-width:0; }
- html .ai-mobile-summary { display:grid; gap:10px; }
+ html .ai-mobile-summary { display:grid; gap:14px; }
  html .ai-usage-card { border:1px solid var(--purple-200); border-radius:17px; padding:13px; background:var(--surface); }
  html .ai-usage-top { font-size:12px; flex-wrap:wrap; gap:5px; }
  html .ai-usage-top strong { font-size:15px; }
