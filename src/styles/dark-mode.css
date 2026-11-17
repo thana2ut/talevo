@@ -145,7 +145,6 @@ html[data-theme="dark"] :is(.auth-card, .auth-panel, .auth-form .input, .auth-fo
 html[data-theme="dark"] :is(.auth-page, .desktop-sidebar, .profile-menu-new, .welcome-page) { background: var(--bg); }
 html[data-theme="dark"] .desktop-sidebar .nav-link { color: var(--text-secondary); }
 html[data-theme="dark"] .desktop-sidebar .nav-link.active { color: var(--purple-700); background: var(--purple-50); }
-html[data-theme="dark"] :is(.welcome-visual, .welcome-visual::before) { background-color: var(--surface-soft); }
 html[data-theme="dark"] .welcome-benefit small { color: var(--text-secondary); }
 html[data-theme="dark"] .profile-menu-new :is(.menu-tone-purple, .menu-tone-blue, .menu-tone-cyan, .menu-tone-slate) > span { color: var(--purple-600); background: var(--surface-soft); }
 html[data-theme="dark"] :is(.danger-zone-card, .notification-permission.permission-denied, .notification-permission.unsupported, .notification-permission.is-warning, .account-data-badge, .session-notice) { color: var(--text-secondary); background: var(--surface-soft); border-color: var(--border); }
