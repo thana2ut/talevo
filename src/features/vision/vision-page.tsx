@@ -26,7 +26,7 @@ export function VisionPage(){
 function VisionWorkspace({owner}:{owner:string}){
   const uiText = useUiText();
 
-  const {schedules,tasks,exams}=useAppState();
+  const {schedules,tasks,exams,academicTerm}=useAppState();
   const [session,setSession]=useState<VisionSession|null>(null);const current=useRef<VisionSession|null>(null);
   const [ready,setReady]=useState(false);const [busy,setBusy]=useState(false);const lock=useRef(false);
   const [message,setMessage]=useState("");const [error,setError]=useState("");const [processing,setProcessing]=useState(false);
@@ -127,7 +127,13 @@ function VisionWorkspace({owner}:{owner:string}){
     const list=item.kind==="task"?tasks:item.kind==="exam"?exams:[];
     return list.filter(row=>row.courseId===item.courseId&&normalizeText(row.title)===normalizeText(item.facts.title.value??""));
   };
-  const selected=(session?.items??[]).filter(item=>item.selected&&item.choice!=="skip"&&!session?.savedIds.includes(item.id));
+  const prepareItem=(item:VisionItem)=>{
+    const year=schedules.find(course=>course.courseId===item.courseId)?.academicYear??academicTerm.academicYear;
+    const date=confirmedDate(item.facts.dueDate.value)??confirmedDate(item.facts.dueDate.value,String(year));
+    const prepared={...item,facts:{...item.facts,dueDate:{...item.facts.dueDate,value:date??item.facts.dueDate.value}}};
+    return {...prepared,reviewed:item.reviewed||(!item.conflicts.length&&readiness({...prepared,reviewed:true}).length===0)};
+  };
+  const selected=(session?.items??[]).filter(item=>item.selected&&item.choice!=="skip"&&!session?.savedIds.includes(item.id)).map(prepareItem);
   const issues=selected.flatMap(item=>readiness(item).map(issue=>`${item.facts.title.value??"รายการ"}: ${issue}`));
   const save=async(single?:VisionItem)=>{
     const pending=(single?[single]:selected).map(item=>({...item,facts:{...item.facts,dueDate:{...item.facts.dueDate,value:confirmedDate(item.facts.dueDate.value)??item.facts.dueDate.value}}}));
@@ -192,7 +198,7 @@ function VisionWorkspace({owner}:{owner:string}){
       </aside>}
 
     </div>
-    {result&&<div className="vision-success-backdrop"><section className="vision-success-dialog" role="dialog" aria-modal="true" aria-labelledby="vision-success-title"><Check size={40} aria-hidden="true"/><h2 id="vision-success-title">{uiText("บันทึกเสร็จแล้ว")}</h2><p>{uiText("บันทึก")} {result.imported} · {uiText("ข้ามซ้ำ")} {result.skipped}</p><button autoFocus type="button" className="primary-button button-block" onClick={()=>setResult(null)}>{uiText("เพิ่มรูปภาพ")}</button></section></div>}
+    {result&&<div className="vision-success-backdrop"><section className="vision-success-dialog" role="dialog" aria-modal="true" aria-labelledby="vision-success-title"><Check size={40} aria-hidden="true"/><h2 id="vision-success-title">{uiText(result.imported?"บันทึกเสร็จแล้ว":"รายการนี้บันทึกไว้แล้ว")}</h2><p>{uiText("บันทึก")} {result.imported} · {uiText("ข้ามซ้ำ")} {result.skipped}</p><button autoFocus type="button" className="primary-button button-block" onClick={()=>{setResult(null);window.location.href=new URL("/tasks",window.location.origin).href;}}>{uiText("ปิด")}</button></section></div>}
     <BottomSheet open={Boolean(editing)} title={uiText("ตรวจสอบและแก้ไขรายการ")} onClose={()=>setEditId(null)} className="vision-edit-sheet">{editing&&<div className="vision-editor">{error&&<p role="alert" className="vision-warning">{uiText(error)}</p>}<label>{uiText("ประเภท")}<select className="input" value={editing.kind} onChange={e=>update(editing.id,{kind:e.target.value as VisionKind,reviewed:false})}>{Object.entries(kindLabels).map(([v,l])=><option key={v} value={v}>{uiText(l)}</option>)}</select></label><label className={editing.courseId?"vision-field-valid":"vision-field-error"}>{uiText("เชื่อมรายวิชา")}<select className="input" value={editing.courseId} onChange={e=>update(editing.id,{courseId:e.target.value,reviewed:false})}><option value="">{uiText("เลือกวิชาใน Talevo")}</option>{courses.map(course=><option key={course.courseId} value={course.courseId}>{course.name} {course.courseCode}</option>)}</select></label>{VISION_FIELDS.filter(key=>(editing.kind==="task"||editing.kind==="exam"?["title","dueDate","dueTime","status"]:["title"]).includes(key)).map(renderEditorField)}<label>{uiText("เมื่อพบรายการเดิม")}<select className="input" value={editing.choice} onChange={e=>update(editing.id,{choice:e.target.value as VisionItem["choice"],reviewed:false})}><option value="create">{uiText("สร้างรายการใหม่")}</option><option value="skip">{uiText("ข้ามรายการนี้")}</option>{(editing.kind==="task"||editing.kind==="exam")&&<option value="update">{uiText("อัปเดตรายการเดิม (ต้องยืนยันอีกครั้ง)")}</option>}</select></label>{editing.choice==="update"&&<label>{uiText("รายการเป้าหมาย")}<select className="input" value={editing.targetId} onChange={e=>update(editing.id,{targetId:e.target.value,reviewed:false})}><option value="">{uiText("เลือกรายการเดิม")}</option>{(editing.kind==="task"?tasks:exams).map(row=><option key={row.id} value={row.id}>{row.title}</option>)}</select></label>}<label className="vision-check"><input type="checkbox" checked={editing.reviewed} onChange={e=>update(editing.id,{reviewed:e.target.checked})}/>{uiText("ตรวจเทียบภาพและยืนยันข้อมูลแล้ว")}</label><button type="button" className="primary-button button-block" disabled={busy||processing||!editing.reviewed||readiness(editing).length>0} onClick={()=>{update(editing.id,{selected:true});setEditId(null);setError("");}}>{uiText(busy?"กำลังบันทึก…":"บันทึกข้อมูล")}</button></div>}</BottomSheet>
     <BottomSheet open={Boolean(source)} title={uiText("ภาพอ้างอิง {0}", [source?.number??""])} onClose={()=>setSourceId(null)} className="vision-source-sheet">{source&&<LocalPicture blob={source.blob} alt={uiText("ภาพต้นทาง {0}", [source.number])}/>}</BottomSheet>
     <BottomSheet open={confirmSave} title={uiText("ยืนยันบันทึกรายการที่เลือก")} onClose={()=>setConfirmSave(false)}><p>{uiText("นำเข้า")}{selected.length} {uiText("รายการที่ตรวจแล้วเท่านั้น เอกสารและประกาศจะเก็บแยกจากงาน")}</p>{selected.filter(i=>i.choice==="update").map(item=><p className="vision-warning" key={item.id}>{uiText("อัปเดต “")}{item.facts.title.value}{uiText("” → รายการเดิม")}{tasks.find(t=>t.id===item.targetId)?.title??exams.find(e=>e.id===item.targetId)?.title} {uiText("· สถานะ")}{uiText(statusLabels[item.facts.status.value as VisionStatus])}</p>)}<button type="button" className="primary-button button-block" onClick={()=>void save()}>{uiText("ยืนยันบันทึก")}</button></BottomSheet>
