@@ -71,6 +71,8 @@ export interface Task {
   attachment?: string;
   attachments?: TaskAttachment[];
   completedAt?: string;
+  /** Keep this completed task indefinitely instead of deleting it after the retention period. */
+  keepCompleted?: boolean;
 }
 
 /** Minimal immutable record retained after a completed task reaches its 7-day expiry. */

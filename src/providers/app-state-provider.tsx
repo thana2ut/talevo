@@ -136,7 +136,7 @@ interface AppStateValue {
   addTaskAttachments: (taskId: string, attachments: TaskAttachment[]) => void;
   removeTaskAttachment: (taskId: string, attachmentId: string) => void;
   setTaskStatus: (id: string, status: Exclude<Task["status"], "completed">) => void;
-  completeTask: (id: string) => void;
+  completeTask: (id: string, keepCompleted: boolean) => void;
   toggleSubtask: (taskId: string, subtaskId: string) => void;
   addTaskSubtask: (taskId: string, title: string) => void;
   updateTaskSubtask: (taskId: string, subtaskId: string, title: string) => void;
@@ -327,6 +327,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       activeStorageRef.current = accountStorage;
 
       let hydratedState: PersistedAppState | null = null;
+      let cloudLoaded = false;
 
       try {
         const supabase = createClient();
@@ -334,6 +335,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
 
         if (cloudResult.status === "loaded") {
+          cloudLoaded = true;
           hydratedState = hydrateCloudAccountToAppState(cloudResult.tables, {
             email: userEmail ?? "",
             defaults: accountDefaults,
@@ -341,6 +343,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           });
           writeAppStateSnapshot(accountStorage, hydratedState);
         } else if (cloudResult.status === "empty") {
+          cloudLoaded = true;
           const cloudProfile = cloudResult.tables.profiles?.[0];
           const cloudAcademic = cloudResult.tables.academic_terms?.[0];
           const initialProfile = cloudProfile ? {
@@ -375,7 +378,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         hydratedState = result.state;
       }
 
-      const expiredTasks = getExpiredCompletedTasks(hydratedState.tasks, new Date());
+      let expiredTasks = getExpiredCompletedTasks(hydratedState.tasks, new Date());
+      if (userId && cloudLoaded && expiredTasks.length) {
+        const purgeResults = await Promise.all(expiredTasks.map(async (task) => ({ task, result: await deleteTaskFromCloud(createClient(), userId, task.id) })));
+        expiredTasks = purgeResults.filter(({ result }) => !result.error).map(({ task }) => task);
+        if (purgeResults.some(({ result }) => result.error)) setSessionNotice("ลบงานที่ครบกำหนดอัตโนมัติบางรายการไม่สำเร็จ กรุณาลองใหม่เมื่อเชื่อมต่ออินเทอร์เน็ต");
+      } else if (userId && !cloudLoaded) {
+        // Keep the account-scoped copy when cloud loading failed; a later refresh can retry the purge.
+        expiredTasks = [];
+      }
       const expiredIds = new Set(expiredTasks.map((task) => task.id));
       const finalState: PersistedAppState = expiredTasks.length ? {
         ...hydratedState,
@@ -523,17 +534,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
   useEffect(() => { dismissedNotificationEventKeysRef.current = dismissedNotificationEventKeys; }, [dismissedNotificationEventKeys]);
 
+  const purgingExpiredTaskIdsRef = useRef(new Set<string>());
   useEffect(() => {
     if (!isCurrentScopeHydrated) return;
-    const cleanupExpired = (currentTime: Date) => {
-      const expiredTasks = getExpiredCompletedTasks(tasksRef.current, currentTime);
+    const cleanupExpired = async (currentTime: Date) => {
+      const candidates = getExpiredCompletedTasks(tasksRef.current, currentTime).filter((task) => !purgingExpiredTaskIdsRef.current.has(task.id));
+      if (!candidates.length) return;
+      candidates.forEach((task) => purgingExpiredTaskIdsRef.current.add(task.id));
+      let expiredTasks = candidates;
+      if (userId) {
+        const results = await Promise.all(candidates.map(async (task) => ({ task, result: await deleteTaskFromCloud(createClient(), userId, task.id) })));
+        expiredTasks = results.filter(({ result }) => !result.error).map(({ task }) => task);
+        results.forEach(({ task }) => purgingExpiredTaskIdsRef.current.delete(task.id));
+        if (results.some(({ result }) => result.error)) setSessionNotice("ลบงานที่ครบกำหนดอัตโนมัติไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต");
+      }
       if (!expiredTasks.length) return;
       const expiredIds = new Set(expiredTasks.map((task) => task.id));
       cleanupTaskAttachments(expiredTasks);
       setTaskCompletionHistory((current) => appendCompletionHistory(current, expiredTasks));
       setTasks((current) => current.filter((task) => !expiredIds.has(task.id)));
     };
-    const tick = () => { const currentTime = new Date(); setNow(currentTime); cleanupExpired(currentTime); };
+    const tick = () => { const currentTime = new Date(); setNow(currentTime); void cleanupExpired(currentTime); };
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") tick();
     };
@@ -546,7 +567,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", tick);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
-  }, [isCurrentScopeHydrated]);
+  }, [isCurrentScopeHydrated, userId]);
 
   // What the switch actually reports: the request this device stored, and a
   // permission the browser still grants.
@@ -710,10 +731,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       });
       const accountStorage = createAccountStateStorage(window.localStorage, userId);
       const current = createAppStateSnapshot(persistableState, tabIdRef.current);
-      const refreshed = { ...current, tasks: next.tasks, exams: next.exams };
+      const expiredCandidates = getExpiredCompletedTasks(next.tasks, new Date());
+      const purgeResults = await Promise.all(expiredCandidates.map(async (task) => ({ task, result: await deleteTaskFromCloud(createClient(), userId, task.id) })));
+      const purgedIds = new Set(purgeResults.filter(({ result }) => !result.error).map(({ task }) => task.id));
+      const purgedTasks = expiredCandidates.filter((task) => purgedIds.has(task.id));
+      const refreshedTasks = next.tasks.filter((task) => !purgedIds.has(task.id));
+      if (purgeResults.some(({ result }) => result.error)) setSessionNotice("ยังลบงานที่ครบกำหนดบางรายการไม่ได้ กรุณาลองรีเฟรชอีกครั้ง");
+      const refreshed = { ...current, tasks: refreshedTasks, taskCompletionHistory: appendCompletionHistory(current.taskCompletionHistory, purgedTasks), exams: next.exams };
+      cleanupTaskAttachments(purgedTasks);
       writeAppStateSnapshot(accountStorage, refreshed);
       activeStorageRef.current = accountStorage;
-      setTasks(next.tasks);
+      setTasks(refreshedTasks);
+      setTaskCompletionHistory(refreshed.taskCompletionHistory);
       setExams(next.exams);
       setLocalOwnershipStatus("ready");
       setHydratedScope(userId);
@@ -926,7 +955,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       let updatedTask: Task | null = null;
       const nextList = current.map((task) => {
         if (task.id !== id) return task;
-        const nextTask = { ...task, status, completedAt: undefined };
+        const nextTask = { ...task, status, completedAt: undefined, keepCompleted: false };
         updatedTask = nextTask;
         return nextTask;
       });
@@ -936,12 +965,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
       return nextList;
     }),
-    completeTask: (id) => setTasks((current) => {
+    completeTask: (id, keepCompleted) => setTasks((current) => {
       let updatedTask: Task | null = null;
       const nextList = current.map((task) => {
         if (task.id !== id || task.status === "completed") return task;
         if ((task.subtasks?.length ?? 0) > 0 && task.subtasks?.some((item) => !item.completed)) return task;
-        const nextTask = { ...task, status: "completed" as const, completedAt: new Date().toISOString() };
+        const nextTask = { ...task, status: "completed" as const, completedAt: new Date().toISOString(), keepCompleted };
         updatedTask = nextTask;
         return nextTask;
       });
@@ -956,12 +985,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const subtasks = (task.subtasks ?? []).map((item) => item.id !== subtaskId ? item : { ...item, completed: !item.completed, completedAt: !item.completed ? new Date().toISOString() : undefined });
       const completedCount = subtasks.filter((item) => item.completed).length;
       const status = completedCount > 0 ? "doing" : "todo";
-      return { ...task, subtasks, status, completedAt: undefined };
+      return { ...task, subtasks, status, completedAt: undefined, keepCompleted: false };
     })),
     addTaskSubtask: (taskId, title) => setTasks((current) => current.map((task) => {
       if (task.id !== taskId || !title.trim()) return task;
       const subtasks = [...(task.subtasks ?? []), { id: uid("subtask"), title: title.trim(), completed: false }];
-      return { ...task, subtasks, status: subtasks.some((item) => item.completed) ? "doing" : "todo", completedAt: undefined };
+      return { ...task, subtasks, status: subtasks.some((item) => item.completed) ? "doing" : "todo", completedAt: undefined, keepCompleted: false };
     })),
     updateTaskSubtask: (taskId, subtaskId, title) => setTasks((current) => current.map((task) => {
       if (task.id !== taskId || !title.trim()) return task;
@@ -973,7 +1002,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (!subtasks.length) return { ...task, subtasks };
       const completedCount = subtasks.filter((item) => item.completed).length;
       const status = completedCount > 0 ? "doing" : "todo";
-      return { ...task, subtasks, status, completedAt: undefined };
+      return { ...task, subtasks, status, completedAt: undefined, keepCompleted: false };
     })),
     addSchedule: (input) => {
       const id = uid("class");

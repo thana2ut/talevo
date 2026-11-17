@@ -1,0 +1,18 @@
+.task-completed-card-wrap { position: relative; min-width: 0; }
+.task-completed-card-wrap .task-card-link { display: block; height: 100%; }
+.task-completed-card-wrap .task-card { height: 100%; padding-right: 62px; }
+.task-trash-button { position: absolute; top: 14px; right: 14px; z-index: 1; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid color-mix(in srgb, var(--danger) 48%, transparent); border-radius: 13px; background: transparent; color: var(--danger); cursor: pointer; }
+.task-trash-button svg { width: 19px; height: 19px; }
+.task-trash-button:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.task-kept-label { display: inline-flex; align-items: center; gap: 5px; color: #16834b; font-size: 12px; font-weight: 700; }
+.task-kept-label svg { width: 15px; height: 15px; }
+.task-retention-overlay { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; padding: 20px; background: rgb(12 10 22 / 58%); backdrop-filter: blur(7px); }
+.task-retention-dialog { width: min(100%, 440px); padding: 25px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface-elevated); color: var(--text-primary); box-shadow: 0 24px 80px rgb(0 0 0 / 28%); }
+.task-retention-dialog h2 { margin: 0; font-size: 20px; font-weight: 800; }
+.task-retention-dialog p { margin: 10px 0 20px; color: var(--text-secondary); line-height: 1.65; }
+.task-retention-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.task-retention-actions-stack { display: grid; grid-template-columns: 1fr; }
+.task-retention-actions-stack > button { min-height: 48px; }
+.task-retention-cancel { min-height: 42px; color: var(--text-secondary); cursor: pointer; }
+.task-trash-button:focus-visible, .task-retention-dialog button:focus-visible { outline: 3px solid var(--purple-400); outline-offset: 2px; }
+@media (max-width: 480px) { .task-retention-dialog { padding: 21px; border-radius: 22px; } .task-retention-actions:not(.task-retention-actions-stack) { display: grid; grid-template-columns: 1fr 1fr; } }

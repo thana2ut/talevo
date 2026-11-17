@@ -130,6 +130,7 @@ export async function persistTask(
       color: task.color,
       attachment_label: task.attachment ?? null,
       completed_at: toCloudTimestamp(task.completedAt),
+      keep_completed: task.keepCompleted ?? false,
     };
     const { error: taskError } = await supabase.from("tasks").upsert(taskRow);
     if (taskError) return { error: new Error(taskError.message) };

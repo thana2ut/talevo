@@ -142,6 +142,7 @@ export function hydrateCloudAccountToAppState(
       color: stringValue(row, "color", "purple"),
       ...(optionalString(row, "attachment_label") ? { attachment: optionalString(row, "attachment_label") } : {}),
       ...(optionalString(row, "completed_at") ? { completedAt: optionalString(row, "completed_at") } : {}),
+      ...(booleanValue(row, "keep_completed") ? { keepCompleted: true } : {}),
       subtasks: (subtasksByTask.get(taskId) ?? [])
         .sort((a, b) => position(a) - position(b))
         .map((child) => ({

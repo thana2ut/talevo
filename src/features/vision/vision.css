@@ -47,6 +47,10 @@ html .page.vision-page { --vision-tint:color-mix(in srgb,var(--purple-100) 45%,v
 .vision-image-state { grid-column:1; display:flex; align-items:center; gap:3px; min-width:0; font-size:10px; line-height:1.6; color:var(--text-secondary); }
 .state-done .vision-image-state { color:#15803d; }.state-error .vision-image-state { color:#b45309; }
 .vision-image-state svg { flex:none; }
+.vision-image-state { padding:0!important; border:0!important; border-radius:0!important; background:transparent!important; }
+.state-done .vision-image-state { color:#16834b!important; font-weight:700; }
+.vision-image-caption .icon-button { width:34px; height:36px; border:1px solid color-mix(in srgb,var(--danger) 48%,transparent); color:var(--danger); }
+.vision-ai-ready { display:flex; align-items:center; gap:8px; margin:10px 0; padding:11px 12px; color:#16834b; font-size:13px; font-weight:700; }
 .vision-image-card .form-error { margin:5px 2px; font-size:10px; overflow-wrap:anywhere; }
 .vision-page .primary-button,.vision-page .secondary-button { max-width:100%; font-size:13px; }
 .vision-page .primary-button>svg { flex:none; width:18px; height:18px; }

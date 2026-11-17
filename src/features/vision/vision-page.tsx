@@ -31,6 +31,7 @@ function VisionWorkspace({owner}:{owner:string}){
   const [session,setSession]=useState<VisionSession|null>(null);const current=useRef<VisionSession|null>(null);
   const [ready,setReady]=useState(false);const [busy,setBusy]=useState(false);const lock=useRef(false);
   const [message,setMessage]=useState("");const [error,setError]=useState("");const [processing,setProcessing]=useState(false);
+  const [retryAfter,setRetryAfter]=useState<number|null>(null);
   const [step,setStep]=useState(1);const [editId,setEditId]=useState<string|null>(null);const [sourceId,setSourceId]=useState<string|null>(null);
   const [archive,setArchive]=useState<Archive[]>([]);const [showArchive,setShowArchive]=useState(false);
   const [confirmSave,setConfirmSave]=useState(false);const [result,setResult]=useState<{imported:number;skipped:number}|null>(null);
@@ -56,6 +57,11 @@ function VisionWorkspace({owner}:{owner:string}){
     },Math.max(0,session.expires-Date.now()));
     return()=>clearTimeout(timer);
   },[owner,session?.expires]);
+  useEffect(()=>{
+    if(retryAfter===null||retryAfter<=0)return;
+    const timer=window.setTimeout(()=>setRetryAfter(value=>value===null?null:Math.max(0,value-1)),1000);
+    return()=>window.clearTimeout(timer);
+  },[retryAfter]);
   const commit=async(next:VisionSession)=>{if(!alive.current)return;current.current=next;setSession(next);try{await saveVisionSession(next);}catch(e){setError(e instanceof Error?e.message:"เก็บคิวไม่สำเร็จ");}};
   const loadArchive=async()=>{try{const response=await fetch("/api/vision/records",{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.message);setArchive(data.records);}catch(e){setError(e instanceof Error?e.message:"อ่านประวัติไม่สำเร็จ");}};
   const choose=async(files:FileList|null)=>{
@@ -72,7 +78,7 @@ function VisionWorkspace({owner}:{owner:string}){
     }}finally{lock.current=false;setBusy(false);if(input.current)input.current.value="";setError(failures.join("\n"));}
   };
   const run=async()=>{
-    if(lock.current||!current.current)return;lock.current=true;setProcessing(true);setError("");setResult(null);setStep(2);
+    if(lock.current||!current.current)return;lock.current=true;setProcessing(true);setError("");setRetryAfter(null);setResult(null);setStep(2);
     const abort=new AbortController();controller.current=abort;
     try{
       const ids=current.current.images.filter(image=>image.state==="queued"||image.state==="error").map(image=>image.id);
@@ -93,7 +99,7 @@ function VisionWorkspace({owner}:{owner:string}){
         try{
           const response=await fetch("/api/vision/analyze",{method:"POST",body:form,signal:abort.signal});const data=await response.json();
           if(abort.signal.aborted||!alive.current)break;
-          if(!response.ok){if(response.status===429){await commit({...current.current!,images:current.current!.images.map(i=>batchIds.has(i.id)?{...i,state:"queued"}:i)});setError(data.message+` (รอประมาณ ${data.retryAfter??60} วินาที)`);break;}throw new Error(data.message||"วิเคราะห์ไม่สำเร็จ");}
+          if(!response.ok){if(response.status===429){await commit({...current.current!,images:current.current!.images.map(i=>batchIds.has(i.id)?{...i,state:"queued"}:i)});setRetryAfter(Math.max(1,Math.ceil(Number(data.retryAfter)||60)));break;}throw new Error(data.message||"วิเคราะห์ไม่สำเร็จ");}
           const extracted=data.items as VisionItem[];
           const nextImages=current.current!.images.map(i=>batchIds.has(i.id)?{...i,state:"done" as const,items:extracted.filter(item=>item.sources[0]===i.id)}:i);
           const previous=new Map(current.current!.items.map(item=>[item.id,item]));
@@ -172,7 +178,7 @@ function VisionWorkspace({owner}:{owner:string}){
   return <div className="page vision-page">
     <header className="vision-header"><Link href="/today" className="icon-button" aria-label={uiText("กลับหน้าหลัก")}><ChevronLeft/></Link><div><h1>{uiText("นำงานเข้าจากภาพ")}</h1><p><Sparkles size={14} aria-hidden="true"/>Talevo Vision</p></div><button type="button" className="secondary-button" onClick={()=>{setShowArchive(true);void loadArchive();}}><History size={18} aria-hidden="true"/><span>{uiText("ประวัติ")}</span></button></header>
     <section className="vision-heading"><span className="vision-heading-icon"><ScanLine/></span><div><h2>{step===1?uiText("เริ่มจากรูปภาพของคุณ"):step===2?uiText("กำลังวิเคราะห์ภาพ"):step===4?uiText("บันทึกรายการ"):uiText("ตรวจสอบงานที่พบ")}</h2><p>{uiText("อ่านหลายภาพ รวมงานซ้ำ แยกวิชาและเรียงวันส่ง")}</p></div></section>
-    {error&&<p role="alert" className="vision-warning">{uiText(error)}</p>}{message&&<p role="status" className="vision-notice">{uiText(message)}</p>}
+    {retryAfter!==null&&retryAfter>0&&<p role="status" className="vision-warning">บริการ AI จำกัดการใช้งานชั่วคราว · ลองใหม่ได้ใน {retryAfter} วินาที</p>}{retryAfter===0&&<p role="status" className="vision-ai-ready"><Check size={17} aria-hidden="true"/>AI พร้อมใช้งาน</p>}{error&&<p role="alert" className="vision-warning">{uiText(error)}</p>}{message&&<p role="status" className="vision-notice">{uiText(message)}</p>}
     <input ref={input} type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif" multiple className="visually-hidden" onChange={e=>void choose(e.target.files)}/>
     <div className={`vision-workspace ${session?.items.length?"has-items":""}`}>
       <aside className="vision-sources"><h3><Images size={21} aria-hidden="true"/>{uiText("รูปภาพของคุณ")}<span className="vision-count">{session?.images.length}</span></h3><button className="vision-upload" type="button" disabled={busy||processing} onClick={()=>input.current?.click()}><span className="vision-upload-title"><Plus size={21} aria-hidden="true"/>{uiText("เพิ่มรูปภาพ")}</span><small>{uiText("เลือกหลายรูปได้ · ไม่เกิน 20 MB / รูป")}</small></button>
