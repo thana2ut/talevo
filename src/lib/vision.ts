@@ -98,7 +98,7 @@ export function normalizeExtraction(value: unknown, imageId: string, imageNumber
     if (!["pending","submitted","overdue","unknown"].includes(facts.status.value ?? "")) facts.status.value = "unknown";
     const statusProof=facts.status.evidence.map(e=>e.text).join(" ");
     const submitted=/ส่งแล้ว|turned\s+in|submitted/i.test(statusProof)&&!/ยังไม่ได้ส่ง|not\s+(?:submitted|turned\s+in)/i.test(statusProof);
-    const notSubmitted=/ยังไม่ได้ส่ง|ยังไม่ส่ง|missing|assigned|not\s+(?:submitted|turned\s+in)/i.test(statusProof);
+    const notSubmitted=/ยังไม่ได้ส่ง|ยังไม่ส่ง|มอบหมายแล้ว|missing|assigned|not\s+(?:submitted|turned\s+in)/i.test(statusProof);
     const overdue=/เลยกำหนด|เกินกำหนด|missing|overdue/i.test(statusProof);
     if ((facts.status.value==="submitted"&&!submitted)||(facts.status.value==="pending"&&!notSubmitted)||(facts.status.value==="overdue"&&!overdue)) {
       facts.status.value="unknown";issues.push("หลักฐานสถานะส่งงานไม่ชัดเจน");

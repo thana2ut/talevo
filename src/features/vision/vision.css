@@ -179,3 +179,10 @@ html .page.vision-page{max-width:960px;margin-inline:auto}
 }
 
 .vision-item.needs-check{border-color:#d9a441}.vision-item.review-complete{border-color:#36a782}
+
+.vision-editor .vision-field-error{color:#dc6678}
+.vision-success-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:24px;background:#08051280;backdrop-filter:blur(8px)}
+.vision-success-dialog{width:min(100%,380px);padding:28px;border-radius:24px;border:1px solid var(--border);background:var(--surface-soft);color:var(--text-primary);text-align:center;box-shadow:0 20px 70px #0004}
+.vision-success-dialog>svg{margin:auto;color:#36a782}
+.vision-success-dialog h2{margin:14px 0 8px;font-size:23px}
+.vision-success-dialog p{margin:0 0 20px;color:var(--text-secondary)}
