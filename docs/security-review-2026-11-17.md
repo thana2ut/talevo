@@ -45,6 +45,11 @@
 3. npm audit: 12 moderate, 0 high, 0 critical ณ เวลาตรวจ
    กลุ่ม minimatch/TypeScript ESLint และ fflate ผ่าน satori/@vercel/og/vinext
    ไม่รัน audit fix --force เพราะข้อเสนอมีการเปลี่ยน vinext ไปเวอร์ชันเก่าและอาจทำให้ deploy เสีย
+   หลังเปิด vulnerability alerts และ push GitHub วิเคราะห์สาขาเริ่มต้น `master`
+   แล้วพบ 17 alerts: 3 critical, 4 high, 9 medium, 1 low (Next.js, sharp,
+   source-map-js, minimatch และ brace-expansion) ยังไม่ได้แก้สาขา master
+   จำนวนนี้เป็นผลตรวจคนละสาขากับ npm audit บน `security-hardening` ที่ใช้ deploy
+   ติดตามที่ https://github.com/thana2ut/talevo/security/dependabot
 4. Leaked password protection ปิดอยู่ และ Supabase กำหนดให้ใช้ Pro ขึ้นไป
    คงแผนฟรีตามคำสั่งเจ้าของ: https://supabase.com/docs/guides/auth/password-security
 5. ยังไม่ได้ตรวจ MFA ของบัญชีเจ้าของ, token expiry/scope ที่เจ้าของสร้าง,
