@@ -20,7 +20,7 @@ const featureNavigationItems = [
   { href: "/schedule", label: "ตารางเรียน", description: "จัดตารางเรียนและเวลาว่าง", icon: CalendarDays },
   { href: "/tasks", label: "งาน", description: "จัดการงานค้าง งานใกล้ส่ง และงานที่เสร็จแล้ว", icon: ClipboardList },
   { href: "/exams", label: "การสอบ", description: "ตารางสอบและเตือนวันสอบ", icon: GraduationCap },
-  { href: "/grade-lab", label: "คำนวณคะแนน", description: "เก็บคะแนนรายวิชา วางแผนคะแนนให้ถึง A", icon: Calculator },
+  { href: "/grade-lab", label: "วางแผนคะแนนให้ถึงเป้าหมาย", description: "ติดตามคะแนนรายวิชา", icon: Calculator },
   { href: "/vision", label: "นำงานเข้าจากภาพ", description: "นำเข้างานจากภาพ Google Classroom", icon: ScanLine },
   { href: "/ai", label: "TALEVO AI", description: "ผู้ช่วยวางแผนและตอบคำถามการเรียน", icon: Bot },
 ];
@@ -252,7 +252,7 @@ function AppShellContent({ children }: { children: ReactNode }) {
             <div><strong>{uiText("เพิ่มด้วยเสียง")}<em>AI</em></strong><small>{uiText("พูดเพื่อเพิ่มงาน การสอบ หรือจัดการคาบเรียน")}</small></div>
             <ChevronRight className="quick-option-chevron" aria-hidden="true" />
           </button>
-          <Link href="/vision" aria-current={isActive("/vision") ? "page" : undefined} onClick={() => setQuickOpen(false)}><span><ScanLine aria-hidden="true" /></span><div><strong>{uiText("นำงานเข้าจากภาพ")}</strong><small>{uiText("สแกนภาพ Classroom หลายรูป แล้วตรวจสอบก่อนนำเข้า")}</small></div><ChevronRight className="quick-option-chevron" aria-hidden="true" /></Link>
+          <Link href="/vision" aria-current={isActive("/vision") ? "page" : undefined} onClick={() => setQuickOpen(false)}><span><ScanLine aria-hidden="true" /></span><div><strong>{uiText("นำงานเข้าจากภาพ")}</strong><small>{uiText("สแกนงานจาก Classroom")}</small></div><ChevronRight className="quick-option-chevron" aria-hidden="true" /></Link>
           {quickOptions.map(({ label, description, icon: Icon, href }) => (
             <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} onClick={() => setQuickOpen(false)}>
               <span><Icon aria-hidden="true" /></span>
