@@ -425,7 +425,7 @@ html[data-theme="dark"] {
 html[data-theme="dark"] :is(.auth-page,.welcome-page) {
   background:radial-gradient(ellipse at 80% 15%,#6f35b326,transparent 45%),radial-gradient(ellipse at 0 90%,#275f7f16,transparent 40%),var(--bg);
 }
-html[data-theme="dark"] :is(.auth-card,.auth-panel,.profile-hero,.profile-identity,.settings-card,.account-management-card,.exam-panel,.notif-day-card,.notif-empty,.vision-editor,.vision-stats>div,.vision-steps,.lab-subject-card,.lab-scores-panel) {
+html[data-theme="dark"] :is(.auth-card,.auth-panel,.profile-hero,.profile-identity,.settings-card,.account-management-card,.exam-panel,.notif-day-card,.notif-empty,.vision-stats>div,.vision-steps,.lab-subject-card,.lab-scores-panel) {
   background:var(--night-panel); border-color:var(--border); box-shadow:var(--shadow-card);
 }
 html[data-theme="dark"] :is(.welcome-ai-node,.ai-context-check) { background:var(--surface-soft); border-color:var(--border); color:var(--purple-700); }
