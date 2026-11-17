@@ -7,7 +7,7 @@ html .bottom-sheet.pwa-install-sheet{position:relative;display:flex;flex-directi
 .pwa-install-platform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,320px);margin:0 auto 16px}
 .pwa-install-platform button{display:flex;align-items:center;justify-content:center;min-height:42px;border:0;border-radius:13px;background:transparent;color:#5c526d;font:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:background .16s,color .16s}
 .pwa-install-platform button[aria-pressed=true]{background:#f1eaff;color:#6035bd}
-.pwa-install-platform button:focus-visible{outline:3px solid #7950d1;outline-offset:3px}
+.pwa-install-platform button:focus-visible:not([data-pointer-interaction]){outline:3px solid #7950d1;outline-offset:3px}
 .pwa-install-logo{order:1;width:84px;height:84px;display:grid;place-items:center;border:1px solid #d4bdf766;border-radius:25px;background:#fff;box-shadow:0 8px 25px #7747c326;flex:none}
 .pwa-install-logo img{display:block;width:76px;height:76px;object-fit:contain;border-radius:21px}
 .pwa-install-content{order:3;width:100%;min-width:0}

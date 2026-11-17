@@ -50,8 +50,8 @@ export function PwaInstallNotice() {
     <div className="pwa-install-content">
       <p className="pwa-install-intro">{en ? (platform === "ios" ? "Add Talevo to your Home Screen for quick access." : "Install Talevo on your Android device for quick access.") : (platform === "ios" ? "เพิ่ม Talevo ไว้บนหน้าจอโฮม\nเปิดใช้งานได้สะดวกเหมือนแอป" : "ติดตั้ง Talevo บน Android\nแล้วเปิดใช้ได้จากหน้าจอหลัก")}</p>
       <div className="pwa-install-platform" role="group" aria-label={en ? "Choose your device" : "เลือกระบบของอุปกรณ์"}>
-        <button type="button" aria-pressed={platform === "ios"} onClick={() => setPlatform("ios")}>iOS</button>
-        <button type="button" aria-pressed={platform === "android"} onClick={() => setPlatform("android")}>Android</button>
+        <button type="button" aria-pressed={platform === "ios"} onPointerDown={(event) => { event.currentTarget.dataset.pointerInteraction = "true"; }} onKeyDown={(event) => { delete event.currentTarget.dataset.pointerInteraction; }} onBlur={(event) => { delete event.currentTarget.dataset.pointerInteraction; }} onClick={() => setPlatform("ios")}>iOS</button>
+        <button type="button" aria-pressed={platform === "android"} onPointerDown={(event) => { event.currentTarget.dataset.pointerInteraction = "true"; }} onKeyDown={(event) => { delete event.currentTarget.dataset.pointerInteraction; }} onBlur={(event) => { delete event.currentTarget.dataset.pointerInteraction; }} onClick={() => setPlatform("android")}>Android</button>
       </div>
       <ol className="pwa-install-steps">
         {platform === "ios" ? <>
