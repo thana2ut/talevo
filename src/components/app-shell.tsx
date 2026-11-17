@@ -20,7 +20,7 @@ const featureNavigationItems = [
   { href: "/schedule", label: "ตารางเรียน", description: "จัดตารางเรียนและเวลาว่าง", icon: CalendarDays },
   { href: "/tasks", label: "งาน", description: "จัดการงานค้าง งานใกล้ส่ง และงานที่เสร็จแล้ว", icon: ClipboardList },
   { href: "/exams", label: "การสอบ", description: "ตารางสอบและเตือนวันสอบ", icon: GraduationCap },
-  { href: "/grade-lab", label: "วางแผนคะแนนให้ถึงเป้าหมาย", description: "ติดตามคะแนนรายวิชา", icon: Calculator },
+  { href: "/grade-lab", label: "คำนวณคะแนน", description: "เก็บคะแนนรายวิชา วางแผนคะแนนให้ถึงเป้าหมาย", icon: Calculator },
   { href: "/vision", label: "นำงานเข้าจากภาพ", description: "นำเข้างานจากภาพ Google Classroom", icon: ScanLine },
   { href: "/ai", label: "TALEVO AI", description: "ผู้ช่วยวางแผนและตอบคำถามการเรียน", icon: Bot },
 ];
