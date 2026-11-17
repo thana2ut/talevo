@@ -1,5 +1,35 @@
 # ตรวจสิทธิ์ข้อมูลและเตรียมเพิ่มการป้องกัน — 17 พฤศจิกายน 2026
 
+## ผลนำขึ้นใช้หลังได้รับอนุมัติจากเจ้าของ
+
+- Commit โค้ด `22dea201b281898a6a629ec4ef11d7595f972198` ขึ้น security-hardening แล้ว
+- Cloudflare workflow 44020478009 ผ่านครบ รวม lint, security gates, build,
+  scan browser assets และ deploy: https://github.com/thana2ut/talevo/actions/runs/44020478009
+- Vercel production `dpl_2gu8sgf7Evy3UzBxrEmbib7FswyP` READY จาก commit เดียวกัน
+  และ alias talevoo.vercel.app ชี้มาที่ deployment นี้ก่อนใช้ SQL
+- master อัปเดตเฉพาะ package.json/package-lock.json ด้วย commit
+  `73f9f54fbf729d1263bc21804fe84af7953e0340`; อ่าน GitHub Dependabot กลับแล้ว open alerts = 0
+- เจ้าของเปิด Cloudflare 2FA และ API ยืนยัน true
+- ใช้ SQL ที่เจ้าของตรวจและอนุมัติครบ หลังทั้งสองโฮสต์พร้อมแล้ว:
+  20261117045930_private_profile_avatars,
+  20261117045935_admin_mfa_enforcement,
+  20261117045941_restrict_rls_auto_enable_execution
+- ไฟล์ migration สร้างด้วย CLI แล้วปรับชื่อ version ให้ตรงประวัติที่ Supabase บันทึกจริง
+  เนื้อหาคือ SQL ที่ได้รับอนุมัติ ไม่มีการใช้ migration cleanup ของงานอื่น
+- อ่าน metadata ยืนยัน bucket public=false, รูปเดิมคงอยู่ 2 รายการ,
+  admin 1 บัญชี, public tables without RLS=0, ทั้งสอง admin helper มี aal2 guard,
+  anon/authenticated EXECUTE rls_auto_enable=false
+- scanner ตรวจ browser assets 165 ไฟล์ ไม่พบค่าลับที่ตรวจได้
+  (ค่าที่มีให้เทียบในเครื่องคือ SUPABASE_SECRET_KEY/GROQ_API_KEY) และไม่พบ source maps
+- Supabase advisor: คำเตือน anon internal function หายแล้ว;
+  ยังคงมี 19 authenticated SECURITY DEFINER notices, 6 RLS/no-policy INFO,
+  และ leaked-password-protection ปิดตามข้อจำกัดแผนฟรี
+- MFA factor ของบัญชีแอดมินยังเป็น 0 ณ การตรวจหลัง SQL:
+  เจ้าของต้องสมัครและยืนยันเองที่ https://talevo.pages.dev/profile/security
+  จนกว่าจะทำเสร็จ ยังไม่ถือว่าแอดมินได้รับการยืนยันสองขั้นตอนครบ
+
+รายละเอียดถัดไปเป็นบันทึกก่อนนำขึ้นใช้ ให้ยึดผลข้างต้นเป็นสถานะล่าสุด
+
 ## สถานะจริง
 
 - Cloudflare owner 2FA: ตอนเริ่มตรวจปิดอยู่ เจ้าของเปิดแล้ว และอ่านกลับผ่าน API เป็น true
