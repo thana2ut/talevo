@@ -5,6 +5,7 @@
 ## คู่มือดูแลระบบ
 
 - [Cloudflare และการ deploy](operations/cloudflare-deployment.md)
+- [รายงานการจัดหมวดไฟล์และโฟลเดอร์](operations/repository-organization-report.md)
 
 ## ฟีเจอร์และการเปลี่ยนแปลง
 

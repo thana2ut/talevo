@@ -69,5 +69,5 @@
 - src/styles/syllabus-import-composition.css
 
 ## Maintenance
-- scripts/localize-ui.cjs maintains the static UI catalogue from app-authored source strings. It does not translate or send user records.
+- scripts/maintenance/localize-ui.cjs maintains the static UI catalogue from app-authored source strings. It does not translate or send user records.
 - Use providers/ui-language.ts useUiText() for new literal UI copy. Preserve stable enum values and translate only their displayed labels.

@@ -13,6 +13,8 @@
 | `public/` | ไฟล์สาธารณะ ใครทราบ URL ก็เปิดได้ ห้ามเก็บข้อมูลลับ |
 | `config/`, `workers/`, `.github/` | config ที่ไม่มี secret, Cloudflare entry points และ workflow |
 | `scripts/` | เครื่องมือและ QA ดู scripts/README.md |
+| `scripts/maintenance/` | เครื่องมือที่เขียน/บำรุงรักษา source ต้องตรวจ diff หลังรัน |
+| `scripts/media/` | เครื่องมือสื่อ; local/ เป็นงานเฉพาะเครื่องที่ไม่เผยแพร่ |
 | `supabase/migrations/` | ประวัติ migration ห้ามย้าย/เปลี่ยนชื่อไฟล์ที่ deploy แล้ว |
 | `supabase/manual/` | SQL ที่เจ้าของต้องตรวจและอนุมัติก่อนรัน |
 | `supabase/tests/` | SQL ทดสอบ ใช้ข้อมูลสมมติและสภาพแวดล้อมควบคุม |

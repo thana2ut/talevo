@@ -49,3 +49,5 @@ next-env.d.ts
 # Local assistant state and linked database CLI cache (not source)
 /.claude/
 /supabase/.temp/
+# Machine-specific rendering tools reference private local source attachments.
+/scripts/media/local/
