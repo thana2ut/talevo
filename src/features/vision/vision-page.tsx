@@ -131,7 +131,12 @@ function VisionWorkspace({owner}:{owner:string}){
         if(!response.ok)throw new Error(data.message??"บันทึกไม่สำเร็จ");imported+=data.imported;skipped+=data.skipped;
         await commit({...current.current!,savedIds:[...new Set([...current.current!.savedIds,...batch.map(item=>item.id)])]});
       }
-      setEditId(null);setResult({imported,skipped});setMessage("บันทึกเฉพาะรายการที่ยืนยันเรียบร้อยแล้ว");
+      // The imported records now live in the account. Remove the temporary images
+      // and extracted items so the old queue cannot look like it is still pending.
+      await clearVisionSession(owner);
+      const empty:VisionSession={schemaVersion:1,owner,expires:current.current?.expires??0,images:[],items:[],savedIds:[]};
+      current.current=empty;setSession(empty);setEditId(null);setSourceId(null);setConfirmSave(false);setStep(1);
+      setResult({imported,skipped});setMessage("บันทึกสำเร็จ ล้างรายการค้างและรูปภาพชั่วคราวแล้ว");
       // A full navigation rehydrates the existing app state and its Smart Alerts.
     }catch(e){setError(`${e instanceof Error?e.message:"บันทึกไม่สำเร็จ"}${imported?` · ชุดก่อนหน้าบันทึกสำเร็จ ${imported} รายการแล้ว`:""}`);setStep(3);}
     finally{lock.current=false;setBusy(false);}
