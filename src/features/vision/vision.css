@@ -152,3 +152,28 @@ html .page.vision-page { --vision-tint:color-mix(in srgb,var(--purple-100) 45%,v
 .vision-extra-fields>div>label { display:grid; gap:7px; color:var(--text-primary); font-size:13px; }
 
 .vision-editor .vision-field-error>.input{border:1px solid #dc6678}.vision-editor .vision-field-valid>.input{border:1px solid #36a782}.vision-editor>label{min-width:0}.vision-editor .primary-button{min-height:48px}
+
+/* A single reading order: upload, review, save on every screen. */
+html .page.vision-page{max-width:960px;margin-inline:auto}
+.vision-workspace,.vision-workspace.has-items{display:flex;flex-direction:column;gap:20px}
+.vision-heading{margin-block:8px 20px}
+.vision-heading-icon{display:none}
+.vision-heading h2{font-size:clamp(18px,2.2vw,23px)}
+.vision-sources,.vision-results,.vision-summary{width:100%;min-width:0}
+.vision-summary{position:static}
+.vision-sources{padding:22px}
+.vision-upload{min-height:150px}
+.vision-image-list:empty{display:none}
+.vision-image-list{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));margin-top:16px}
+.vision-privacy{margin-top:14px}
+.vision-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
+.vision-filters button{flex:none}
+.vision-summary-hint,.vision-summary-note{display:none}
+.vision-summary .vision-notice{font-size:14px}
+@media(max-width:599px){
+ .vision-sources,.vision-results,.vision-summary{padding:16px}
+ .vision-header h1{font-size:19px}
+ .vision-heading p{font-size:12px;line-height:1.7}
+ .vision-upload{min-height:138px}
+ .vision-workspace,.vision-workspace.has-items{gap:16px}
+}
