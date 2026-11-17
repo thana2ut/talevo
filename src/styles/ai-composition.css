@@ -325,7 +325,7 @@
   display: none;
   min-width: 0;
   align-content: start;
-  gap: 10px;
+  gap: 14px;
   position: sticky;
   top: 14px;
   max-height: calc(100dvh - 90px);
@@ -653,12 +653,13 @@ html[data-theme="dark"] .ai-mode-badge.status-online-ready .ai-badge-dot {
 html[data-theme="dark"] .ai-mode-badge.status-online-unavailable { background: #332616; color: #fbbf24; }
 html[data-theme="dark"] .ai-usage-card.is-local-mode { background: linear-gradient(145deg, #18281f, #1b3226); border-color: rgba(34,197,94,.25); }
 html[data-theme="dark"] .ai-usage-card.is-local-mode .ai-usage-top strong { color: #86efac; }
-html[data-theme="dark"] .ai-context-item { background: #201a2c; border-color: rgba(173,151,255,.14); }
-@media(hover:hover) and (pointer:fine){html[data-theme="dark"] .ai-context-item:hover { background: #271f37; border-color: rgba(173,151,255,.32); }}
-html[data-theme="dark"] .ai-context-item.is-selected { border-color: rgba(168,137,255,.6); background: linear-gradient(135deg, #2c2046, #342554); box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+html[data-theme="dark"] .ai-context-item { background: #242033; border-color: transparent; box-shadow: none; }
+@media(hover:hover) and (pointer:fine){html[data-theme="dark"] .ai-context-item:hover { background: #2c2540; border-color: transparent; }}
+html[data-theme="dark"] .ai-context-item.is-selected { border-color: transparent; background: linear-gradient(135deg, #34264f, #3a2b57); box-shadow: inset 0 0 0 1px rgba(185,157,255,.2); }
 html[data-theme="dark"] .ai-context-item.is-selected .ai-context-icon { background: #7955fa; color: #fff; }
 html[data-theme="dark"] .ai-context-item.is-selected .ai-context-copy strong { color: #e0d7ff; }
-html[data-theme="dark"] .ai-context-item.is-selected .ai-context-check { border-color: #7955fa; background: #7955fa; color: #fff; }
+html[data-theme="dark"] .ai-context-check { border-color: #9b8aad; background: #171521; color: #fff; }
+html[data-theme="dark"] .ai-context-item.is-selected .ai-context-check { border-color: #a88aff; background: #7955fa; color: #fff; }
 html[data-theme="dark"] .ai-context-badge { background: #2b2244; color: #c4b5fd; }
 
 @media (prefers-reduced-motion: reduce) {

@@ -245,9 +245,9 @@ function PrivacyDialog() {
 }
 
 function formatCompactDuration(seconds: number) {
-  const safeSeconds = Math.max(0, seconds);
-  const hours = Math.floor(safeSeconds / 3_600);
-  const minutes = Math.floor((safeSeconds % 3_600) / 60);
+  const totalMinutes = Math.ceil(Math.max(0, seconds) / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
   return hours > 0 ? `${hours} ชม. ${minutes} นาที` : `${minutes} นาที`;
 }
 
@@ -264,6 +264,7 @@ function UsageCard({
   usage,
   countdown,
   loading,
+  quotaReached,
   onlineUnavailable,
   isUnconfigured,
   isLocalMode,
@@ -271,6 +272,7 @@ function UsageCard({
   usage: AIUsageStatusResponse | null;
   countdown: number | null;
   loading: boolean;
+  quotaReached: boolean;
   onlineUnavailable: boolean;
   isUnconfigured: boolean;
   isLocalMode: boolean;
@@ -312,8 +314,12 @@ function UsageCard({
         <span>
           {isUnconfigured
             ? uiText("กำลังรอการตั้งค่าผู้ให้บริการ AI ใหม่")
+            : quotaReached
+              ? countdown !== null && countdown > 0
+                ? uiText("ใช้ได้อีกใน {0}", [formatCompactDuration(countdown)])
+                : uiText("กำลังตรวจสอบโควตารอบใหม่")
             : onlineUnavailable
-              ? uiText("สิทธิ์คงเหลือจะใช้ได้เมื่อ AI ออนไลน์กลับมาพร้อม")
+              ? uiText("รอ AI ออนไลน์กลับมา")
               : usage?.resetAt && countdown !== null
                 ? uiText("รีเซ็ต {0} · อีก {1}", [formatResetDate(usage.resetAt), formatCompactDuration(countdown)])
                 : uiText("รอบเริ่มเมื่อได้รับคำตอบแรก")}
@@ -330,7 +336,7 @@ function QuotaUnavailableNotice() {
     <section className="ai-quota-notice" role="status" aria-live="polite">
       <div>
         <strong>{uiText("โควตาใช้งานไม่พร้อมใช้งาน")}</strong>
-        <p>{uiText("ใช้ AI ออนไลน์ครบโควตาแล้ว ระบบจะเปิดให้ใช้อีกครั้งเมื่อเริ่มรอบถัดไป")}</p>
+        <p>{uiText("ใช้ AI ออนไลน์ครบโควตารอบนี้")}</p>
       </div>
       <span className="ai-quota-notice-count">0 {uiText("ครั้ง")}</span>
     </section>
@@ -601,6 +607,7 @@ export function AIPage() {
       usage={usage}
       countdown={countdown}
       loading={usageLoading}
+      quotaReached={quotaReached}
       onlineUnavailable={experienceStatus === "online-unavailable" || experienceStatus === "response-error"}
       isUnconfigured={onlineAvailability === "unconfigured" || usage?.providerConfigured === false}
       isLocalMode={mode === "on-device"}
