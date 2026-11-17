@@ -62,8 +62,8 @@ async function verifyDeviceDelivery() {
   const devicePreferenceSource = fs.readFileSync(path.join(projectRoot, "src/lib/push/device-preference.ts"), "utf8");
   check(devicePreferenceSource.includes('Notification.permission === "granted"'), "a device that already granted permission must count as opted in, not be silently switched off");
   check(devicePreferenceSource.includes('stored === "off"'), "an explicit off must still win over a granted permission");
-  const otherPagesSource = fs.readFileSync(path.join(projectRoot, "src/features/other/other-pages.tsx"), "utf8");
-  check(otherPagesSource.includes("openNotification") && otherPagesSource.includes("notifications.detailTitle"), "a notification must open to be read in full");
+  const otherPagesSource = fs.readFileSync(path.join(projectRoot, "src/features/notifications/notifications-page.tsx"), "utf8");
+  check(otherPagesSource.includes("setOpened(item)") && otherPagesSource.includes("notifications.detailTitle") && otherPagesSource.includes("opened.message"), "a notification must open to be read in full");
   check(!otherPagesSource.includes("notification-device-strip"), "the device strip must stay out of the notification centre");
   const domainSource = fs.readFileSync(path.join(projectRoot, "src/components/domain.tsx"), "utf8");
   check(domainSource.includes("onOpen"), "the notification row must be able to open a reading view instead of following its link");

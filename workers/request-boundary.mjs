@@ -4,6 +4,7 @@ function reject(status, message, retryAfter) {
   return Response.json({ message }, { status, headers: {
     "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY", "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+    "Strict-Transport-Security": "max-age=31536000", "Referrer-Policy": "no-referrer",
     ...(retryAfter ? { "Retry-After": String(retryAfter) } : {}),
   } });
 }

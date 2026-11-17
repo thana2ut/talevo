@@ -4,6 +4,7 @@ import { getSupabaseConfiguration } from "@/lib/supabase/config";
 import { sessionCookieOptions } from "@/lib/supabase/cookie-options";
 
 const protectedRoutePrefixes = [
+  "/admin",
   "/academic",
   "/ai",
   "/calendar",

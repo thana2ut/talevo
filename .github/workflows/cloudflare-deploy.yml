@@ -42,8 +42,18 @@ jobs:
           done
       - run: npm ci
       - run: npm run lint
+      - name: Dependency and security gates
+        run: |
+          npm audit --audit-level=moderate
+          npm run qa:security
+          node scripts/qa-security-runtime.cjs
+          npm run qa:auth
+          npm run qa:persistence
+          npm run qa:notifications
       - name: Build without deployment credentials
         run: npm run deploy:vinext -- --build-only --ci
+      - name: Check public build for secrets and source maps
+        run: node scripts/qa-public-secrets.mjs .cloudflare/output/v1/workers/default/assets
       - name: Deploy using existing Worker secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
