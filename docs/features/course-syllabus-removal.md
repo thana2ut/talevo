@@ -23,7 +23,7 @@
 
 ไฟล์สคริปต์ที่ปรับตามการลบฟีเจอร์: `scripts/qa-auth.cjs`, `scripts/qa-learning-tools.cjs`, `scripts/qa-learning-postgres.cjs`, `scripts/qa-learning-responsive.cjs` โดยไม่ได้รันสคริปต์เหล่านี้
 
-เอกสารเดิมที่เพิ่มหมายเหตุ: `docs/learning-tools-release.md` และ Next.js ปรับระดับหัวข้อใน `AGENTS.md` ให้อัตโนมัติเมื่อเปิดเซิร์ฟเวอร์
+เอกสารเดิมที่เพิ่มหมายเหตุ: `docs/features/learning-tools-release.md` และ Next.js ปรับระดับหัวข้อใน `AGENTS.md` ให้อัตโนมัติเมื่อเปิดเซิร์ฟเวอร์
 
 ไฟล์ที่สร้าง: เอกสารฉบับนี้, `supabase/manual/remove-course-syllabus-import.sql` และ `supabase/migrations/20261116073903_remove_course_syllabus_import.sql`
 

@@ -7,3 +7,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Project organization
+
+ก่อนเพิ่มหรือย้ายไฟล์ ให้อ่าน `docs/project-organization.md` และใช้หมวดที่กำหนดไว้.
+เอกสารใหม่ต้องเพิ่มในหมวดและลิงก์จาก `docs/README.md`; เครื่องมือดู `scripts/README.md`.
+อย่าย้าย framework config, migrations ที่ deploy แล้ว หรือ script entry points โดยไม่ตรวจผู้เรียกและแก้ reference ทั้งหมด.
+ห้ามเก็บ secrets, database dumps หรือข้อมูลผู้ใช้จริงใน Git หรือ public assets.

@@ -1,6 +1,6 @@
 # Talevo learning tools — release review
 
-> Historical release record. Course syllabus import was removed from the application on 16 November 2026. See `docs/course-syllabus-removal.md` for the current scope and the separate database cleanup awaiting review. The database migration below remains unchanged as deployed history.
+> Historical release record. Course syllabus import was removed from the application on 16 November 2026. See `docs/features/course-syllabus-removal.md` for the current scope and the separate database cleanup awaiting review. The database migration below remains unchanged as deployed history.
 
 Implemented 15 November 2026. Existing timetable-image import is retained.
 

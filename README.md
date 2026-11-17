@@ -48,6 +48,8 @@ npm run qa:auth        # และ qa:* ตัวอื่น ดูรายก
 
 ## โครงสร้างสำคัญ
 
+ดู [แผนที่โฟลเดอร์และกติกาจัดไฟล์](docs/project-organization.md), [สารบัญเอกสาร](docs/README.md) และ [หมวดเครื่องมือ](scripts/README.md) ก่อนเพิ่มไฟล์ใหม่
+
 - `src/app` — App Router pages และ API routes
 - `src/components` — UI ที่ใช้ร่วมกัน และโครงหน้าจอ
 - `src/features` — โมดูลระดับหน้า
