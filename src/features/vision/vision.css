@@ -150,3 +150,5 @@ html .page.vision-page { --vision-tint:color-mix(in srgb,var(--purple-100) 45%,v
 .vision-extra-fields[open]>summary::after { content:"−"; }
 .vision-extra-fields>div { display:grid; gap:14px; margin-top:12px; }
 .vision-extra-fields>div>label { display:grid; gap:7px; color:var(--text-primary); font-size:13px; }
+
+.vision-editor .vision-field-error>.input{border:1px solid #dc6678}.vision-editor .vision-field-valid>.input{border:1px solid #36a782}.vision-editor>label{min-width:0}.vision-editor .primary-button{min-height:48px}
