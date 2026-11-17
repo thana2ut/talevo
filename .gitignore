@@ -43,3 +43,6 @@ next-env.d.ts
 
 # tesseract OCR language cache
 *.traineddata
+/dist/
+.vinext/
+.cloudflare/

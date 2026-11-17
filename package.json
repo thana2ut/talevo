@@ -7,7 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "qa:vision": "node scripts/qa-vision.cjs",
     "qa:alerts": "node scripts/qa-smart-alerts.cjs",
     "qa:persistence": "node scripts/qa-persistence.cjs",
@@ -28,31 +28,44 @@
     "qa:reliability": "node scripts/qa-reliability.cjs",
     "qa:cloud-persistence": "node scripts/qa-cloud-persistence.cjs",
     "qa:learning": "node scripts/qa-learning-tools.cjs",
-    "qa:learning:postgres": "node scripts/qa-learning-postgres.cjs"
+    "qa:learning:postgres": "node scripts/qa-learning-postgres.cjs",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview",
+    "deploy:vinext": "node scripts/deploy-cloudflare.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",
     "@supabase/ssr": "0.12.5",
     "@supabase/supabase-js": "2.112.4",
+    "@vinext/cloudflare": "^1.4.0",
     "groq-sdk": "^1.6.0",
     "lucide-react": "^1.37.0",
     "next": "16.4.6",
     "pdfjs-dist": "^6.3.289",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-server-dom-webpack": "^19.3.1",
     "tesseract.js": "^7.0.0",
+    "vinext": "^1.4.6",
     "web-push": "^3.6.7",
     "zod": "4.6.6"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^2.0.0-rc.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitejs/plugin-rsc": "^0.5.39",
+    "cf": "^1.0.0-rc.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "vite": "^8.3.8"
+  },
+  "type": "module"
 }

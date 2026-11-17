@@ -1,0 +1,6 @@
+{
+  "productionBranch": "security-hardening",
+  "pushDelivery": "external",
+  "pushPublicKey": "BBwCudGQXF5JqQDzvDX3DoUSHPO8xJRy8x8IKo1dgi24sA8t6vDxJ-PIAHEL4SrcCcr989cCaI8pqjK5bd0VRTg",
+  "pushDispatcher": "https://talevoo.vercel.app/api/push/dispatch"
+}

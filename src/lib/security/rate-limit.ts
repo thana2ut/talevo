@@ -23,6 +23,10 @@ export function takeLocalLimit(key: string, limit: number, now = Date.now(), per
 }
 
 export function trustedClientAddress(headers: Headers) {
+  // Set only on the Cloudflare deployment; Cloudflare overwrites this header.
+  if (process.env.TALEVO_CLOUDFLARE === "1") {
+    return headers.get("cf-connecting-ip")?.trim().slice(0, 64) || "unknown";
+  }
   // Do not trust arbitrary forwarding headers on a self-hosted server.
   return process.env.VERCEL === "1"
     ? (headers.get("x-vercel-forwarded-for")?.split(",")[0].trim().slice(0, 64) || "unknown")

@@ -38,6 +38,10 @@
   ],
   "exclude": [
     "node_modules",
-    ".next/dev/types"
+    ".next/dev/types",
+    ".cloudflare",
+    "dist",
+    "cloudflare.config.ts",
+    "vite.config.ts"
   ]
 }

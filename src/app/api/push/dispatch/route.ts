@@ -33,6 +33,8 @@ function fail(code: string, status: number) {
 }
 
 async function handlerPOST(request: NextRequest) {
+  // Both hosts share one queue. Only the original dispatcher may drain it.
+  if (process.env.TALEVO_PUSH_DELIVERY === "external") return fail("push_external_dispatch", 409);
   const secret = getPushDispatchSecret();
   const vapid = getVapidConfiguration();
   if (!secret || !vapid) return fail("push_not_configured", 503);
