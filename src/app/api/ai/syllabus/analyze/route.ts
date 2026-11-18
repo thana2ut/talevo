@@ -36,7 +36,7 @@ async function handlerPOST(request:NextRequest){
   if(error||!lease)return fail("ระบบโควตา AI ยังไม่พร้อม กรุณาลองใหม่",503);
   if(!lease.allowed||!lease.request_id)return fail(lease.reason==="concurrent"?"กำลังวิเคราะห์เอกสารอื่นอยู่ กรุณารอสักครู่":"ใช้ AI ครบโควตาในรอบนี้แล้ว",429);
   try{
-    const preview=await analyzeUniversityTimetable(pages,request.signal,language);
+    const preview=await analyzeUniversityTimetable(pages,AbortSignal.any([request.signal,AbortSignal.timeout(90000)]),language);
     if(request.signal.aborted){await releaseTalevoAIRequest(supabase,lease.request_id);return fail("หยุดอ่านตารางแล้ว",499);}
     const usage=await completeTalevoAIRequest(supabase,lease.request_id,true);
     return NextResponse.json({preview,usage},{headers:{"Cache-Control":"no-store"}});

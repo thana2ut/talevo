@@ -45,20 +45,25 @@ export function isOnlineAIConfigured(): boolean {
 
 export async function withAIProviderFallback<T>(
   signal: AbortSignal | undefined,
-  generate: (provider: Exclude<AIProviderId, "disconnected">, key: string) => Promise<T>,
+  generate: (provider: Exclude<AIProviderId, "disconnected">, key: string, attemptSignal?: AbortSignal) => Promise<T>,
+  imageAttemptTimeoutMs?: number,
 ): Promise<T> {
   let lastError: unknown = new AIConfigurationError();
-  for (const provider of getConfiguredAIProviderIds()) {
-    for (const key of getAIProviderKeys(provider)) {
+  const providers = getConfiguredAIProviderIds().map(provider => ({ provider, keys: getAIProviderKeys(provider) }));
+  const attempts = providers.flatMap(({ provider, keys }) => keys.map((key, index) => ({ provider, key, index })));
+  if (imageAttemptTimeoutMs) attempts.sort((a, b) => a.index - b.index);
+  for (const { provider, key } of attempts) {
       if (signal?.aborted) throw new AIProviderError("cancelled");
+      const deadline = imageAttemptTimeoutMs && attempts.length > 1 ? AbortSignal.timeout(imageAttemptTimeoutMs) : undefined;
+      const attemptSignal = deadline && signal ? AbortSignal.any([deadline, signal]) : deadline ?? signal;
       try {
-        return await generate(provider, key);
+        return await generate(provider, key, attemptSignal);
       } catch (error) {
-        if (signal?.aborted || (error instanceof Error && error.name === "AbortError")) throw error;
-        if (error instanceof AIProviderError && error.kind === "cancelled") throw error;
+        if (signal?.aborted) throw error;
+        if (!deadline?.aborted && ((error instanceof Error && error.name === "AbortError")
+          || (error instanceof AIProviderError && error.kind === "cancelled"))) throw error;
         lastError = error;
       }
-    }
   }
   throw lastError;
 }

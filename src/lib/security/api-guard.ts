@@ -14,7 +14,7 @@ const policies: Record<string, Policy> = {
   "/api/account": {},
   "/api/profile/avatar": {},
   "/api/ai/status": {},
-  "/api/ai/chat": { body: 32768, schema: apiPayloadSchemas.chat },
+  "/api/ai/chat": { body: 32768 + 1_400_000, schema: apiPayloadSchemas.chat },
   "/api/ai/chat/probe": { developmentOnly: true, body: 32768 },
   "/api/ai/syllabus/probe": { developmentOnly: true, body: 12000 },
   "/api/ai/syllabus/analyze": { body: 6 * 1024 * 1024 + 256 * 1024, multipart: true },

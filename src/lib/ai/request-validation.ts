@@ -12,7 +12,7 @@ import {
   type AIHistoryItem,
 } from "@/lib/ai/types";
 
-const REQUEST_KEYS = new Set(["message", "selectedContext", "history"]);
+const REQUEST_KEYS = new Set(["message", "selectedContext", "history", "image"]);
 
 export class AIRequestValidationError extends Error {
   constructor() {
@@ -64,8 +64,13 @@ export function parseAIChatRequest(value: unknown): AIChatRequest {
   if (typeof value.message !== "string") throw new AIRequestValidationError();
   const message = value.message.trim();
   if (!message || message.length > AI_MESSAGE_MAX_LENGTH) throw new AIRequestValidationError();
+  const image = value.image;
+  if (image !== undefined && (typeof image !== "string" || image.length > 1_400_000 || !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image))) {
+    throw new AIRequestValidationError();
+  }
   return {
     message,
+    ...(typeof image === "string" ? { image } : {}),
     selectedContext: parseSelection(value.selectedContext),
     history: parseHistory(value.history),
   };

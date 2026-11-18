@@ -374,6 +374,7 @@ export function AIPage() {
   const [onlineAvailability, setOnlineAvailability] = useState<OnlineAvailability>("checking");
   const [mode, setMode] = useState<AIChatMode>("online");
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const [attachedImage, setAttachedImage] = useState<string>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestInFlightRef = useRef(false);
@@ -528,6 +529,7 @@ export function AIPage() {
         return;
       }
       const success = payload as AIChatSuccess;
+      if (requestBody.image) setAttachedImage(undefined);
       if (!success?.message?.trim() || !success.usage) {
         setErrorMessage("AI ไม่ได้ส่งคำตอบกลับมา กรุณาลองใหม่");
         return;
@@ -596,7 +598,7 @@ export function AIPage() {
       activateOnDeviceMode(message);
       return;
     }
-    void sendOnlineRequest({ message, selectedContext: { ...selectedContext }, history: createBoundedHistory(chat) });
+    void sendOnlineRequest({ message, selectedContext: { ...selectedContext }, history: createBoundedHistory(chat), image: attachedImage });
   };
 
   const toggleContext = (key: AIContextKey) => setSelectedContext((current) => ({ ...current, [key]: !current[key] }));
@@ -753,6 +755,26 @@ export function AIPage() {
               </div>
             )}
 
+            {attachedImage && <button type="button" disabled={isLoading} onClick={() => setAttachedImage(undefined)}>เอารูปแนบออก</button>}
+            <label>
+              แนบรูป
+              <input type="file" accept="image/jpeg,image/png,image/webp" disabled={!canSend || isLoading} onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (!file) return;
+                setAttachedImage(undefined);
+                if (file.size > 1_000_000 || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+                  setErrorMessage("เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 1 MB");
+                  return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => {
+                  if (typeof reader.result === "string") setAttachedImage(reader.result);
+                };
+                reader.onerror = () => setErrorMessage("เปิดรูปที่เลือกไม่ได้ กรุณาลองอีกครั้ง");
+                reader.readAsDataURL(file);
+              }} />
+            </label>
             <div className="ai-composer-row">
               <button className="ai-context-trigger" type="button" onClick={() => setContextSheetOpen(true)} aria-label={uiText("เลือกข้อมูล TALEVO ที่ให้ AI ใช้")}>
                 <Plus />

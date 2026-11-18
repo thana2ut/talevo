@@ -10,6 +10,7 @@ export interface AIHistoryItem {
 }
 
 export interface AIChatRequest {
+  image?: string;
   message: string;
   selectedContext: AIContextSelection;
   history: AIHistoryItem[];

@@ -6,6 +6,8 @@ import {
   getTalevoAIModel,
   isAIProviderConfigured,
 } from "@/lib/ai/config";
+import { learningJSON } from "@/lib/ai/learning-tools";
+import { matchesSyllabusDocumentMagic } from "@/lib/ai/syllabus-upload";
 import { AIContextReadError, buildTalevoContext } from "@/lib/ai/talevo-context";
 import {
   AIProviderError,
@@ -70,7 +72,7 @@ export function createAIChatHandler(provider: AIProvider = createGeminiProvider(
         || rawContentLength === null
         || !Number.isSafeInteger(contentLength)
         || contentLength <= 0
-        || contentLength > AI_CHAT_MAX_REQUEST_BYTES) {
+        || contentLength > AI_CHAT_MAX_REQUEST_BYTES + 1_400_000) {
       return errorResponse("AI_BAD_REQUEST", "รูปแบบหรือขนาดข้อความไม่ถูกต้อง", 400);
     }
 
@@ -84,6 +86,11 @@ export function createAIChatHandler(provider: AIProvider = createGeminiProvider(
     let input;
     try {
       input = parseAIChatRequest(body);
+      if (!input.image && contentLength > AI_CHAT_MAX_REQUEST_BYTES) throw new AIRequestValidationError();
+      if (input.image) {
+        const [header, data] = input.image.split(",");
+        if (!matchesSyllabusDocumentMagic(header.slice(5, -7), Buffer.from(data, "base64"))) throw new AIRequestValidationError();
+      }
     } catch (error) {
       if (error instanceof AIRequestValidationError) {
         return errorResponse("AI_BAD_REQUEST", "ข้อความหรือบริบทไม่ถูกต้อง", 400);
@@ -114,7 +121,20 @@ export function createAIChatHandler(provider: AIProvider = createGeminiProvider(
 
     try {
       const context = await buildTalevoContext(supabase, authData.user.id, input.selectedContext);
-      const message = await provider.generate({ ...input, contextBlock: context.block, signal: request.signal });
+      let message: string;
+      if (input.image) {
+        const result = await learningJSON(
+          'Answer the latest question using the attached image and Talevo context as reference. Distinguish assignments, recurring classes and exams. Flag unreadable dates and times rather than guessing. Reply in the question language. Return {"answer":"text"}.',
+          JSON.stringify({ question: input.message, history: input.history, context: context.block }),
+          [input.image],
+          AbortSignal.any([request.signal, AbortSignal.timeout(70_000)]),
+        );
+        const answer = (result as { answer?: unknown } | null)?.answer;
+        if (typeof answer !== "string" || !answer.trim() || answer.length > 32_000) throw new AIProviderError("unavailable");
+        message = answer.trim();
+      } else {
+        message = await provider.generate({ ...input, contextBlock: context.block, signal: request.signal });
+      }
       if (request.signal.aborted) {
         await finishTalevoAIRequest(supabase, lease.request_id);
         return errorResponse("AI_CANCELLED", "หยุดการสร้างคำตอบแล้ว", 499);

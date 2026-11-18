@@ -44,7 +44,7 @@ async function handlerPOST(request:NextRequest) {
     if(lease.error)return fail("ระบบโควตา AI ไม่พร้อมใช้งาน",503);
     if(!row?.allowed||!row.request_id)return fail("AI ถึงขีดจำกัดชั่วคราว คิวที่เหลือยังอยู่ กรุณาลองต่อภายหลัง",429,Math.max(1,row?.retry_after_seconds??60));
     leaseId=row.request_id;
-    const result=await analyzeClassroomImages(images,AbortSignal.any([request.signal,AbortSignal.timeout(45000)]));
+    const result=await analyzeClassroomImages(images,AbortSignal.any([request.signal,AbortSignal.timeout(70000)]));
     const items=normalizeBatchExtraction(result,metadata);
     const save=await db.from("vision_analyses").upsert({user_id:auth.user.id,digest,result,expires_at:new Date(Date.now()+86400000).toISOString()});
     if(save.error)throw new Error("บันทึกผลวิเคราะห์ไม่สำเร็จ");
