@@ -258,6 +258,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [gradePlans, setGradePlans] = useState<CourseGradePlan[]>(defaultAppState.gradePlans);
   const [selectedFinanceMonth, setSelectedFinanceMonth] = useState(() => getLocalMonthKey());
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const academicTermWriteRef = useRef<Promise<unknown>>(Promise.resolve());
   const pendingCloudMutationsRef = useRef<Set<Promise<unknown>>>(new Set());
 
   const runCloudMutation = useCallback((mutationFn: (client: SupabaseClient, uid: string) => Promise<{ error: Error | null }>) => {
@@ -878,10 +879,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     },
     updateGoals: (next) => setGoals((current) => ({ ...current, ...next })),
     updateAcademicTerm: (next) => {
-      setAcademicTerm((current) => {
-        const updated = { ...current, ...next };
-        runCloudMutation((client, uid) => persistAcademicTerm(client, uid, updated));
-        return updated;
+      const updated = { ...academicTerm, ...next };
+      setAcademicTerm(updated);
+      runCloudMutation((client, uid) => {
+        const write = academicTermWriteRef.current.then(() => persistAcademicTerm(client, uid, updated));
+        academicTermWriteRef.current = write.catch(() => undefined);
+        return write;
       });
     },
     endSession: async () => {
@@ -1006,52 +1009,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     })),
     addSchedule: (input) => {
       const id = uid("class");
-      let createdSchedule: ClassSchedule | null = null;
-      setSchedules((current) => {
-        const matchingCourse = current.find(
-          (item) => (Boolean(input.courseCode) && item.courseCode === input.courseCode) ||
-            item.name.trim().toLocaleLowerCase() === input.name.trim().toLocaleLowerCase()
-        );
-        const courseId = matchingCourse?.courseId ?? uid("course");
-        const color = matchingCourse?.color
-          ? normalizeTalevoColor(matchingCourse.color)
-          : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || courseId || input.name));
-        const newSchedule: ClassSchedule = { ...input, academicLevel: input.academicLevel ?? academicTerm.level, academicTerm: input.academicTerm ?? academicTerm.term, academicYear: input.academicYear ?? academicTerm.academicYear, color, id, courseId };
-        createdSchedule = newSchedule;
-        return [...current, newSchedule];
-      });
-      if (createdSchedule) {
-        const sched = createdSchedule;
-        runCloudMutation((client, uid) => persistClassSchedule(client, uid, sched));
-      }
+      const matchingCourse = schedules.find(
+        (item) => (Boolean(input.courseCode) && item.courseCode === input.courseCode) ||
+          item.name.trim().toLocaleLowerCase() === input.name.trim().toLocaleLowerCase()
+      );
+      const courseId = matchingCourse?.courseId ?? uid("course");
+      const color = matchingCourse?.color
+        ? normalizeTalevoColor(matchingCourse.color)
+        : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || courseId || input.name));
+      const newSchedule: ClassSchedule = { ...input, academicLevel: input.academicLevel ?? academicTerm.level, academicTerm: input.academicTerm ?? academicTerm.term, academicYear: input.academicYear ?? academicTerm.academicYear, color, id, courseId };
+      setSchedules((current) => [...current, newSchedule]);
+      runCloudMutation((client, uid) => persistClassSchedule(client, uid, newSchedule));
       return id;
     },
     importSyllabus: (payload) => {
-      let importedSchedulesCount = 0;
-      let importedSchedulesList: ClassSchedule[] = [];
-      setSchedules((current) => {
-        const imported = payload.schedules.map((input) => {
-          const matchingCourse = current.find(
-            (item) => item.courseId === input.courseId ||
-              Boolean(input.courseCode && item.courseCode === input.courseCode) ||
-              Boolean(input.name.trim() && item.name.trim().toLocaleLowerCase() === input.name.trim().toLocaleLowerCase())
-          );
-          const color = matchingCourse?.color
-            ? normalizeTalevoColor(matchingCourse.color)
-            : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || input.courseId || input.name));
-          return {
-            ...input,
-            academicLevel: input.academicLevel ?? academicTerm.level,
-            academicTerm: input.academicTerm ?? academicTerm.term,
-            academicYear: input.academicYear ?? academicTerm.academicYear,
-            id: uid("class"),
-            color,
-          };
-        });
-        importedSchedulesCount = imported.length;
-        importedSchedulesList = imported;
-        return [...current, ...imported];
+      const importedSchedules = payload.schedules.map((input) => {
+        const matchingCourse = schedules.find(
+          (item) => item.courseId === input.courseId ||
+            Boolean(input.courseCode && item.courseCode === input.courseCode) ||
+            Boolean(input.name.trim() && item.name.trim().toLocaleLowerCase() === input.name.trim().toLocaleLowerCase())
+        );
+        const color = matchingCourse?.color
+          ? normalizeTalevoColor(matchingCourse.color)
+          : normalizeTalevoColor(input.color || getDeterministicCourseColor(input.courseCode || input.courseId || input.name));
+        return {
+          ...input,
+          academicLevel: input.academicLevel ?? academicTerm.level,
+          academicTerm: input.academicTerm ?? academicTerm.term,
+          academicYear: input.academicYear ?? academicTerm.academicYear,
+          id: uid("class"),
+          color,
+        };
       });
+      setSchedules((current) => [...current, ...importedSchedules]);
       const importedTasks: Task[] = payload.tasks.map((input) => ({ ...input, id: uid("task"), color: normalizeTaskColor(input.color), dueLabel: "กำหนดใหม่", subtasks: input.subtasks ?? [], attachments: input.attachments ?? [], status: "todo" as const }));
       const importedExams: Exam[] = payload.exams.map((input) => { const timestamp = new Date().toISOString(); return { ...input, id: uid("exam"), topics: input.topics ?? [], createdAt: timestamp, updatedAt: timestamp }; });
       // React batches these state updates from one confirmed user action; persistence observes one complete snapshot.
@@ -1059,8 +1049,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setExams((current) => [...current, ...importedExams]);
 
       runCloudMutation(async (client, uid) => {
-        if (importedSchedulesList.length > 0) {
-          await persistClassSchedulesBatch(client, uid, importedSchedulesList);
+        if (importedSchedules.length > 0) {
+          const result = await persistClassSchedulesBatch(client, uid, importedSchedules);
+          if (result.error) return result;
         }
         for (const task of importedTasks) {
           await persistTask(client, uid, task);
@@ -1071,7 +1062,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return { error: null };
       });
 
-      return { schedules: importedSchedulesCount, tasks: importedTasks.length, exams: importedExams.length };
+      return { schedules: importedSchedules.length, tasks: importedTasks.length, exams: importedExams.length };
     },
     /**
      * Edits the class that was opened, and only that one.
@@ -1086,27 +1077,21 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
      * a period is what changes.
      */
     updateSchedule: (id, input) => {
-      let updatedSchedule: ClassSchedule | null = null;
-      setSchedules((current) => current.map((item) => {
-        if (item.id !== id) return item;
-        const updated: ClassSchedule = {
-          ...item,
-          ...input,
-          id: item.id,
-          courseId: item.courseId,
-          name: input.name.trim(),
-          color: normalizeTalevoColor(input.color),
-          courseCode: input.courseCode !== undefined ? (input.courseCode.trim() || undefined) : item.courseCode,
-          section: input.section !== undefined ? (input.section.trim() || undefined) : item.section,
-          credits: input.credits !== undefined ? input.credits : item.credits,
-        };
-        updatedSchedule = updated;
-        return updated;
-      }));
-      if (updatedSchedule) {
-        const schedule = updatedSchedule;
-        runCloudMutation((client, uid) => persistClassSchedule(client, uid, schedule));
-      }
+      const item = schedules.find((schedule) => schedule.id === id);
+      if (!item) return;
+      const updated: ClassSchedule = {
+        ...item,
+        ...input,
+        id: item.id,
+        courseId: item.courseId,
+        name: input.name.trim(),
+        color: normalizeTalevoColor(input.color),
+        courseCode: input.courseCode !== undefined ? (input.courseCode.trim() || undefined) : item.courseCode,
+        section: input.section !== undefined ? (input.section.trim() || undefined) : item.section,
+        credits: input.credits !== undefined ? input.credits : item.credits,
+      };
+      setSchedules((current) => current.map((schedule) => schedule.id === id ? updated : schedule));
+      runCloudMutation((client, uid) => persistClassSchedule(client, uid, updated));
     },
     deleteSchedule: (id) => {
       setSchedules((current) => current.filter((item) => item.id !== id));

@@ -1,4 +1,4 @@
-import type { ClassSchedule, NewClassInput } from "@/types";
+import type { AcademicTerm, ClassSchedule, NewClassInput } from "@/types";
 import { academicRangesOverlap, calculateAcademicDuration, timeToAcademicMinutes } from "@/lib/academic-time";
 
 export function timeToMinutes(time: string) {
@@ -213,3 +213,8 @@ export function getScheduleDisplayName(item: Pick<ClassSchedule, "name" | "cours
   }
   return "รายการเรียน";
 }
+
+const normalizeAcademicScopeValue = (value: string | undefined, fallback: string) => (value?.trim() || fallback.trim()).toLocaleLowerCase("th-TH");
+export const isInAcademicScope = (item: ClassSchedule, scope: AcademicTerm) => normalizeAcademicScopeValue(item.academicLevel, scope.level) === normalizeAcademicScopeValue(undefined, scope.level)
+  && normalizeAcademicScopeValue(item.academicTerm, scope.term) === normalizeAcademicScopeValue(undefined, scope.term)
+  && normalizeAcademicScopeValue(item.academicYear, scope.academicYear) === normalizeAcademicScopeValue(undefined, scope.academicYear);

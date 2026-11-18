@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "rea
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronRight, CircleStop, FileText, LoaderCircle, Pencil, ScanText, ShieldCheck, Trash2, Upload } from "lucide-react";
 import { BottomSheet, Input, Select, Textarea } from "@/components/ui";
+import { isInAcademicScope } from "@/lib/schedule-utils";
 import { AcademicEndTimeInput } from "@/components/academic-end-time-input";
 import { buildSyllabusImportPayload, getScheduleReviewFields, getSyllabusImportReadiness, setAllSyllabusPreviewSelected, updateSyllabusScheduleDraft, validateSyllabusPreview, type SyllabusExamItem, type SyllabusPreview, type SyllabusScheduleItem, type SyllabusTaskItem } from "@/lib/syllabus-import";
 import { hasLocalSyllabusFileMagic } from "@/lib/syllabus-local-file";
@@ -35,7 +36,8 @@ function fileError(file: File) {
 export function SyllabusScanner() {
   const uiText = useUiText();
 
-  const { schedules, tasks, exams, importSyllabus } = useAppState();
+  const { schedules, tasks, exams, academicTerm, importSyllabus } = useAppState();
+  const scopedSchedules = schedules.filter((item) => isInAcademicScope(item, academicTerm));
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
@@ -165,7 +167,7 @@ setPreview(nextPreview);
     setImporting(true);
     setError(null);
     try {
-      const payload = buildSyllabusImportPayload(preview, { schedules, tasks, exams });
+      const payload = buildSyllabusImportPayload(preview, { schedules: scopedSchedules, tasks, exams });
       if (process.env.NODE_ENV === "development") {
         console.info("[TALEVO Import Payload Diagnostic]", {
           origin: "current-import-payload",
@@ -202,7 +204,7 @@ setPreview(nextPreview);
     ? dayLabels.map((label, day) => ({ label, count: preview!.schedules.filter((item) => item.day === day).length })).filter((item) => item.count > 0)
     : [];
   const hasInferredDayDrafts = isTimetablePreview && (preview?.debug?.courseBlocks ?? 0) > 0 && (preview?.debug?.dayAnchors ?? 0) === 0;
-  const readiness = preview ? getSyllabusImportReadiness(preview, { schedules, tasks, exams }) : { readyCount: 0, duplicateCount: 0, importableCount: 0 };
+  const readiness = preview ? getSyllabusImportReadiness(preview, { schedules: scopedSchedules, tasks, exams }) : { readyCount: 0, duplicateCount: 0, importableCount: 0 };
   const selectedCount = preview ? preview.schedules.filter((item) => item.selected).length + preview.tasks.filter((item) => item.selected).length + preview.exams.filter((item) => item.selected).length : 0;
   const unreadyCount = Math.max(0, selectedCount - readiness.readyCount);
   const confidenceCounts = preview ? (["confident", "review", "missing", "conflict"] as const).map((confidence) => ({ confidence, count: preview.schedules.filter((item) => item.confidence === confidence).length })) : [];
