@@ -48,7 +48,7 @@ npm run qa:auth        # และ qa:* ตัวอื่น ดูรายก
 
 ## โครงสร้างสำคัญ
 
-ดู [แผนที่โฟลเดอร์และกติกาจัดไฟล์](docs/project-organization.md), [สารบัญเอกสาร](docs/README.md) และ [หมวดเครื่องมือ](scripts/README.md) ก่อนเพิ่มไฟล์ใหม่
+เริ่มจาก [สารบัญตามประเภทงาน](docs/project-organization.md#เริ่มจากประเภทงาน) เพื่อหาโค้ดของฟีเจอร์ที่จะแก้ หรือเปิด [สารบัญเอกสาร](docs/README.md) และ [หมวดเครื่องมือ](scripts/README.md) เมื่อต้องดูคู่มือหรือคำสั่งตรวจงาน
 
 - `src/app` — App Router pages และ API routes
 - `src/components` — UI ที่ใช้ร่วมกัน และโครงหน้าจอ

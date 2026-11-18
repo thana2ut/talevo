@@ -2,6 +2,21 @@
 
 ขอบเขต: repository TALEVO บนเครื่องและ GitHub ไม่รวมไฟล์ส่วนตัวนอกโปรเจกต์.
 
+## เริ่มจากประเภทงาน
+
+| ประเภทงาน | เปิดที่นี่ก่อน | จุดที่เกี่ยวข้อง |
+| --- | --- | --- |
+| หน้าแรกและเมนู | [หน้าแรก](../src/features/today/) | [โครงแอปและแถบเมนู](../src/components/app-shell.tsx), [สไตล์มือถือและ iPad](../src/styles/mobile-app.css) |
+| ตารางเรียนและสอบ | [ตารางเรียน](../src/features/schedule/), [การเรียนและสอบ](../src/features/academic/) | [API อ่านเอกสารตาราง](../src/app/api/ai/syllabus/) |
+| งานและนำเข้าจากภาพ | [งาน](../src/features/tasks/), [นำเข้าจากภาพ](../src/features/vision/) | [API นำเข้าจากภาพ](../src/app/api/vision/) |
+| แชตและสั่งงานด้วยเสียง | [หน้าจอ AI](../src/features/ai/) | [ตรรกะ AI](../src/lib/ai/), [API AI](../src/app/api/ai/) |
+| คะแนนและเกณฑ์เกรด | [หน้าคำนวณคะแนน](../src/features/grade-lab/) | [API คะแนน](../src/app/api/grade-lab/) |
+| กระดิ่งและแจ้งเตือนนอกแอป | [หน้าการแจ้งเตือน](../src/app/notifications/) | [ตรรกะแจ้งเตือน](../src/lib/alerts/), [Web Push](../src/lib/push/) |
+| บัญชีและแอดมิน | [โปรไฟล์](../src/features/profile/), [แอดมิน](../src/features/admin/) | [Supabase](../src/lib/supabase/), [SQL สำหรับตรวจ](../supabase/manual/) |
+| เผยแพร่และตรวจงาน | [คู่มือ Cloudflare](operations/cloudflare-deployment.md), [สารบัญเครื่องมือ](../scripts/README.md) | [Workflow](../.github/workflows/), [ผลการตรวจ](qa/) |
+
+## ตำแหน่งไฟล์ตามหน้าที่
+
 | ตำแหน่ง | เก็บอะไร |
 | --- | --- |
 | `src/app/` | URL, layouts, API และ server entry points |
@@ -34,3 +49,9 @@
 5. ไม่เก็บ `.env.local`, tokens, credentials, database dump หรือข้อมูลผู้ใช้จริงใน Git/public/fixtures.
 6. ไม่ใช้ `git add .`; ตรวจ diff และเพิ่มเฉพาะไฟล์ที่ต้องเผยแพร่.
 7. ตรวจ lint/build/diff ก่อน commit และคง migration เดิมเพื่อให้ rollback ตรวจสอบได้.
+
+### เก็บงานรอบถัดไป
+
+- โค้ดของหน้าจอให้เพิ่มในหมวดฟีเจอร์ที่รับผิดชอบ ส่วนที่หลายหน้าต้องใช้ร่วมกันจึงเก็บในโฟลเดอร์ส่วนกลาง
+- บันทึกการเปลี่ยนแปลงที่ต้องเก็บระยะยาวไว้ในหมวดเอกสารที่เกี่ยวข้องและลิงก์จากสารบัญ ส่วนไฟล์ชั่วคราวจาก build หรือ deploy ให้เก็บใน `.cloudflare/` บนเครื่อง
+- ผลงานที่จะส่งมอบแยกโฟลเดอร์ตามชื่อชิ้นงานใน `deliverables/` และใช้ README ของชิ้นงานนั้นเป็นจุดเริ่มต้น
