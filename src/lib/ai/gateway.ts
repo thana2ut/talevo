@@ -2,9 +2,12 @@ import "server-only";
 
 import {
   AIConfigurationError,
+  getConfiguredAIProviderIds,
+  getAIProviderKeys,
+  type AIProviderId,
   getTalevoAIProviderId,
 } from "@/lib/ai/config";
-import { geminiProvider } from "@/lib/ai/providers/gemini";
+import { AIProviderError, geminiProvider } from "@/lib/ai/providers/gemini";
 import { groqProvider } from "@/lib/ai/providers/groq";
 import type {
   AIProviderAdapter,
@@ -40,12 +43,27 @@ export function isOnlineAIConfigured(): boolean {
   return provider.isConfigured();
 }
 
-export async function generateAIResponse(
-  request: AIProviderRequest,
-): Promise<AIProviderResult> {
-  const provider = getConfiguredAIProvider();
-  if (!provider.isConfigured()) {
-    throw new AIConfigurationError();
+export async function withAIProviderFallback<T>(
+  signal: AbortSignal | undefined,
+  generate: (provider: Exclude<AIProviderId, "disconnected">, key: string) => Promise<T>,
+): Promise<T> {
+  let lastError: unknown = new AIConfigurationError();
+  for (const provider of getConfiguredAIProviderIds()) {
+    for (const key of getAIProviderKeys(provider)) {
+      if (signal?.aborted) throw new AIProviderError("cancelled");
+      try {
+        return await generate(provider, key);
+      } catch (error) {
+        if (signal?.aborted || (error instanceof Error && error.name === "AbortError")) throw error;
+        if (error instanceof AIProviderError && error.kind === "cancelled") throw error;
+        lastError = error;
+      }
+    }
   }
-  return provider.generate(request);
+  throw lastError;
+}
+
+export function generateAIResponse(request: AIProviderRequest): Promise<AIProviderResult> {
+  return withAIProviderFallback(request.signal, (provider, key) =>
+    (provider === "groq" ? groqProvider : geminiProvider).generate(request, key));
 }

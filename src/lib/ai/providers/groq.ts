@@ -4,6 +4,7 @@ import Groq from "groq-sdk";
 import {
   AI_MESSAGE_MAX_LENGTH,
   AI_PROVIDER_TIMEOUT_MS,
+  getAIProviderKeys,
   AIConfigurationError,
   getTalevoAIModel,
   isAIProviderConfigured,
@@ -128,8 +129,7 @@ function formatChatMessages(request: AIProviderRequest): Groq.Chat.ChatCompletio
   return messages;
 }
 
-function createClient(): Groq {
-  const apiKey = process.env.GROQ_API_KEY?.trim();
+function createClient(apiKey?: string): Groq {
   if (!apiKey) {
     throw new AIConfigurationError();
   }
@@ -143,7 +143,7 @@ export class GroqProviderAdapter implements AIProviderAdapter {
     return isAIProviderConfigured("groq");
   }
 
-  async generate(request: AIProviderRequest): Promise<AIProviderResult> {
+  async generate(request: AIProviderRequest, apiKey = getAIProviderKeys("groq")[0]): Promise<AIProviderResult> {
     if (!this.isConfigured()) {
       throw new AIConfigurationError();
     }
@@ -152,7 +152,7 @@ export class GroqProviderAdapter implements AIProviderAdapter {
       throw new AIProviderError("cancelled");
     }
 
-    const client = createClient();
+    const client = createClient(apiKey);
     const model = getTalevoAIModel("groq");
     const messages = formatChatMessages(request);
 

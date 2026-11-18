@@ -28,6 +28,12 @@ export default defineConfig({
       SUPABASE_SECRET_KEY: bindings.secret(),
       TALEVO_AI_PROVIDER: bindings.secret(),
       GROQ_API_KEY: bindings.secret(),
+      GROQ_API_KEY1: bindings.secret(),
+      GROQ_API_KEY2: bindings.secret(),
+      GROQ_API_KEY3: bindings.secret(),
+      GROQ_API_KEY4: bindings.secret(),
+      GEMINI_API_KEY1: bindings.secret(),
+      GEMINI_API_KEY2: bindings.secret(),
       TALEVO_AI_MODEL: bindings.secret(),
       NEXT_PUBLIC_VAPID_PUBLIC_KEY: bindings.secret(),
       ...(deployment.pushDelivery === "external"

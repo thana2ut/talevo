@@ -3,6 +3,7 @@ import "server-only";
 import { ApiError, GoogleGenAI } from "@google/genai";
 import {
   AI_PROVIDER_TIMEOUT_MS,
+  getAIProviderKeys,
   AIConfigurationError,
   getTalevoAIModel,
   isAIProviderConfigured,
@@ -113,8 +114,7 @@ function formatPromptInput(request: AIProviderRequest): string {
   return sections.join("\n\n");
 }
 
-function createClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+function createClient(apiKey?: string): GoogleGenAI {
   if (!apiKey) {
     throw new AIConfigurationError();
   }
@@ -125,10 +125,10 @@ export class GeminiProviderAdapter implements AIProviderAdapter {
   readonly id = "gemini" as const;
 
   isConfigured(): boolean {
-    return isAIProviderConfigured();
+    return isAIProviderConfigured("gemini");
   }
 
-  async generate(request: AIProviderRequest): Promise<AIProviderResult> {
+  async generate(request: AIProviderRequest, apiKey = getAIProviderKeys("gemini")[0]): Promise<AIProviderResult> {
     if (!this.isConfigured()) {
       throw new AIConfigurationError();
     }
@@ -137,8 +137,8 @@ export class GeminiProviderAdapter implements AIProviderAdapter {
       throw new AIProviderError("cancelled");
     }
 
-    const client = createClient();
-    const model = getTalevoAIModel();
+    const client = createClient(apiKey);
+    const model = getTalevoAIModel("gemini");
     const prompt = formatPromptInput(request);
     const _tools: unknown[] = [];
     void _tools;

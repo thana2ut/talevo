@@ -6,16 +6,26 @@ export const DEFAULT_GROQ_AI_MODEL = "openai/gpt-oss-120b" as const;
 export const DEFAULT_GEMINI_AI_MODEL = "gemini-3.7-flash" as const;
 export const DEFAULT_TALEVO_AI_MODEL = DEFAULT_GROQ_AI_MODEL;
 
-export function getTalevoAIProviderId(): AIProviderId {
+function getPreferredAIProviderId(): AIProviderId {
   const provider = process.env.TALEVO_AI_PROVIDER?.trim().toLowerCase();
   if (provider === "groq") return "groq";
   if (provider === "gemini") return "gemini";
   return "disconnected";
 }
 
+export function getTalevoAIProviderId(): AIProviderId {
+  return getConfiguredAIProviderIds()[0] ?? getPreferredAIProviderId();
+}
+
+export function getAIProviderKeys(provider: Exclude<AIProviderId, "disconnected">): string[] {
+  const prefix = provider === "groq" ? "GROQ_API_KEY" : "GEMINI_API_KEY";
+  const names = [prefix, ...Array.from({ length: 4 }, (_, index) => prefix + (index + 1))];
+  return [...new Set(names.map(name => process.env[name]?.trim()).filter((key): key is string => Boolean(key)))];
+}
+
 export function getTalevoAIModel(providerId?: AIProviderId): string {
   const custom = process.env.TALEVO_AI_MODEL?.trim();
-  if (custom) return custom;
+  if (custom && (!providerId || providerId === getPreferredAIProviderId())) return custom;
   const active = providerId ?? getTalevoAIProviderId();
   if (active === "gemini") return DEFAULT_GEMINI_AI_MODEL;
   return DEFAULT_GROQ_AI_MODEL;
@@ -23,14 +33,26 @@ export function getTalevoAIModel(providerId?: AIProviderId): string {
 
 export const TALEVO_AI_MODEL = getTalevoAIModel();
 
+export function getTalevoVisionModel(provider: "groq" | "gemini", timetable = false): string {
+  if (provider === getPreferredAIProviderId()) {
+    const custom = (timetable && process.env.TALEVO_TIMETABLE_MODEL?.trim()) || process.env.TALEVO_VISION_MODEL?.trim();
+    if (custom) return custom;
+  }
+  return provider === "groq" ? "qwen/qwen3.8-27b" : "gemini-3.8-flash";
+}
+
 export function isAIProviderConfigured(providerId: AIProviderId = getTalevoAIProviderId()): boolean {
-  if (providerId === "groq") {
-    return Boolean(process.env.GROQ_API_KEY?.trim());
+  return providerId !== "disconnected" && getAIProviderKeys(providerId).length > 0;
+}
+
+export function getConfiguredAIProviderIds(): Exclude<AIProviderId, "disconnected">[] {
+  const primary = getPreferredAIProviderId();
+  const available: Exclude<AIProviderId, "disconnected">[] = [];
+  if (primary !== "disconnected" && isAIProviderConfigured(primary)) available.push(primary);
+  for (const provider of ["groq", "gemini"] as const) {
+    if (provider !== primary && isAIProviderConfigured(provider)) available.push(provider);
   }
-  if (providerId === "gemini") {
-    return Boolean(process.env.GEMINI_API_KEY?.trim());
-  }
-  return false;
+  return available;
 }
 
 export function getActiveAIProviderLabel(providerId: AIProviderId = getTalevoAIProviderId()): string {
