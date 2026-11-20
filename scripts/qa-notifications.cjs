@@ -124,8 +124,8 @@ function verifyPreferencesSurviveCloudHydration() {
       deadline_risk: false,
       morning_0600: true,
       daily_0700: false,
-      class_30m: true,
-      class_end_10m: true,
+      class_30m: false,
+      class_end_10m: false,
       exam_7d: true,
       exam_3d: true,
       exam_1d: true,
@@ -136,6 +136,7 @@ function verifyPreferencesSurviveCloudHydration() {
 
   const preferences = hydrated.settings.notificationPreferences;
   check(preferences.task24h === false && preferences.task12h === false && preferences.deadlineRisk === false, "alerts switched off in the account must stay off after a cloud hydration");
+  check(!preferences.class30m && !preferences.classEnd10m, "The classes switch stays off after cloud hydration");
   check(preferences.daily0700 === false, "the daily brief must hydrate from its own column instead of falling back to the default");
   check(preferences.weeklyRadar === false, "the weekly radar switch must survive a cloud hydration");
   check(!("browserNotifications" in preferences), "the device switch must not travel through the account state");

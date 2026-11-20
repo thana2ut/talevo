@@ -1,5 +1,5 @@
 import {summaryTime,summaryWeekday} from "@/lib/alerts/summary-schedule";
-import { evaluateSmartAlerts } from "@/lib/alerts/alert-engine";
+import { evaluateSmartAlerts, getClassReminderTimes } from "@/lib/alerts/alert-engine";
 import { addLocalDays, getClassOccurrences, MINUTE_MS } from "@/lib/alerts/date-time";
 import type { AppLanguage } from "@/lib/i18n";
 import { parseLocalTaskDate } from "@/lib/task-utils";
@@ -46,9 +46,8 @@ function candidateInstants(input: PlanInput): Date[] {
   };
 
   if (preferences.class30m || preferences.classEnd10m) {
-    for (const occurrence of getClassOccurrences(input.schedules, now, horizon)) {
-      if (preferences.class30m) push(new Date(occurrence.start.getTime() - 30 * MINUTE_MS));
-      if (preferences.classEnd10m) push(new Date(occurrence.end.getTime() - 10 * MINUTE_MS));
+    for (const occurrence of getClassOccurrences(input.schedules, now, new Date(horizon.getTime() + 60 * MINUTE_MS))) {
+      for (const { at } of getClassReminderTimes(occurrence, preferences)) push(at);
     }
   }
 
@@ -97,7 +96,7 @@ export function buildPushSchedule(input: PlanInput): ScheduledPush[] {
       // still unseen now. Suppression of already-delivered reminders is the
       // event_key primary key's job.
       existingEventKeys: new Set<string>(),
-    });
+    }, { exactClassTimes: true });
 
     for (const alert of alerts) {
       // The earliest instant that produces an alert is the one to send at. A

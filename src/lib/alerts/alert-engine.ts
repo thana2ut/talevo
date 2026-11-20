@@ -1,5 +1,5 @@
 import {summaryTime,summaryWeekday} from "@/lib/alerts/summary-schedule";
-import type { AppLanguage } from "@/lib/i18n";
+import { translate, type AppLanguage } from "@/lib/i18n";
 import type { AcademicTerm, AppNotification, ClassSchedule, Exam, NotificationPreferences, Task, UserProfile } from "@/types";
 import { calculateDeadlineRisk } from "@/lib/alerts/deadline-risk";
 import {
@@ -11,6 +11,7 @@ import {
   localDateKey,
   MINUTE_MS,
   addLocalDays,
+  type ClassOccurrence,
 } from "@/lib/alerts/date-time";
 import { buildWeeklyRadar } from "@/lib/alerts/weekly-radar";
 import { isSameLocalDate, parseLocalTaskDate } from "@/lib/task-utils";
@@ -154,34 +155,53 @@ export function buildDailyBrief(context: AlertContext): AppNotification | null {
   return createAlert(context.now, { type: "daily_brief", priority: "normal", title: context.language === "th" ? "วันนี้ของคุณ" : "Your day", message: parts.filter(Boolean).join(" · "), href: "/today", eventKey });
 }
 
-export function evaluateClassAlerts(context: AlertContext) {
+export function getClassReminderTimes(occurrence: ClassOccurrence, preferences: NotificationPreferences) {
+  const reminders: { kind: "60m" | "30m" | "end"; at: Date }[] = [];
+  if (preferences.class30m) {
+    reminders.push(
+      { kind: "60m", at: new Date(occurrence.start.getTime() - 60 * MINUTE_MS) },
+      { kind: "30m", at: new Date(occurrence.start.getTime() - 30 * MINUTE_MS) },
+    );
+  }
+  // Retain the stored preference for end-of-class alerts for existing accounts.
+  if (preferences.classEnd10m) reminders.push({ kind: "end", at: occurrence.end });
+  return reminders;
+}
+
+export function evaluateClassAlerts(context: AlertContext, exactTime = false) {
   const alerts: AppNotification[] = [];
-  const occurrences = getClassOccurrences(context.schedules, context.now, addLocalDays(context.now, 1));
-  occurrences.forEach((occurrence) => {
-    const minutesUntilStart = (occurrence.start.getTime() - context.now.getTime()) / MINUTE_MS;
-    if (context.preferences.class30m && isWithinMinuteWindow(minutesUntilStart, 30, 10)) {
+  // Include classes ending at midnight during the following day's first tick.
+  const from = new Date(context.now.getTime() - MINUTE_MS);
+  const occurrences = getClassOccurrences(context.schedules, from, addLocalDays(context.now, 1));
+  for (const occurrence of occurrences) {
+    for (const { kind, at } of getClassReminderTimes(occurrence, context.preferences)) {
+      const elapsed = context.now.getTime() - at.getTime();
+      if (exactTime ? elapsed !== 0 : elapsed < 0 || elapsed >= MINUTE_MS) continue;
+      const ending = kind === "end";
+      const next = ending ? occurrences.find((item) => item !== occurrence && item.dateKey === occurrence.dateKey && item.start >= occurrence.end) : undefined;
+      const gap = next ? (next.start.getTime() - occurrence.end.getTime()) / MINUTE_MS : null;
+      const titleKey = ending && gap === 0 ? "switch" : kind;
+      const en = context.language === "en";
+      const details = `${occurrence.schedule.name} · ${formatRange(occurrence.start, occurrence.end)}${occurrence.schedule.room ? ` · ${occurrence.schedule.room}` : ""}`;
+      let message = details;
+      if (next) {
+        message += ` · ${en ? "Next:" : "คาบถัดไป"} ${next.schedule.name} ${formatTime(next.start)}${next.schedule.room ? ` · ${next.schedule.room}` : ""}`;
+        if (gap && gap > 0) message += en ? ` · ${gap}-minute break` : ` · พัก ${gap} นาที`;
+      } else if (ending) {
+        message += en ? " · No more classes today." : " · หลังจากนี้วันนี้ไม่มีเรียนต่อแล้ว";
+      }
       appendIfNew(alerts, context, {
-        type: "class_upcoming",
-        priority: "medium",
-        title: context.language === "th" ? "ใกล้ถึงเวลาเรียน" : "Class starts soon",
-        message: `${occurrence.schedule.name} · ${formatRange(occurrence.start, occurrence.end)}${occurrence.schedule.room ? ` · ${occurrence.schedule.room}` : ""}`,
+        type: ending ? "class_ending" : "class_upcoming",
+        priority: ending ? "normal" : "medium",
+        title: translate(context.language, `classReminders.${titleKey}`),
+        message,
         href: `/schedule?date=${occurrence.dateKey}`,
-        eventKey: `class-30m:${occurrence.occurrenceId}`,
+        eventKey: `class-${kind}:${occurrence.occurrenceId}`,
         sourceId: occurrence.schedule.id,
+        metadata: ending ? { gapMinutes: gap } : undefined,
       });
     }
-    const minutesUntilEnd = (occurrence.end.getTime() - context.now.getTime()) / MINUTE_MS;
-    if (context.preferences.classEnd10m && occurrence.start <= context.now && isWithinMinuteWindow(minutesUntilEnd, 10, 5)) {
-      const sameDay = occurrences.filter((item) => item.dateKey === occurrence.dateKey && item.start >= occurrence.end);
-      const next = sameDay[0];
-      const gap = next ? Math.round((next.start.getTime() - occurrence.end.getTime()) / MINUTE_MS) : null;
-      const title = gap === 0 ? (context.language === "th" ? "ใกล้เปลี่ยนคาบ" : "Time to switch classes soon") : (context.language === "th" ? "ใกล้หมดคาบ" : "Class ends soon");
-      const message = next
-        ? (context.language === "th" ? `${occurrence.schedule.name} จบ ${formatTime(occurrence.end)} · คาบถัดไป ${next.schedule.name} ${formatTime(next.start)}${next.schedule.room ? ` · ${next.schedule.room}` : ""}${gap && gap > 0 ? ` · พัก ${gap} นาที` : ""}` : `${occurrence.schedule.name} ends ${formatTime(occurrence.end)} · Next: ${next.schedule.name} ${formatTime(next.start)}${next.schedule.room ? ` · ${next.schedule.room}` : ""}${gap && gap > 0 ? ` · ${gap}-minute break` : ""}`)
-        : (context.language === "th" ? `คาบนี้จะจบเวลา ${formatTime(occurrence.end)} · หลังจากนี้วันนี้ไม่มีเรียนต่อแล้ว` : `This class ends at ${formatTime(occurrence.end)} · No more classes today.`);
-      appendIfNew(alerts, context, { type: "class_ending", priority: "normal", title, message, href: `/schedule?date=${occurrence.dateKey}`, eventKey: `class-end-10m:${occurrence.occurrenceId}`, sourceId: occurrence.schedule.id, metadata: { gapMinutes: gap } });
-    }
-  });
+  }
   return alerts;
 }
 
@@ -195,7 +215,7 @@ export function buildWeeklyRadarAlert(context: AlertContext): AppNotification | 
   return createAlert(context.now, { type: "weekly_radar", priority: "normal", title: context.language === "th" ? "สัปดาห์นี้ของคุณ" : "Your week", message, href: "/today", eventKey, metadata: { academicYear: context.academicTerm.academicYear } });
 }
 
-export function evaluateSmartAlerts(context: AlertContext) {
+export function evaluateSmartAlerts(context: AlertContext, { exactClassTimes = false } = {}) {
   if (!context.preferences.enabled) return [];
   if (context.schedules.length === 0 && context.tasks.length === 0 && context.exams.length === 0) return [];
   const alerts: AppNotification[] = [];
@@ -207,7 +227,7 @@ export function evaluateSmartAlerts(context: AlertContext) {
   if (weekly) alerts.push(weekly);
   alerts.push(...evaluateDeadlineRiskAlerts(context));
   alerts.push(...evaluateTaskDeadlineAlerts(context));
-  alerts.push(...evaluateClassAlerts(context));
+  alerts.push(...evaluateClassAlerts(context, exactClassTimes));
   for (const exam of context.exams) {
     const start = parseLocalTaskDate(exam.startAt);
     if (!start || exam.completedAt || start <= context.now) continue;
